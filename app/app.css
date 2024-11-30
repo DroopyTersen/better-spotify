@@ -1,4 +1,65 @@
 @import "tailwindcss";
-* {
-  min-width: 0;
+
+@theme {
+  /* Base radius variable */
+  --radius: 0.5rem;
+
+  /* Border radius scale using the base radius */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+
+  /* Direct color mappings using Tailwind color variables */
+  --color-background: var(--color-white);
+  --color-foreground: var(--color-gray-900);
+
+  /* Card colors */
+  --color-card: var(--color-white);
+  --color-card-foreground: var(--color-gray-900);
+
+  /* Popover colors */
+  --color-popover: var(--color-white);
+  --color-popover-foreground: var(--color-gray-900);
+
+  /* Primary colors - using cyan-700 as base */
+  --color-primary: var(--color-sky-700);
+  --color-primary-foreground: var(--color-white);
+
+  /* Secondary colors */
+  --color-secondary: var(--color-yellow-600);
+  --color-secondary-foreground: var(--color-white);
+
+  /* Muted colors */
+  --color-muted: var(--color-gray-100);
+  --color-muted-foreground: var(--color-gray-500);
+
+  /* Accent colors */
+  --color-accent: var(--color-gray-100);
+  --color-accent-foreground: var(--color-gray-900);
+
+  /* Destructive colors */
+  --color-destructive: var(--color-red-700);
+  --color-destructive-foreground: var(--color-white);
+
+  /* Utility colors */
+  --color-border: var(--color-gray-200);
+  --color-input: var(--color-gray-200);
+  --color-ring: var(--color-cyan-700);
+
+  /* Chart colors */
+  --color-chart-1: var(--color-cyan-700);
+  --color-chart-2: var(--color-cyan-500);
+  --color-chart-3: var(--color-cyan-400);
+  --color-chart-4: var(--color-cyan-300);
+  --color-chart-5: var(--color-cyan-200);
+
+  /* Sidebar colors */
+  --color-sidebar-background: var(--color-white);
+  --color-sidebar-foreground: var(--color-gray-900);
+  --color-sidebar-primary: var(--color-cyan-700);
+  --color-sidebar-primary-foreground: var(--color-white);
+  --color-sidebar-accent: var(--color-gray-100);
+  --color-sidebar-accent-foreground: var(--color-gray-900);
+  --color-sidebar-border: var(--color-gray-200);
+  --color-sidebar-ring: var(--color-cyan-700);
 }

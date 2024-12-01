@@ -1,65 +1,66 @@
-@import "tailwindcss";
-
-@theme {
-  /* Base radius variable */
-  --radius: 0.5rem;
-
-  /* Border radius scale using the base radius */
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-
-  /* Direct color mappings using Tailwind color variables */
-  --color-background: var(--color-white);
-  --color-foreground: var(--color-gray-900);
-
-  /* Card colors */
-  --color-card: var(--color-white);
-  --color-card-foreground: var(--color-gray-900);
-
-  /* Popover colors */
-  --color-popover: var(--color-white);
-  --color-popover-foreground: var(--color-gray-900);
-
-  /* Primary colors - using cyan-700 as base */
-  --color-primary: var(--color-sky-700);
-  --color-primary-foreground: var(--color-white);
-
-  /* Secondary colors */
-  --color-secondary: var(--color-yellow-600);
-  --color-secondary-foreground: var(--color-white);
-
-  /* Muted colors */
-  --color-muted: var(--color-gray-100);
-  --color-muted-foreground: var(--color-gray-500);
-
-  /* Accent colors */
-  --color-accent: var(--color-gray-100);
-  --color-accent-foreground: var(--color-gray-900);
-
-  /* Destructive colors */
-  --color-destructive: var(--color-red-700);
-  --color-destructive-foreground: var(--color-white);
-
-  /* Utility colors */
-  --color-border: var(--color-gray-200);
-  --color-input: var(--color-gray-200);
-  --color-ring: var(--color-cyan-700);
-
-  /* Chart colors */
-  --color-chart-1: var(--color-cyan-700);
-  --color-chart-2: var(--color-cyan-500);
-  --color-chart-3: var(--color-cyan-400);
-  --color-chart-4: var(--color-cyan-300);
-  --color-chart-5: var(--color-cyan-200);
-
-  /* Sidebar colors */
-  --color-sidebar-background: var(--color-white);
-  --color-sidebar-foreground: var(--color-gray-900);
-  --color-sidebar-primary: var(--color-cyan-700);
-  --color-sidebar-primary-foreground: var(--color-white);
-  --color-sidebar-accent: var(--color-gray-100);
-  --color-sidebar-accent-foreground: var(--color-gray-900);
-  --color-sidebar-border: var(--color-gray-200);
-  --color-sidebar-ring: var(--color-cyan-700);
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 224 71.4% 4.1%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 71.4% 4.1%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71.4% 4.1%;
+    --primary: 220.9 39.3% 11%;
+    --primary-foreground: 210 20% 98%;
+    --secondary: 220 14.3% 95.9%;
+    --secondary-foreground: 220.9 39.3% 11%;
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 220 8.9% 46.1%;
+    --accent: 220 14.3% 95.9%;
+    --accent-foreground: 220.9 39.3% 11%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 224 71.4% 4.1%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem
+  }
+  .dark {
+    --background: 224 71.4% 4.1%;
+    --foreground: 210 20% 98%;
+    --card: 224 71.4% 4.1%;
+    --card-foreground: 210 20% 98%;
+    --popover: 224 71.4% 4.1%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 210 20% 98%;
+    --primary-foreground: 220.9 39.3% 11%;
+    --secondary: 215 27.9% 16.9%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 215 27.9% 16.9%;
+    --muted-foreground: 217.9 10.6% 64.9%;
+    --accent: 215 27.9% 16.9%;
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 215 27.9% 16.9%;
+    --input: 215 27.9% 16.9%;
+    --ring: 216 12.2% 83.9%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%
+  }
+}
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }

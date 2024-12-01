@@ -1,5 +1,5 @@
 import { Outlet } from "react-router";
-import { MainNav } from "./main-nav";
+import { SidebarNav } from "./SidebarNav";
 import {
   Sidebar,
   SidebarInset,
@@ -11,7 +11,7 @@ import { Separator } from "~/shadcn/components/ui/separator";
 export const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <SidebarProvider>
-      <MainNav />
+      <SidebarNav />
       <SidebarInset>
         <header className="flex h-16 items-center gap-4 border-b bg-white px-6">
           <SidebarTrigger />

@@ -4,9 +4,9 @@
   "rsc": false,
   "tsx": true,
   "tailwind": {
-    "config": "app/shadcn/tailwind.config.ts",
-    "css": "app/shadcn/shadcn.css",
-    "baseColor": "neutral",
+    "config": "tailwind.config.ts",
+    "css": "app/app.css",
+    "baseColor": "gray",
     "cssVariables": true,
     "prefix": ""
   },
@@ -17,5 +17,5 @@
     "lib": "~/shadcn/lib",
     "hooks": "~/shadcn/hooks"
   },
-  "iconLibrary": "react-icons"
+  "iconLibrary": "lucide"
 }

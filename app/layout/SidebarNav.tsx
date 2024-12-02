@@ -1,5 +1,14 @@
-import { Link } from "react-router";
-import { Music2, Play, Mic2, Plus, User, LogOut, Settings } from "lucide-react";
+import { Link, useFetcher } from "react-router";
+import {
+  Music2,
+  Play,
+  Mic2,
+  Plus,
+  User,
+  LogOut,
+  Settings,
+  History as HistoryIcon,
+} from "lucide-react";
 import {
   Avatar,
   AvatarFallback,
@@ -29,9 +38,34 @@ import {
   DropdownMenuTrigger,
 } from "~/shadcn/components/ui/dropdown-menu";
 import { useCurrentUser } from "~/auth/useCurrentUser";
+import { SpotifyPlaylist } from "~/spotify/spotify.db";
+import { Button } from "~/shadcn/components/ui/button";
+import { useAsyncData } from "~/toolkit/hooks/useAsyncData";
+import { createSpotifySdk } from "~/spotify/createSpotifySdk";
 
-export const SidebarNav = () => {
+export const SidebarNav = ({ playlists }: { playlists: SpotifyPlaylist[] }) => {
   let currentUser = useCurrentUser();
+  let fetcher = useFetcher();
+  let syncPlayHistory = () => {
+    console.log("🚀 | syncPlayHistory | user:", currentUser);
+    if (!currentUser?.tokens) return;
+    fetcher.submit(
+      { user: currentUser },
+      {
+        method: "POST",
+        encType: "application/json",
+      }
+    );
+  };
+  let { data: devices } = useAsyncData(
+    async () => {
+      let sdk = createSpotifySdk(currentUser?.tokens!);
+      let devicesResult = await sdk.player.getAvailableDevices();
+      return devicesResult.devices;
+    },
+    [],
+    []
+  );
   return (
     <Sidebar className="bg-white border-r">
       <SidebarHeader>
@@ -61,9 +95,9 @@ export const SidebarNav = () => {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild className="font-medium">
-                  <Link to="/create-playlist">
-                    <Plus className="h-5 w-5" />
-                    <span>Create Playlist</span>
+                  <Link to="/play-history">
+                    <HistoryIcon className="h-5 w-5" />
+                    <span>Play History</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -73,13 +107,13 @@ export const SidebarNav = () => {
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-base font-bold">
-            Play History
+            Your Top
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild className="font-medium">
-                  <Link to="/songs">
+                  <Link to="/top/tracks">
                     <Music2 className="h-5 w-5" />
                     <span>Songs</span>
                   </Link>
@@ -87,7 +121,7 @@ export const SidebarNav = () => {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild className="font-medium">
-                  <Link to="/artists">
+                  <Link to="/top/artists">
                     <Mic2 className="h-5 w-5" />
                     <span>Artists</span>
                   </Link>
@@ -103,36 +137,27 @@ export const SidebarNav = () => {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/recently-added">Recently Added</Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/recently-played">Recently Played</Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/top-songs">Top Songs</Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/top-albums">Top Albums</Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/top-artists">Top Artists</Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {playlists?.slice(0, 10).map?.((playlist) => (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <Link to={`/playlists/${playlist.playlist_id}`}>
+                      {playlist.playlist_name}
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="border-t">
+        <Button
+          type="button"
+          disabled={fetcher.state !== "idle"}
+          onClick={syncPlayHistory}
+        >
+          Sync Play History
+        </Button>
         <SidebarMenu>
           {currentUser && (
             <SidebarMenuItem>
@@ -158,8 +183,12 @@ export const SidebarNav = () => {
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-56">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuLabel>Devices</DropdownMenuLabel>
+                  {devices?.map((device) => (
+                    <DropdownMenuItem>{device.name}</DropdownMenuItem>
+                  ))}
                   <DropdownMenuSeparator />
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuItem asChild>
                     <a
                       href={`https://open.spotify.com/user/${currentUser.id}`}

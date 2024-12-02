@@ -9,6 +9,8 @@ import {
   topArtistsTable,
   topTracksTable,
   tracksTable,
+  playlistsTable,
+  playlistTracksTable,
 } from "~/db/db.schema";
 import { eq, sql } from "drizzle-orm";
 
@@ -168,4 +170,48 @@ export const spotifyDb = {
         (results) => results.map((r) => r.genre).filter(Boolean) as string[]
       );
   },
+  getPlaylists: async (
+    db: DB,
+    { limit = 100, offset = 0 }: { limit?: number; offset?: number } = {}
+  ) => {
+    return db
+      .select({
+        playlist_id: playlistsTable.id,
+        playlist_name: playlistsTable.name,
+        description: playlistsTable.description,
+        images: playlistsTable.images,
+        track_count: sql<number>`count(${playlistTracksTable.track_id})`.as(
+          "track_count"
+        ),
+        last_added_at: sql<Date>`max(${playlistTracksTable.added_at})`.as(
+          "last_added_at"
+        ),
+      })
+      .from(playlistsTable)
+      .leftJoin(
+        playlistTracksTable,
+        eq(playlistsTable.id, playlistTracksTable.playlist_id)
+      )
+      .groupBy(
+        playlistsTable.id,
+        playlistsTable.name,
+        playlistsTable.description,
+        playlistsTable.images
+      )
+      .orderBy(sql`max(${playlistTracksTable.added_at}) DESC`)
+      .limit(limit)
+      .offset(offset);
+  },
 };
+
+export type SpotifyPlaylist = Awaited<
+  ReturnType<typeof spotifyDb.getPlaylists>
+>[number];
+
+export type SpotifyTopTrack = Awaited<
+  ReturnType<typeof spotifyDb.getPlayHistory>
+>[number];
+
+export type SpotifyTopArtist = Awaited<
+  ReturnType<typeof spotifyDb.getTopArtists>
+>[number];

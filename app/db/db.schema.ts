@@ -127,6 +127,51 @@ export const topArtistsTable = pgTable("top_artists", {
   position: integer("position"),
 });
 
+export const playlistsTable = pgTable("playlists", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  collaborative: boolean("collaborative").default(false),
+  public: boolean("public"),
+  snapshot_id: text("snapshot_id"),
+  external_urls: jsonb().$type<{
+    spotify: string;
+  }>(),
+  uri: text("uri"),
+  images: jsonb("images").$type<SpotifyImage[]>(),
+  // Owner info
+  owner: jsonb("owner").$type<{
+    id: string;
+    external_urls: {
+      spotify: string;
+    };
+    display_name: string;
+    href: string;
+    uri: string;
+  }>(),
+});
+
+export const playlistTracksTable = pgTable(
+  "playlist_tracks",
+  {
+    playlist_id: text("playlist_id").references(() => playlistsTable.id),
+    track_id: text("track_id").references(() => tracksTable.id),
+    added_at: timestamp("added_at", { withTimezone: true }).notNull(),
+    // Added by user info
+    added_by: jsonb("added_by").$type<{
+      id: string;
+      external_urls: {
+        spotify: string;
+      };
+      href: string;
+      uri: string;
+    }>(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.playlist_id, table.track_id] }),
+  })
+);
+
 // Define relationships
 export const artistsRelations = relations(artistsTable, ({ many }) => ({
   albumArtists: many(albumArtistsTable),
@@ -169,3 +214,21 @@ export const topArtistsRelations = relations(topArtistsTable, ({ one }) => ({
     references: [artistsTable.id],
   }),
 }));
+
+export const playlistsRelations = relations(playlistsTable, ({ many }) => ({
+  playlistTracks: many(playlistTracksTable),
+}));
+
+export const playlistTracksRelations = relations(
+  playlistTracksTable,
+  ({ one }) => ({
+    playlist: one(playlistsTable, {
+      fields: [playlistTracksTable.playlist_id],
+      references: [playlistsTable.id],
+    }),
+    track: one(tracksTable, {
+      fields: [playlistTracksTable.track_id],
+      references: [tracksTable.id],
+    }),
+  })
+);

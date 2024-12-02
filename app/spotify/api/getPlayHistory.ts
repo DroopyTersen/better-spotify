@@ -1,5 +1,5 @@
 import { RecentlyPlayedTracksPage } from "@spotify/web-api-ts-sdk";
-import { SpotifySdk } from "./createSpotifySdk";
+import { SpotifySdk } from "../createSpotifySdk";
 import { Prettify } from "~/toolkit/utils/typescript.utils";
 
 export type RecentlyPlayedTrack = Prettify<

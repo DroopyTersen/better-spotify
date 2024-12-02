@@ -57,6 +57,27 @@ CREATE TABLE IF NOT EXISTS "play_history" (
 	"context_uri" text
 );
 --> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "playlist_tracks" (
+	"playlist_id" text,
+	"track_id" text,
+	"added_at" timestamp with time zone NOT NULL,
+	"added_by" jsonb,
+	CONSTRAINT "playlist_tracks_playlist_id_track_id_pk" PRIMARY KEY("playlist_id","track_id")
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "playlists" (
+	"id" text PRIMARY KEY NOT NULL,
+	"name" text NOT NULL,
+	"description" text,
+	"collaborative" boolean DEFAULT false,
+	"public" boolean,
+	"snapshot_id" text,
+	"external_urls" jsonb,
+	"uri" text,
+	"images" jsonb,
+	"owner" jsonb
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "top_artists" (
 	"id" text PRIMARY KEY NOT NULL,
 	"artist_id" text,
@@ -123,6 +144,18 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "play_history" ADD CONSTRAINT "play_history_track_id_tracks_id_fk" FOREIGN KEY ("track_id") REFERENCES "public"."tracks"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "playlist_tracks" ADD CONSTRAINT "playlist_tracks_playlist_id_playlists_id_fk" FOREIGN KEY ("playlist_id") REFERENCES "public"."playlists"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "playlist_tracks" ADD CONSTRAINT "playlist_tracks_track_id_tracks_id_fk" FOREIGN KEY ("track_id") REFERENCES "public"."tracks"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

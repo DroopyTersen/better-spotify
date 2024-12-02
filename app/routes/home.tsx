@@ -1,14 +1,16 @@
 import { LoaderFunctionArgs, useFetcher } from "react-router";
 import { requireAuth } from "~/auth/auth.server";
 import { useCurrentUser } from "~/auth/useCurrentUser";
-import { SidebarLayout } from "~/components/layout/SidebarLayout";
+import { SidebarLayout } from "~/layout/SidebarLayout";
 import { Button } from "~/shadcn/components/ui/button";
 import { createSpotifySdk } from "~/spotify/createSpotifySdk";
 import { spotifyDb } from "~/spotify/spotify.db";
-import { syncSpotifyData } from "~/spotify/syncSpotifyData";
+import { syncSpotifyData } from "~/spotify/sync/syncSpotifyData";
 import { Welcome } from "../welcome/welcome";
 import type { Route } from "./+types/home";
 import { getDb } from "~/db/db.client";
+import { Portal } from "~/toolkit/components/Portal/Portal";
+import { PageHeader } from "~/layout/PageHeader";
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "New React Router App" },
@@ -23,62 +25,20 @@ export const clientAction = async ({ request }: Route.ClientActionArgs) => {
   await syncSpotifyData(sdk);
   return { success: true };
 };
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   let user = await requireAuth(request);
+  let sdk = await createSpotifySdk(user.tokens);
+  let devices = await sdk.player.getAvailableDevices();
+  return { devices: devices.devices };
 };
 
-export const clientLoader = async ({ request }: LoaderFunctionArgs) => {
-  console.time("data-loading");
-  let db = getDb();
-  let play;
-  let results = await db.transaction(
-    async (tx) => {
-      let [topTracks, topArtists, playHistory] = await Promise.all([
-        spotifyDb.getTopTracks(tx, {
-          limit: 150,
-        }),
-        spotifyDb.getTopArtists(tx, {
-          limit: 50,
-        }),
-        spotifyDb.getPlayHistory(tx, { limit: 50 }),
-      ]);
-      return { topTracks, topArtists, playHistory };
-    },
-    {
-      accessMode: "read only",
-      isolationLevel: "repeatable read",
-    }
-  );
-
-  console.timeEnd("data-loading");
-  return results;
-};
 export default function Home({ loaderData }: Route.ComponentProps) {
-  let user = useCurrentUser();
-  let fetcher = useFetcher();
-  let syncPlayHistory = () => {
-    console.log("🚀 | syncPlayHistory | user:", user);
-    if (!user?.tokens) return;
-    fetcher.submit(
-      { user },
-      {
-        method: "POST",
-        encType: "application/json",
-      }
-    );
-  };
+  console.log("🚀 | Home | loaderData:", loaderData);
   return (
-    <SidebarLayout>
-      <h1>Home</h1>
+    <>
+      <PageHeader title="Dashboard" />
       <Welcome />
-      <Button
-        type="button"
-        disabled={fetcher.state !== "idle"}
-        onClick={syncPlayHistory}
-      >
-        Sync Play History
-      </Button>
-      <pre className="text-xs">{JSON.stringify(loaderData, null, 2)}</pre>
-    </SidebarLayout>
+    </>
   );
 }

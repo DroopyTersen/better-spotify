@@ -35,6 +35,7 @@ const SPOTIFY_CONFIG = {
     "user-modify-playback-state",
     "user-read-currently-playing",
     "user-read-playback-state",
+
     "user-read-private",
     "user-top-read",
   ],

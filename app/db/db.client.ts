@@ -2,10 +2,12 @@
 import { PGlite } from "https://cdn.jsdelivr.net/npm/@electric-sql/pglite/dist/index.js";
 import { setupTablesSql } from "./pglite/migrations/001.setupTables";
 import { createSingleton } from "~/toolkit/utils/createSingleton";
-import { drizzle } from "drizzle-orm/pglite";
+import { drizzle, PgliteDatabase } from "drizzle-orm/pglite";
 import * as schema from "./db.schema";
 let _pg: PGlite;
-export const initDb = async (dataDir?: string) => {
+export type DB = PgliteDatabase<typeof schema>;
+let _db: DB;
+export const initDb = async () => {
   if (_pg) {
     return _pg;
   }
@@ -14,17 +16,19 @@ export const initDb = async (dataDir?: string) => {
     await applyMigrations(pg);
     return pg;
   });
+  _db = drizzle({
+    client: _pg,
+    schema,
+  });
+  await _db.query.genresTable.findFirst();
   return _pg;
 };
 
 export const getDb = () => {
-  if (!_pg) {
+  if (!_db) {
     throw new Error("Database not initialized");
   }
-  return drizzle({
-    client: _pg,
-    schema,
-  });
+  return _db;
 };
 
 export const applyMigrations = async (pg: PGlite) => {

@@ -21,7 +21,13 @@ type SpotifyImage = {
 export const artistsTable = pgTable("artists", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
-  external_url: text("external_url"),
+  external_urls: jsonb().$type<{
+    spotify: string;
+  }>(),
+  followers: jsonb().$type<{
+    href: string | null;
+    total: number;
+  }>(),
   href: text("href"),
   uri: text("uri"),
   popularity: integer("popularity"),
@@ -35,7 +41,9 @@ export const albumsTable = pgTable("albums", {
   total_tracks: integer("total_tracks"),
   release_date: text("release_date"),
   release_date_precision: text("release_date_precision"),
-  external_url: text("external_url"),
+  external_urls: jsonb().$type<{
+    spotify: string;
+  }>(),
   href: text("href"),
   uri: text("uri"),
   label: text("label"),
@@ -50,7 +58,9 @@ export const tracksTable = pgTable("tracks", {
   disc_number: integer("disc_number"),
   duration_ms: integer("duration_ms"),
   explicit: boolean("explicit"),
-  external_url: text("external_url"),
+  external_urls: jsonb().$type<{
+    spotify: string;
+  }>(),
   href: text("href"),
   uri: text("uri"),
   is_playable: boolean("is_playable"),
@@ -159,102 +169,3 @@ export const topArtistsRelations = relations(topArtistsTable, ({ one }) => ({
     references: [artistsTable.id],
   }),
 }));
-
-// Add these view definitions after the existing tables and relations
-export const trackHistoryView = pgView("track_history_view").as((qb) => {
-  return qb
-    .select({
-      played_at: playHistoryTable.played_at,
-      track_name: tracksTable.name,
-      track_popularity: tracksTable.popularity,
-      track_duration_ms: tracksTable.duration_ms,
-      track_is_playable: tracksTable.is_playable,
-      track_id: tracksTable.id,
-      artist_name: artistsTable.name,
-      artist_popularity: artistsTable.popularity,
-      genre: genresTable.name,
-      release_date: albumsTable.release_date,
-      album_name: albumsTable.name,
-      images: albumsTable.images,
-    })
-    .from(playHistoryTable)
-    .leftJoin(tracksTable, eq(playHistoryTable.track_id, tracksTable.id))
-    .leftJoin(artistTracks, eq(tracksTable.id, artistTracks.track_id))
-    .leftJoin(artistsTable, eq(artistTracks.artist_id, artistsTable.id))
-    .leftJoin(
-      artistGenresTable,
-      eq(artistsTable.id, artistGenresTable.artist_id)
-    )
-    .leftJoin(genresTable, eq(artistGenresTable.genre_id, genresTable.id))
-    .leftJoin(albumsTable, eq(tracksTable.album_id, albumsTable.id));
-});
-
-export const artistHistoryView = pgView("artist_history_view").as((qb) => {
-  return qb
-    .select({
-      artist_id: artistsTable.id,
-      artist_name: artistsTable.name,
-      artist_popularity: artistsTable.popularity,
-      genre: genresTable.name,
-      played_at: playHistoryTable.played_at,
-      images: artistsTable.images,
-    })
-    .from(playHistoryTable)
-    .leftJoin(tracksTable, eq(playHistoryTable.track_id, tracksTable.id))
-    .leftJoin(artistTracks, eq(tracksTable.id, artistTracks.track_id))
-    .leftJoin(artistsTable, eq(artistTracks.artist_id, artistsTable.id))
-    .leftJoin(
-      artistGenresTable,
-      eq(artistsTable.id, artistGenresTable.artist_id)
-    )
-    .leftJoin(genresTable, eq(artistGenresTable.genre_id, genresTable.id));
-});
-
-export const topTracksView = pgView("top_tracks_view").as((qb) => {
-  return qb
-    .select({
-      position: topTracksTable.position,
-      track_name: tracksTable.name,
-      track_popularity: tracksTable.popularity,
-      track_duration_ms: tracksTable.duration_ms,
-      track_is_playable: tracksTable.is_playable,
-      track_id: tracksTable.id,
-      artist_name: artistsTable.name,
-      artist_popularity: artistsTable.popularity,
-      genre: genresTable.name,
-      release_date: albumsTable.release_date,
-      album_name: albumsTable.name,
-      images: albumsTable.images,
-    })
-    .from(topTracksTable)
-    .leftJoin(tracksTable, eq(topTracksTable.track_id, tracksTable.id))
-    .leftJoin(artistTracks, eq(tracksTable.id, artistTracks.track_id))
-    .leftJoin(artistsTable, eq(artistTracks.artist_id, artistsTable.id))
-    .leftJoin(
-      artistGenresTable,
-      eq(artistsTable.id, artistGenresTable.artist_id)
-    )
-    .leftJoin(genresTable, eq(artistGenresTable.genre_id, genresTable.id))
-    .leftJoin(albumsTable, eq(tracksTable.album_id, albumsTable.id))
-    .orderBy(topTracksTable.position);
-});
-
-export const topArtistsView = pgView("top_artists_view").as((qb) => {
-  return qb
-    .select({
-      position: topArtistsTable.position,
-      artist_id: artistsTable.id,
-      artist_name: artistsTable.name,
-      artist_popularity: artistsTable.popularity,
-      genre: genresTable.name,
-      images: artistsTable.images,
-    })
-    .from(topArtistsTable)
-    .leftJoin(artistsTable, eq(topArtistsTable.artist_id, artistsTable.id))
-    .leftJoin(
-      artistGenresTable,
-      eq(artistsTable.id, artistGenresTable.artist_id)
-    )
-    .leftJoin(genresTable, eq(artistGenresTable.genre_id, genresTable.id))
-    .orderBy(topArtistsTable.position);
-});

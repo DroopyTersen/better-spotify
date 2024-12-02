@@ -13,9 +13,16 @@ import {
 } from "~/db/db.schema";
 import { getPlayHistory } from "./getPlayHistory";
 import { SpotifySdk } from "./createSpotifySdk";
-import { eq, inArray, sql } from "drizzle-orm";
+import { eq, inArray, isNull, sql } from "drizzle-orm";
 import { wait } from "~/toolkit/utils/wait";
 import { Track } from "@spotify/web-api-ts-sdk";
+
+export const syncSpotifyData = async (sdk: SpotifySdk) => {
+  await resyncTopTracks(sdk);
+  await resyncTopArtists(sdk);
+  await resyncPlayHistory(sdk);
+  await syncFullArtistData(sdk);
+};
 
 export const resyncTopTracks = async (sdk: SpotifySdk) => {
   const db = getDb();
@@ -85,6 +92,57 @@ export const resyncTopTracks = async (sdk: SpotifySdk) => {
   console.log("🚀 | resyncTopTracks | trackCount:", count);
 };
 
+export const syncFullArtistData = async (sdk: SpotifySdk) => {
+  const db = getDb();
+  let artistsWithNoImages = await db.query.artistsTable.findMany({
+    where: isNull(artistsTable.images),
+  });
+  let artistIds = artistsWithNoImages.map((artist) => artist.id);
+  console.log(
+    "🚀 | syncFullArtistData | artists with no images:",
+    artistIds.length
+  );
+
+  // Process artists in batches of 25
+  const BATCH_SIZE = 25;
+  for (let i = 0; i < artistIds.length; i += BATCH_SIZE) {
+    const batchIds = artistIds.slice(i, i + BATCH_SIZE);
+
+    // Get full artist data for current batch
+    let fullArtists = await sdk.artists.get(batchIds);
+
+    // Update artists table with images
+    await db
+      .insert(artistsTable)
+      .values(fullArtists)
+      .onConflictDoUpdate({
+        target: artistsTable.id,
+        set: { images: sql`excluded.images` },
+      });
+
+    // Insert genres for current batch
+    let genres = fullArtists.flatMap((artist) => artist.genres);
+    await db
+      .insert(genresTable)
+      .values(genres.map((genre) => ({ id: genre, name: genre })))
+      .onConflictDoNothing();
+
+    // Link artists to genres for current batch
+    let artistGenres = fullArtists.flatMap((artist) =>
+      artist.genres.map((genre) => ({
+        artist_id: artist.id,
+        genre_id: genre,
+      }))
+    );
+    await db
+      .insert(artistGenresTable)
+      .values(artistGenres)
+      .onConflictDoNothing();
+
+    // Log progress
+    console.log(`Processed ${i + BATCH_SIZE} of ${artistIds.length} artists`);
+  }
+};
 export const resyncTopArtists = async (sdk: SpotifySdk) => {
   const db = getDb();
   let count = 0;
@@ -120,7 +178,6 @@ export const resyncTopArtists = async (sdk: SpotifySdk) => {
       .values(genres.map((genre) => ({ id: genre, name: genre })))
       .onConflictDoNothing();
 
-    await db.update;
     let artistGenres = artists.flatMap((artist) =>
       artist.genres.map((genre) => ({
         artist_id: artist.id,

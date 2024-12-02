@@ -1,4 +1,4 @@
-import { getDb } from "~/db/db.client";
+import { DB, getDb } from "~/db/db.client";
 import {
   albumsTable,
   artistGenresTable,
@@ -7,20 +7,16 @@ import {
   genresTable,
   playHistoryTable,
   topArtistsTable,
-  topArtistsView,
   topTracksTable,
-  topTracksView,
-  trackHistoryView,
   tracksTable,
 } from "~/db/db.schema";
 import { eq, sql } from "drizzle-orm";
 
 export const spotifyDb = {
-  getPlayHistory: async ({
-    limit = 100,
-    offset = 0,
-  }: { limit?: number; offset?: number } = {}) => {
-    let db = getDb();
+  getPlayHistory: async (
+    db: DB,
+    { limit = 100, offset = 0 }: { limit?: number; offset?: number } = {}
+  ) => {
     return db
       .select({
         played_at: playHistoryTable.played_at,
@@ -62,13 +58,14 @@ export const spotifyDb = {
         albumsTable.release_date,
         albumsTable.name,
         artistsTable.images
-      );
+      )
+      .limit(limit)
+      .offset(offset);
   },
-  getTopTracks: async ({
-    limit = 100,
-    offset = 0,
-  }: { limit?: number; offset?: number } = {}) => {
-    let db = getDb();
+  getTopTracks: async (
+    db: DB,
+    { limit = 100, offset = 0 }: { limit?: number; offset?: number } = {}
+  ) => {
     return db
       .select({
         position: topTracksTable.position,
@@ -113,11 +110,10 @@ export const spotifyDb = {
       .limit(limit)
       .offset(offset);
   },
-  getTopArtists: async ({
-    limit = 100,
-    offset = 0,
-  }: { limit?: number; offset?: number } = {}) => {
-    let db = getDb();
+  getTopArtists: async (
+    db: DB,
+    { limit = 100, offset = 0 }: { limit?: number; offset?: number } = {}
+  ) => {
     return db
       .select({
         position: topArtistsTable.position,
@@ -146,5 +142,30 @@ export const spotifyDb = {
       .orderBy(topArtistsTable.position)
       .limit(limit)
       .offset(offset);
+  },
+  getTopGenres: async (
+    db: DB,
+    { limit = 100, offset = 0 }: { limit?: number; offset?: number } = {}
+  ) => {
+    return db
+      .select({
+        genre: genresTable.name,
+      })
+      .from(topTracksTable)
+      .leftJoin(tracksTable, eq(topTracksTable.track_id, tracksTable.id))
+      .leftJoin(artistTracks, eq(tracksTable.id, artistTracks.track_id))
+      .leftJoin(artistsTable, eq(artistTracks.artist_id, artistsTable.id))
+      .leftJoin(
+        artistGenresTable,
+        eq(artistsTable.id, artistGenresTable.artist_id)
+      )
+      .leftJoin(genresTable, eq(artistGenresTable.genre_id, genresTable.id))
+      .groupBy(genresTable.name)
+      .orderBy(topTracksTable.position)
+      .limit(limit)
+      .offset(offset)
+      .then(
+        (results) => results.map((r) => r.genre).filter(Boolean) as string[]
+      );
   },
 };

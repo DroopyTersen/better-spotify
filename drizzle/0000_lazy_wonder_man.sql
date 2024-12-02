@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS "albums" (
 	"total_tracks" integer,
 	"release_date" text,
 	"release_date_precision" text,
-	"external_url" text,
+	"external_urls" jsonb,
 	"href" text,
 	"uri" text,
 	"label" text,
@@ -34,7 +34,8 @@ CREATE TABLE IF NOT EXISTS "artist_tracks" (
 CREATE TABLE IF NOT EXISTS "artists" (
 	"id" text PRIMARY KEY NOT NULL,
 	"name" text NOT NULL,
-	"external_url" text,
+	"external_urls" jsonb,
+	"followers" jsonb,
 	"href" text,
 	"uri" text,
 	"popularity" integer,
@@ -75,7 +76,7 @@ CREATE TABLE IF NOT EXISTS "tracks" (
 	"disc_number" integer,
 	"duration_ms" integer,
 	"explicit" boolean,
-	"external_url" text,
+	"external_urls" jsonb,
 	"href" text,
 	"uri" text,
 	"is_playable" boolean,
@@ -143,8 +144,3 @@ DO $$ BEGIN
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
---> statement-breakpoint
-CREATE VIEW "public"."artist_history_view" AS (select "artists"."id", "artists"."name", "artists"."popularity", "genres"."name", "play_history"."played_at", "artists"."images" from "play_history" left join "tracks" on "play_history"."track_id" = "tracks"."id" left join "artist_tracks" on "tracks"."id" = "artist_tracks"."track_id" left join "artists" on "artist_tracks"."artist_id" = "artists"."id" left join "artist_genres" on "artists"."id" = "artist_genres"."artist_id" left join "genres" on "artist_genres"."genre_id" = "genres"."id");--> statement-breakpoint
-CREATE VIEW "public"."top_artists_view" AS (select "top_artists"."position", "artists"."id", "artists"."name", "artists"."popularity", "genres"."name", "artists"."images" from "top_artists" left join "artists" on "top_artists"."artist_id" = "artists"."id" left join "artist_genres" on "artists"."id" = "artist_genres"."artist_id" left join "genres" on "artist_genres"."genre_id" = "genres"."id" order by "top_artists"."position");--> statement-breakpoint
-CREATE VIEW "public"."top_tracks_view" AS (select "top_tracks"."position", "tracks"."name", "tracks"."popularity", "tracks"."duration_ms", "tracks"."is_playable", "tracks"."id", "artists"."name", "artists"."popularity", "genres"."name", "albums"."release_date", "albums"."name", "albums"."images" from "top_tracks" left join "tracks" on "top_tracks"."track_id" = "tracks"."id" left join "artist_tracks" on "tracks"."id" = "artist_tracks"."track_id" left join "artists" on "artist_tracks"."artist_id" = "artists"."id" left join "artist_genres" on "artists"."id" = "artist_genres"."artist_id" left join "genres" on "artist_genres"."genre_id" = "genres"."id" left join "albums" on "tracks"."album_id" = "albums"."id" order by "top_tracks"."position");--> statement-breakpoint
-CREATE VIEW "public"."track_history_view" AS (select "play_history"."played_at", "tracks"."name", "tracks"."popularity", "tracks"."duration_ms", "tracks"."is_playable", "tracks"."id", "artists"."name", "artists"."popularity", "genres"."name", "albums"."release_date", "albums"."name", "albums"."images" from "play_history" left join "tracks" on "play_history"."track_id" = "tracks"."id" left join "artist_tracks" on "tracks"."id" = "artist_tracks"."track_id" left join "artists" on "artist_tracks"."artist_id" = "artists"."id" left join "artist_genres" on "artists"."id" = "artist_genres"."artist_id" left join "genres" on "artist_genres"."genre_id" = "genres"."id" left join "albums" on "tracks"."album_id" = "albums"."id");

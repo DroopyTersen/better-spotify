@@ -8,8 +8,13 @@ export type User = {
   email?: string;
   name: string;
   photo?: string;
+  tokens: AuthTokens;
+};
+export type AuthTokens = {
   accessToken: string;
   refreshToken: string;
+  tokenType: string;
+  expiresAt: string;
 };
 export let authenticator = new Authenticator<User>();
 
@@ -49,8 +54,12 @@ let strategy = createSpotifyStrategy<User>(
       email: profile.emails?.[0]?.value,
       name: profile.displayName,
       photo: profile.photos?.[0]?.value,
-      accessToken: tokens.accessToken(),
-      refreshToken: tokens.refreshToken(),
+      tokens: {
+        accessToken: tokens.accessToken(),
+        refreshToken: tokens.refreshToken(),
+        tokenType: tokens.tokenType(),
+        expiresAt: tokens.accessTokenExpiresAt().toISOString(),
+      },
     };
   }
 );

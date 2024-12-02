@@ -7,9 +7,11 @@
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc --build --noEmit",
-    "clean": "rm -rf build && rm -rf public/build"
+    "clean": "rm -rf build && rm -rf public/build",
+    "db:generate": "npx drizzle-kit generate"
   },
   "dependencies": {
+    "@electric-sql/pglite": "^0.2.14",
     "@radix-ui/react-avatar": "^1.1.1",
     "@radix-ui/react-dialog": "^1.1.2",
     "@radix-ui/react-dropdown-menu": "^2.1.2",
@@ -18,8 +20,10 @@
     "@radix-ui/react-tooltip": "^1.1.4",
     "@react-router/node": "^7.0.1",
     "@react-router/serve": "^7.0.1",
+    "@spotify/web-api-ts-sdk": "^1.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "drizzle-orm": "^0.36.4",
     "isbot": "^5.1.17",
     "lucide-react": "^0.462.0",
     "react": "^18.3.1",
@@ -36,6 +40,7 @@
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "autoprefixer": "^10.4.20",
+    "drizzle-kit": "^0.28.1",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.15",
     "typescript": "^5.6.3",

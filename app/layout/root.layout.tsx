@@ -31,9 +31,9 @@ export const clientLoader = async ({ request }: Route.ClientLoaderArgs) => {
             limit: 200,
           }),
           spotifyDb.getTopArtists(tx, {
-            limit: 120,
+            limit: 100,
           }),
-          spotifyDb.getPlayHistory(tx, { limit: 50 }),
+          spotifyDb.getPlayHistory(tx, { limit: 100 }),
           spotifyDb.getLikedTracks(tx, { limit: 100 }),
         ]);
       return { topPlaylists, topTracks, topArtists, playHistory, likedTracks };

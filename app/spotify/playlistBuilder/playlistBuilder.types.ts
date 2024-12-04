@@ -43,6 +43,7 @@ export interface FamiliarSongsPool {
 export const BuildPlaylistInput = z.object({
   topTracks: z.array(BuildPlaylistTrack),
   likedTracks: z.array(BuildPlaylistTrack),
+  playHistory: z.array(BuildPlaylistTrack),
   topArtists: z.array(
     z.object({
       id: z.string(),

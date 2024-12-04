@@ -1,64 +1,45 @@
 import { useState } from "react";
 import { useFetcher } from "react-router";
-import { Button } from "~/shadcn/components/ui/button";
-import { useRouteData } from "~/toolkit/remix/useRouteData";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "~/shadcn/components/ui/tabs";
+
 import {
   SpotifyLikedTrack,
+  SpotifyPlayedTrack,
   SpotifyTopArtist,
   SpotifyTopTrack,
 } from "../spotify.db";
+import { useRouteData } from "~/toolkit/remix/useRouteData";
+import { ArtistList } from "../components/ArtistList";
+import { TrackList } from "../components/TrackList";
+import { PlaylistBuilderSelection } from "./PlaylistBuilderSelection";
 import { BuildPlaylistInput } from "./playlistBuilder.types";
 
 export const PlaylistBuilder = () => {
-  let topArtists = useRouteData(
-    (r) => r?.data?.topArtists
-  ) as SpotifyTopArtist[];
-  let fetcher = useFetcher();
-  let topTracks = useRouteData((r) => r?.data?.topTracks) as SpotifyTopTrack[];
-  let likedTracks = useRouteData(
-    (r) => r?.data?.playHistory
-  ) as SpotifyLikedTrack[];
+  const spotifyData = useSpotifyData();
+  const fetcher = useFetcher();
+  const [selectedArtistIds, setSelectedArtistIds] = useState<string[]>([]);
+  const [selectedTrackIds, setSelectedTrackIds] = useState<string[]>([]);
 
-  let allTracks = [
+  const allTracks = [
     ...new Map(
-      [...topTracks, ...likedTracks].map((track) => [track.track_id, track])
+      [
+        ...spotifyData.topTracks,
+        ...spotifyData.likedTracks,
+        ...spotifyData.playHistory,
+      ].map((track) => [track.track_id, track])
     ).values(),
   ];
-  let [selectedArtistIds, setSelectedArtistIds] = useState<string[]>([]);
-  let [selectedTrackIds, setSelectedTrackIds] = useState<string[]>([]);
-  let selectedTracks = selectedTrackIds.map((id) =>
-    allTracks.find((t) => t.track_id === id)
-  );
-  let selectedArtists = selectedArtistIds.map((id) =>
-    topArtists.find((a) => a.artist_id === id)
-  );
 
-  let handleBuildPlaylist = async () => {
-    let input: BuildPlaylistInput = {
-      topTracks: topTracks.map((t) => ({
-        id: t.track_id!,
-        name: t.track_name!,
-        artist_id: t.artist_id!,
-        artist_name: t.artist_name!,
-        popularity: t.track_popularity,
-      })),
-      topArtists: topArtists.map((a) => ({
-        id: a.artist_id!,
-        name: a.artist_name!,
-      })),
-      likedTracks: likedTracks.map((t) => ({
-        id: t.track_id!,
-        name: t.track_name!,
-        artist_id: t.artist_id!,
-        artist_name: t.artist_name!,
-        popularity: t.track_popularity,
-      })),
-      request: {
-        artistIds: selectedArtistIds,
-        trackIds: selectedTrackIds,
-        numSongs: 32,
-      },
-    };
+  const handleBuildPlaylist = async () => {
+    const input = await getBuildPlaylistInput(spotifyData, {
+      selectedArtistIds,
+      selectedTrackIds,
+    });
     fetcher.submit(input, {
       method: "post",
       encType: "application/json",
@@ -66,84 +47,164 @@ export const PlaylistBuilder = () => {
     });
   };
 
-  console.log("Fetcher data", fetcher.data);
+  const isArtistSelected = (artistId: string) =>
+    selectedArtistIds.includes(artistId);
+  const isTrackSelected = (trackId: string) =>
+    selectedTrackIds.includes(trackId);
+
+  const toggleArtistSelection = (artistId: string) => {
+    setSelectedArtistIds((prev) =>
+      prev.includes(artistId)
+        ? prev.filter((id) => id !== artistId)
+        : [...prev, artistId]
+    );
+  };
+
+  const toggleTrackSelection = (trackId: string) => {
+    setSelectedTrackIds((prev) =>
+      prev.includes(trackId)
+        ? prev.filter((id) => id !== trackId)
+        : [...prev, trackId]
+    );
+  };
+
   return (
-    <div>
-      <fieldset
-        className="grid grid-cols-2 gap-4"
-        disabled={fetcher.state !== "idle"}
-      >
-        <div className="col-span-1 w-full">
-          <h3 className="text-sm font-bold">Top Artists</h3>
-          <select
-            multiple
-            name="artists"
-            className="border p-2 rounded h-[600px] w-full"
-            onChange={(e) => {
-              setSelectedArtistIds(
-                Array.from(e.target.selectedOptions).map((o) => o.value)
-              );
-            }}
-          >
-            {topArtists.map((artist) => (
-              <option key={artist.artist_id} value={artist.artist_id!}>
-                {artist.artist_name}
-              </option>
-            ))}
-          </select>
-          <hr className="my-4" />
-          {selectedArtists.map((artist) => (
-            <div className="font-semibold" key={artist?.artist_id}>
-              {artist?.artist_name}
-            </div>
-          ))}
+    <div className="">
+      <div className="grid grid-cols-3 gap-6">
+        <div className="col-span-2">
+          <Tabs defaultValue="topArtists">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="topArtists">Top Artists</TabsTrigger>
+              <TabsTrigger value="topTracks">Top Tracks</TabsTrigger>
+              <TabsTrigger value="likedTracks">Liked Tracks</TabsTrigger>
+              <TabsTrigger value="playHistory">Play History</TabsTrigger>
+            </TabsList>
+            <TabsContent value="topArtists">
+              <ArtistList
+                artists={spotifyData.topArtists}
+                isSelected={isArtistSelected}
+                toggleSelection={toggleArtistSelection}
+              />
+            </TabsContent>
+            <TabsContent value="topTracks">
+              <TrackList
+                tracks={spotifyData.topTracks}
+                isSelected={isTrackSelected}
+                toggleSelection={toggleTrackSelection}
+              />
+            </TabsContent>
+            <TabsContent value="likedTracks">
+              <TrackList
+                tracks={spotifyData.likedTracks}
+                isSelected={isTrackSelected}
+                toggleSelection={toggleTrackSelection}
+              />
+            </TabsContent>
+            <TabsContent value="playHistory">
+              <TrackList
+                tracks={spotifyData.playHistory}
+                isSelected={isTrackSelected}
+                toggleSelection={toggleTrackSelection}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
-        <div className="col-span-1 w-full">
-          <h3 className="text-sm font-bold">Top Tracks</h3>
-          <select
-            multiple
-            name="tracks"
-            className="border p-2 rounded h-[600px] w-full"
-            onChange={(e) => {
-              setSelectedTrackIds(
-                Array.from(e.target.selectedOptions).map((o) => o.value)
-              );
-            }}
-          >
-            {allTracks.map((track) => (
-              <option key={track.track_id} value={track.track_id!}>
-                {track.track_name} | {track.artist_name}
-              </option>
-            ))}
-          </select>
-          <hr className="my-4" />
-          {selectedTracks.map((track) => (
-            <div className="font-semibold" key={track?.track_id}>
-              {track?.track_name} | {track?.artist_name}
-            </div>
-          ))}
+        <div>
+          <PlaylistBuilderSelection
+            selectedArtists={
+              spotifyData.topArtists.filter((a) =>
+                selectedArtistIds.includes(a.artist_id!)
+              ) as any
+            }
+            selectedTracks={
+              allTracks.filter((t) =>
+                selectedTrackIds.includes(t.track_id!)
+              ) as any
+            }
+            onBuildPlaylist={handleBuildPlaylist}
+            isBuilding={fetcher.state !== "idle"}
+          />
         </div>
-      </fieldset>
-      <div className="w-full text-center mt-8">
-        <Button
-          size="lg"
-          onClick={handleBuildPlaylist}
-          disabled={fetcher.state !== "idle"}
-        >
-          Build Playlist
-        </Button>
       </div>
       {fetcher.data && (
-        <div className="mt-4">
-          <div>
-            {fetcher.data?.playlist?.name} has{" "}
-            {fetcher.data?.playlist?.tracks?.length} songs
+        <div className="mt-8">
+          <h2 className="text-2xl font-semibold mb-4">Generated Playlist</h2>
+          <div className="bg-gray-100 p-4 rounded-lg">
+            <p className="mb-2">
+              {fetcher.data?.playlist?.name} has{" "}
+              {fetcher.data?.playlist?.tracks?.length} songs
+            </p>
+            <pre className="text-sm overflow-auto max-h-60">
+              {JSON.stringify(fetcher.data, null, 2)}
+            </pre>
           </div>
-          <pre className="p-2 text-sm">
-            {JSON.stringify(fetcher.data, null, 2)}
-          </pre>
         </div>
       )}
     </div>
   );
+};
+
+const useSpotifyData = () => {
+  let topArtists = useRouteData(
+    (r) => r?.data?.topArtists
+  ) as SpotifyTopArtist[];
+  let topTracks = useRouteData((r) => r?.data?.topTracks) as SpotifyTopTrack[];
+  let playHistory = useRouteData(
+    (r) => r?.data?.playHistory
+  ) as SpotifyPlayedTrack[];
+  let likedTracks = useRouteData(
+    (r) => r?.data?.likedTracks
+  ) as SpotifyLikedTrack[];
+
+  return {
+    topArtists,
+    topTracks,
+    playHistory,
+    likedTracks,
+  };
+};
+
+const getBuildPlaylistInput = async (
+  spotifyData: ReturnType<typeof useSpotifyData>,
+  {
+    selectedArtistIds,
+    selectedTrackIds,
+  }: {
+    selectedArtistIds: string[];
+    selectedTrackIds: string[];
+  }
+) => {
+  let input: BuildPlaylistInput = {
+    topTracks: spotifyData.topTracks.map((t) => ({
+      id: t.track_id!,
+      name: t.track_name!,
+      artist_id: t.artist_id!,
+      artist_name: t.artist_name!,
+      popularity: t.track_popularity,
+    })),
+    topArtists: spotifyData.topArtists.map((a) => ({
+      id: a.artist_id!,
+      name: a.artist_name!,
+    })),
+    playHistory: spotifyData.playHistory.map((t) => ({
+      id: t.track_id!,
+      name: t.track_name!,
+      artist_id: t.artist_id!,
+      artist_name: t.artist_name!,
+      popularity: t.track_popularity,
+    })),
+    likedTracks: spotifyData.likedTracks.map((t) => ({
+      id: t.track_id!,
+      name: t.track_name!,
+      artist_id: t.artist_id!,
+      artist_name: t.artist_name!,
+      popularity: t.track_popularity,
+    })),
+    request: {
+      artistIds: selectedArtistIds,
+      trackIds: selectedTrackIds,
+      numSongs: 32,
+    },
+  };
+  return input;
 };

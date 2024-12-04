@@ -14,13 +14,14 @@ import {
   savedTracksTable,
 } from "~/db/db.schema";
 import { eq, sql, desc } from "drizzle-orm";
+import { Prettify } from "~/toolkit/utils/typescript.utils";
 
 export const spotifyDb = {
   getPlayHistory: async (
     db: DB,
     { limit = 100, offset = 0 }: { limit?: number; offset?: number } = {}
   ) => {
-    return db
+    const results = await db
       .select({
         played_at: playHistoryTable.played_at,
         track_name: tracksTable.name,
@@ -64,12 +65,14 @@ export const spotifyDb = {
       )
       .limit(limit)
       .offset(offset);
+
+    return [...new Map(results.map((item) => [item.track_id, item])).values()];
   },
   getTopTracks: async (
     db: DB,
     { limit = 100, offset = 0 }: { limit?: number; offset?: number } = {}
   ) => {
-    return db
+    const results = await db
       .select({
         position: topTracksTable.position,
         track_name: tracksTable.name,
@@ -114,6 +117,8 @@ export const spotifyDb = {
       .orderBy(topTracksTable.position)
       .limit(limit)
       .offset(offset);
+
+    return [...new Map(results.map((item) => [item.track_id, item])).values()];
   },
   getTopArtists: async (
     db: DB,
@@ -210,7 +215,7 @@ export const spotifyDb = {
     db: DB,
     { limit = 100, offset = 0 }: { limit?: number; offset?: number } = {}
   ) => {
-    return db
+    const results = await db
       .select({
         added_at: savedTracksTable.added_at,
         track_name: tracksTable.name,
@@ -255,6 +260,8 @@ export const spotifyDb = {
       .orderBy(desc(savedTracksTable.added_at))
       .limit(limit)
       .offset(offset);
+
+    return [...new Map(results.map((item) => [item.track_id, item])).values()];
   },
 };
 
@@ -273,3 +280,7 @@ export type SpotifyTopArtist = Awaited<
 export type SpotifyLikedTrack = Awaited<
   ReturnType<typeof spotifyDb.getLikedTracks>
 >[number];
+
+export type SpotifyPlayedTrack = Prettify<
+  Awaited<ReturnType<typeof spotifyDb.getPlayHistory>>[number]
+>;

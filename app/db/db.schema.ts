@@ -172,6 +172,12 @@ export const playlistTracksTable = pgTable(
   })
 );
 
+export const savedTracksTable = pgTable("saved_tracks", {
+  id: text("id").primaryKey(),
+  track_id: text("track_id").references(() => tracksTable.id),
+  added_at: timestamp("added_at", { withTimezone: true }).notNull(),
+});
+
 // Define relationships
 export const artistsRelations = relations(artistsTable, ({ many }) => ({
   albumArtists: many(albumArtistsTable),
@@ -232,3 +238,10 @@ export const playlistTracksRelations = relations(
     }),
   })
 );
+
+export const savedTracksRelations = relations(savedTracksTable, ({ one }) => ({
+  track: one(tracksTable, {
+    fields: [savedTracksTable.track_id],
+    references: [tracksTable.id],
+  }),
+}));

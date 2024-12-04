@@ -16,34 +16,27 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export const clientAction = async ({ request }: Route.ClientActionArgs) => {
-  let { user } = await request.json();
-  console.log("🚀 | clientAction | user:", user);
-  let sdk = await createSpotifySdk(user.tokens);
-  await syncSpotifyData(sdk);
-  return { success: true };
-};
-
 export const clientLoader = async ({ request }: Route.ClientLoaderArgs) => {
   console.time("data-loading");
   let db = getDb();
 
   let results = await db.transaction(
     async (tx) => {
-      let [topPlaylists, topTracks, topArtists, playHistory] =
+      let [topPlaylists, topTracks, topArtists, playHistory, likedTracks] =
         await Promise.all([
           spotifyDb.getPlaylists(tx, {
             limit: 25,
           }),
           spotifyDb.getTopTracks(tx, {
-            limit: 150,
+            limit: 200,
           }),
           spotifyDb.getTopArtists(tx, {
-            limit: 50,
+            limit: 120,
           }),
           spotifyDb.getPlayHistory(tx, { limit: 50 }),
+          spotifyDb.getLikedTracks(tx, { limit: 100 }),
         ]);
-      return { topPlaylists, topTracks, topArtists, playHistory };
+      return { topPlaylists, topTracks, topArtists, playHistory, likedTracks };
     },
     {
       accessMode: "read only",
@@ -54,11 +47,11 @@ export const clientLoader = async ({ request }: Route.ClientLoaderArgs) => {
   console.timeEnd("data-loading");
   return results;
 };
+
 export default function Home({ loaderData }: Route.ComponentProps) {
   return (
     <SidebarLayout playlists={loaderData?.topPlaylists || []}>
       <Outlet />
-      <pre className="text-xs">{JSON.stringify(loaderData, null, 2)}</pre>
     </SidebarLayout>
   );
 }

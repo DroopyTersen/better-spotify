@@ -53,6 +53,7 @@ export const SidebarNav = ({ playlists }: { playlists: SpotifyPlaylist[] }) => {
       { user: currentUser },
       {
         method: "POST",
+        action: "/spotify/sync",
         encType: "application/json",
       }
     );
@@ -137,12 +138,12 @@ export const SidebarNav = ({ playlists }: { playlists: SpotifyPlaylist[] }) => {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {playlists?.slice(0, 10).map?.((playlist) => (
+              {playlists.map?.((playlist) => (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
-                    <Link to={`/playlists/${playlist.playlist_id}`}>
+                    <a target="_blank" href={playlist.external_urls?.spotify}>
                       {playlist.playlist_name}
-                    </Link>
+                    </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -172,7 +173,7 @@ export const SidebarNav = ({ playlists }: { playlists: SpotifyPlaylist[] }) => {
                         />
                       )}
                       <AvatarFallback>
-                        {currentUser?.name
+                        {(currentUser?.name || currentUser.id)
                           .split(" ")
                           .map((n) => n[0])
                           .join("")

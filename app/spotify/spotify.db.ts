@@ -11,8 +11,9 @@ import {
   tracksTable,
   playlistsTable,
   playlistTracksTable,
+  savedTracksTable,
 } from "~/db/db.schema";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, desc } from "drizzle-orm";
 
 export const spotifyDb = {
   getPlayHistory: async (
@@ -76,6 +77,7 @@ export const spotifyDb = {
         track_duration_ms: tracksTable.duration_ms,
         track_is_playable: tracksTable.is_playable,
         track_id: tracksTable.id,
+        artist_id: artistsTable.id,
         artist_name: artistsTable.name,
         artist_popularity: artistsTable.popularity,
         genres: sql<string[]>`array_agg(distinct ${genresTable.name})`.as(
@@ -102,6 +104,7 @@ export const spotifyDb = {
         tracksTable.popularity,
         tracksTable.duration_ms,
         tracksTable.is_playable,
+        artistsTable.id,
         artistsTable.name,
         artistsTable.popularity,
         albumsTable.release_date,
@@ -180,6 +183,7 @@ export const spotifyDb = {
         playlist_name: playlistsTable.name,
         description: playlistsTable.description,
         images: playlistsTable.images,
+        external_urls: playlistsTable.external_urls,
         track_count: sql<number>`count(${playlistTracksTable.track_id})`.as(
           "track_count"
         ),
@@ -202,6 +206,56 @@ export const spotifyDb = {
       .limit(limit)
       .offset(offset);
   },
+  getLikedTracks: async (
+    db: DB,
+    { limit = 100, offset = 0 }: { limit?: number; offset?: number } = {}
+  ) => {
+    return db
+      .select({
+        added_at: savedTracksTable.added_at,
+        track_name: tracksTable.name,
+        track_popularity: tracksTable.popularity,
+        track_duration_ms: tracksTable.duration_ms,
+        track_is_playable: tracksTable.is_playable,
+        track_id: tracksTable.id,
+        artist_id: artistsTable.id,
+        artist_name: artistsTable.name,
+        artist_popularity: artistsTable.popularity,
+        genres: sql<string[]>`array_agg(distinct ${genresTable.name})`.as(
+          "genres"
+        ),
+        release_date: albumsTable.release_date,
+        album_name: albumsTable.name,
+        images: artistsTable.images,
+      })
+      .from(savedTracksTable)
+      .leftJoin(tracksTable, eq(savedTracksTable.track_id, tracksTable.id))
+      .leftJoin(artistTracks, eq(tracksTable.id, artistTracks.track_id))
+      .leftJoin(artistsTable, eq(artistTracks.artist_id, artistsTable.id))
+      .leftJoin(
+        artistGenresTable,
+        eq(artistsTable.id, artistGenresTable.artist_id)
+      )
+      .leftJoin(genresTable, eq(artistGenresTable.genre_id, genresTable.id))
+      .leftJoin(albumsTable, eq(tracksTable.album_id, albumsTable.id))
+      .groupBy(
+        savedTracksTable.added_at,
+        tracksTable.id,
+        tracksTable.name,
+        tracksTable.popularity,
+        tracksTable.duration_ms,
+        tracksTable.is_playable,
+        artistsTable.id,
+        artistsTable.name,
+        artistsTable.popularity,
+        albumsTable.release_date,
+        albumsTable.name,
+        artistsTable.images
+      )
+      .orderBy(desc(savedTracksTable.added_at))
+      .limit(limit)
+      .offset(offset);
+  },
 };
 
 export type SpotifyPlaylist = Awaited<
@@ -214,4 +268,8 @@ export type SpotifyTopTrack = Awaited<
 
 export type SpotifyTopArtist = Awaited<
   ReturnType<typeof spotifyDb.getTopArtists>
+>[number];
+
+export type SpotifyLikedTrack = Awaited<
+  ReturnType<typeof spotifyDb.getLikedTracks>
 >[number];

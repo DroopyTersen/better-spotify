@@ -1,8 +1,8 @@
 import { Authenticator } from "remix-auth";
 import { authSessionStorage } from "./authSession.server";
-import { createSpotifyStrategy } from "./createSpotifyStrategy";
 import { redirect } from "react-router";
-
+import { SpotifyAuthStrategy } from "./SpotifyAuthStrategy";
+import dayjs from "dayjs";
 export type User = {
   id: string;
   email?: string;
@@ -40,20 +40,18 @@ const SPOTIFY_CONFIG = {
     "user-top-read",
   ],
 };
-let strategy = createSpotifyStrategy<User>(
+let strategy = new SpotifyAuthStrategy<User>(
   {
     clientId: CLIENT_ID,
     clientSecret: CLIENT_SECRET,
     redirectURI: `${APP_URL}/auth/callback`,
     scopes: SPOTIFY_CONFIG.scopes,
   },
-  async ({ tokens }, profile) => {
-    // here you can use the params above to get the user and return it
-    // what you do inside this and how you find the user is up to you
+  async ({ tokens, profile }) => {
     return {
       id: profile.id,
       email: profile.emails?.[0]?.value,
-      name: profile.displayName,
+      name: profile.displayName || profile.emails?.[0]?.value || profile.id,
       photo: profile.photos?.[0]?.value,
       tokens: {
         accessToken: tokens.accessToken(),
@@ -66,13 +64,44 @@ let strategy = createSpotifyStrategy<User>(
 );
 authenticator.use(strategy, "spotify");
 
-export async function requireAuth(request: Request, returnTo?: string) {
+export async function requireAuth(request: Request) {
   let session = await authSessionStorage.getSession(
     request.headers.get("cookie")
   );
-  let user = session.get("user");
-  if (user) return user as User;
-  if (returnTo) session.set("returnTo", returnTo);
+  let user = session.get("user") as User;
+  console.log(
+    "🚀 | requireAuth | time until token expires:",
+    dayjs(user.tokens.expiresAt).diff(dayjs(), "minutes"),
+    "minutes"
+  );
+
+  if (user) {
+    if (
+      request.method === "GET" &&
+      user?.tokens.refreshToken &&
+      dayjs(user.tokens.expiresAt).diff(dayjs(), "minutes") < 20
+    ) {
+      let newTokens = await strategy.refreshAccessToken(
+        user.tokens.refreshToken
+      );
+      user.tokens = {
+        accessToken: newTokens.accessToken(),
+        refreshToken: newTokens.refreshToken(),
+        tokenType: newTokens.tokenType(),
+        expiresAt: newTokens.accessTokenExpiresAt().toISOString(),
+      };
+      session.set("user", user);
+      let newUrl = new URL(request.url);
+      newUrl.searchParams.set("refreshToken", "true");
+      throw redirect(newUrl.toString(), {
+        headers: {
+          "Set-Cookie": await authSessionStorage.commitSession(session),
+        },
+      });
+    }
+    return user as User;
+  }
+
   throw redirect("/login", {
     headers: { "Set-Cookie": await authSessionStorage.commitSession(session) },
   });
@@ -82,5 +111,6 @@ export async function tryAuth(request: Request) {
   let session = await authSessionStorage.getSession(
     request.headers.get("cookie")
   );
-  return (session.get("user") as User) || null;
+  let user = session.get("user") as User;
+  return user || null;
 }

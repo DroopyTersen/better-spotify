@@ -18,6 +18,7 @@ export const syncTopArtists = async (sdk: SpotifySdk) => {
 
   while (nextUrl && count < MAX_LIMIT) {
     console.log("🚀 | resyncTopArtists | nextUrl:", nextUrl);
+
     const nextPage = await sdk.currentUser.topItems(
       "artists",
       "long_term",

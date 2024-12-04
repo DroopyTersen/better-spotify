@@ -78,6 +78,12 @@ CREATE TABLE IF NOT EXISTS "playlists" (
 	"owner" jsonb
 );
 --> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "saved_tracks" (
+	"id" text PRIMARY KEY NOT NULL,
+	"track_id" text,
+	"added_at" timestamp with time zone NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "top_artists" (
 	"id" text PRIMARY KEY NOT NULL,
 	"artist_id" text,
@@ -156,6 +162,12 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "playlist_tracks" ADD CONSTRAINT "playlist_tracks_track_id_tracks_id_fk" FOREIGN KEY ("track_id") REFERENCES "public"."tracks"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "saved_tracks" ADD CONSTRAINT "saved_tracks_track_id_tracks_id_fk" FOREIGN KEY ("track_id") REFERENCES "public"."tracks"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

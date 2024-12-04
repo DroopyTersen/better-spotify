@@ -1,5 +1,5 @@
 {
-  "name": "spotify-playlist-builder2",
+  "name": "better-spotify",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,6 +11,7 @@
     "db:generate": "npx drizzle-kit generate"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^1.0.6",
     "@electric-sql/pglite": "^0.2.14",
     "@radix-ui/react-avatar": "^1.1.1",
     "@radix-ui/react-dialog": "^1.1.2",
@@ -21,8 +22,11 @@
     "@react-router/node": "^7.0.1",
     "@react-router/serve": "^7.0.1",
     "@spotify/web-api-ts-sdk": "^1.2.0",
+    "ai": "^4.0.11",
+    "arctic": "^2.3.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dayjs": "^1.11.13",
     "drizzle-orm": "^0.36.4",
     "isbot": "^5.1.17",
     "lucide-react": "^0.462.0",
@@ -32,7 +36,8 @@
     "remix-auth": "^4.0.0",
     "remix-auth-oauth2": "^3.1.0",
     "tailwind-merge": "^2.5.5",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@react-router/dev": "^7.0.1",

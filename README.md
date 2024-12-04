@@ -1,98 +1,215 @@
-# Welcome to React Router!
+# Better Spotify
 
-A modern, production-ready template for building full-stack React applications using React Router.
+Spotify is good but...
 
-## Features
+- I want Artist Radio but based on multiple artists
+- I want to be introduced to fresher new music. Spotify's recommendations always feel stale.
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+## Playlist Builder
 
-## Getting Started
+```mermaid
+flowchart TD
+    ParseRequest[Parse Playlist Request] --> |"{ numSongs, artists, tracks, deepCutsRatio, newArtistsRatio }"|CalcDist[Calculate Distribution]
 
-### Installation
+    %% Familiar Songs Path
+    CalcDist --> ProcessFamiliar[Identify Specified Tracks and Artists]
 
-Install the dependencies:
+    subgraph BuildFamiliarPool[Build Familiar Songs Pool]
+        ProcessFamiliar --> |specified tracks|FamiliarPool
+        ProcessFamiliar --> |Specified Artists|CombineArtists[Combine Artists]
+        ProcessFamiliar --> |specified tracks|CombineArtists[Combine Artists]
+        CombineArtists --> |artist|TopTracks[Get Top Tracks by Artist]
+        CombineArtists --> |artist|ArtistCatalog[Get Artist Catalog]
+        CombineArtists --> |artist|LikedTracks[Get Liked Tracks]
+        TopTracks --> |top tracks|FamiliarPool
+        ArtistCatalog --> |catalog|FamiliarPool[Add to Familiar Song Pool]
+        LikedTracks --> |liked tracks|FamiliarPool
+    end
 
-```bash
-npm install
-```
+    %% New Songs Path
+    CalcDist -->  StartNew[Identify Specified Artists and Tracks]
 
-### Development
+    subgraph BuildNewPool[Build New Songs Pool]
+        StartNew --> |Specified Tracks|TrackRecommendations
+        StartNew --> |Specified Artists|ArtistRecommendations
+        StartNew --> |Specified Artists|SimilarArtists
+        ExcludeTopTracks[Exclude Top & Liked & Recently Played Tracks]
+        TrackRecommendations[Get Track Recommendations] --> |recommended tracks|ExcludeTopTracks
+        ArtistRecommendations[Get Artist Recommendations] --> |recommended tracks|ExcludeTopTracks
+        SimilarArtists[Get Similar Artists' Tracks] --> |similar tracks|ExcludeTopTracks
+        ExcludeTopTracks --> |new tracks|NewPool[Add to New Song Pool]
+    end
 
-Start the development server with HMR:
-
-```bash
-npm run dev
-```
-
-Your application will be available at `http://localhost:5173`.
-
-## Building for Production
-
-Create a production build:
-
-```bash
-npm run build
-```
-
-## Deployment
-
-### Docker Deployment
-
-This template includes three Dockerfiles optimized for different package managers:
-
-- `Dockerfile` - for npm
-- `Dockerfile.pnpm` - for pnpm
-- `Dockerfile.bun` - for bun
-
-To build and run using Docker:
-
-```bash
-# For npm
-docker build -t my-app .
-
-# For pnpm
-docker build -f Dockerfile.pnpm -t my-app .
-
-# For bun
-docker build -f Dockerfile.bun -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
-```
-
-The containerized application can be deployed to any platform that supports Docker, including:
-
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
+    %% Final Steps
+    FamiliarPool & NewPool --> LLMCuration[LLM Playlist Curation]
+    LLMCuration --> |"{ thought, playlist }"|FinalPlaylist[Create Final Playlist]
 
 ```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
 
-## Styling
+### **Algorithm Overview with Updated Parameters**
 
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
+1. **Parse the Playlist Request**:
+
+   - Extract specified tracks, artists, `numSongs`, `NewArtistsRatio`, `DeepCutsRatio`.
+
+2. **Calculate the Distribution of Songs**:
+
+   - Determine the number of familiar songs and new songs based on `NewArtistsRatio`.
+
+3. **Build the Familiar Song Pool**:
+
+   - Include specified tracks.
+   - Include `liked_tracks` from specified artists and artists of specified tracks
+   - Include `top_tracks` from specified artists and artists of specified tracks
+   - Include full catalogs from specified artists and artists of specified tracks
+     - Use DeepCutsRatio to determine which 100 to choose based on popularity?
+
+4. **Build the New Song Pool**:
+
+   - Fetch songs from new artists not in `top_artists`.
+   - Use recommendations based on specified tracks and artists.
+   - Include popular songs by similar artists.
+   - Exclude any tracks already in `top_tracks` or `liked_tracks`, or recent `play_history`
+
+5. **LLM Playlist Curation**:
+
+   - Pass both song pools and playlist parameters to LLM
+   - LLM returns structured response with thought process and final playlist
+   - Use the NewArtistsRatio to determine how many familair songs vs new songs to use
+   - Automatically include specified tracks.
+   - Select from pool of Familiar Songs by distributing songs between `top_tracks`, `liked_tracks` and popular
+     songs vs deep cuts based on `DeepCutsRatio`.
+   - Tell the LLM to heavily favor `liked_tracks` for any songs it selects that aren't deep cuts. but we also want
+     to leave room for variety.
+   - Tell the LLM to select a diverse set of new songs that pair well with the chosen familiar songs.
+
+6. **Create Final Playlist**:
+
+   - Use the LLM-generated track list and name to create the playlist
 
 ---
 
-Built with ❤️ using React Router.
+### **Applying the Algorithm to Your Example Request**
+
+**User Request**:
+
+"Create me a playlist with Thinking 'Bout Love by Wild Rivers, some Lake Street Dive, and Red Clay Strays, minimal deep cuts, and 30% new stuff."
+
+**Interpretation**:
+
+- **Specified Tracka**: "Thinking 'Bout Love" by Wild Rivers
+- **Specified Artists**: Lake Street Dive, Red Clay Strays
+- **DeepCutsRatio**: Minimal deep cuts ⇒ `DeepCutsRatio` ≈ 0.1
+- **NewArtistsRatio**: 30% ⇒ `NewArtistsRatio` = 0.3
+- **Number of Songs**: Not specified; let's assume a default of 30 songs
+
+---
+
+### **Detailed Steps**
+
+#### **Step 1: Parse the Playlist Request**
+
+- **Specified Track**:
+
+  - "Thinking 'Bout Love" by Wild Rivers
+
+- **Specified Artists**:
+
+  - Lake Street Dive
+  - Red Clay Strays
+
+- **Parameters**:
+  - `numSongs`: 30 (default)
+  - `NewArtistsRatio`: 0.3
+  - `DeepCutsRatio`: 0.1 (minimal deep cuts)
+
+#### **Step 2: Calculate the Distribution of Songs**
+
+```
+numNewSongs = numSongs × NewArtistsRatio
+            = 30 × 0.3
+            = 9
+
+numFamiliarSongs = numSongs - numNewSongs
+                 = 30 - 9
+                 = 21
+```
+
+#### **Step 3: Build the Familiar Song Pool**
+
+**a. Process Specified Content**
+
+- Include specified tracks directly
+- Identify all specified artists
+- Include artists from specified tracks
+
+**b. Gather Familiar Songs**
+For each artist:
+
+- Fetch top tracks
+- Fetch full artist catalog
+- Fetch user's liked tracks by the artist
+
+**c. Combine into Familiar Songs Pool**
+
+```ts
+const familiarSongsPool = {
+  specifiedTracks: [trackA],
+  topTracks: {
+    artistA: [tracks...],
+    artistB: [tracks...],
+  },
+  artistCatalog: {
+    artistA: [tracks...],
+    artistB: [tracks...],
+  },
+  likedTracks: {
+    artistA: [tracks...],
+    artistB: [tracks...],
+  }
+};
+```
+
+#### **Step 4: Build the New Song Pool**
+
+**a. Process Input for Recommendations**
+
+- Use specified tracks and artists as seeds
+
+**b. Gather New Songs From Multiple Sources**
+
+- Get recommendations based on specified tracks excluding specified artists
+- Get recommendations based on specified artists excluding specified artists
+- Get similar artists' tracks excluding `top_artists`
+
+**c. Filter New Songs**
+
+- Exclude tracks that appear in:
+  - User's top tracks
+  - User's liked tracks
+  - User's recent play history
+  - Songs by specified artists
+
+#### **Step 5: LLM Playlist Curation**
+
+Pass to LLM:
+
+- Familiar songs pool
+- New songs pool
+- Original request parameters (`DeepCutsRatio`, `NewArtistsRatio`, etc.)
+- Request structured response:
+
+```typescript
+interface LLMResponse {
+  thought: string; // Summary of request and curation strategy
+  playlist: {
+    name: string; // 2-3 word generated name
+    track_ids: string[]; // Final ordered track list
+  };
+}
+```
+
+#### **Step 6: Create Final Playlist**
+
+- Use the LLM-generated track list and name to create the playlist in Spotify
+- Playlist name format: "YYYY-MM-DD - {LLM generated name}"

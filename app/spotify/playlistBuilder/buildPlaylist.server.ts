@@ -1,19 +1,16 @@
-import type { Market } from "@spotify/web-api-ts-sdk";
-import { eq, inArray } from "drizzle-orm";
-import { artistsTable, artistTracks, tracksTable } from "~/db/db.schema";
-import { createSpotifySdk, SpotifySdk } from "../createSpotifySdk";
-import { spotifyDb } from "../spotify.db";
+import dayjs from "dayjs";
+import { SpotifySdk } from "../createSpotifySdk";
+import { generateArtistRecommendations } from "./generateArtistRecommendations.server";
+import { generatePlaylist } from "./generatePlaylist.server";
 import {
+  BuildPlaylistInput,
+  BuildPlaylistTrack,
   DEFAULT_PLAYLIST_BUILDER_REQUEST,
   FamiliarSongsPool,
-  LLMCurationResponse,
-  NewSongsPool,
   PlaylistBuilderRequest,
-  BuildPlaylistTrack,
   SongDistribution,
-  BuildPlaylistInput,
 } from "./playlistBuilder.types";
-import { generatePlaylist } from "./generatePlaylist.server";
+import { getPlaylist } from "../api/getPlaylist";
 
 export async function buildPlaylist(
   input: BuildPlaylistInput,
@@ -36,24 +33,88 @@ export async function buildPlaylist(
     },
     sdk
   );
-  console.log("🚀 | familiarPool:", familiarPool);
-  // const newPool = await buildNewSongsPool(sdk, request, familiarPool);
+
+  let artistsToMatch = Array.from(
+    new Set([
+      ...familiarPool.specifiedTracks.map((t) => t.artist_name || ""),
+      ...familiarPool.topTracks.map((t) => t.artist_name || ""),
+      ...familiarPool.likedTracks.map((t) => t.artist_name || ""),
+    ])
+  ).filter(Boolean);
+  let artistsToExclude = Array.from(
+    new Set([
+      ...input.likedTracks.map((t) => t.artist_name || ""),
+      ...input.topTracks.map((t) => t.artist_name || ""),
+      ...input.topArtists.map((t) => t.name || ""),
+      ...input.playHistory.map((t) => t.artist_name || ""),
+    ])
+  ).filter(Boolean);
+  let recommendedNewArtists: string[] = await generateArtistRecommendations({
+    artistsToMatch,
+    artistsToExclude,
+    desiredArtistCount: Math.max(4, Math.floor(distribution.numNewSongs / 2)),
+  });
+  let newSongs: BuildPlaylistTrack[] = [];
+
+  // Search for each recommended artist and get their top tracks concurrently
+  await Promise.all(
+    recommendedNewArtists.map(async (artistName) => {
+      let artistResults = await sdk.search(artistName, ["artist"], "US", 1);
+      if (!artistResults.artists.items[0]) return;
+
+      let topTracks = await sdk.artists.topTracks(
+        artistResults.artists.items[0].id,
+        "US"
+      );
+
+      // Map tracks to BuildPlaylistTrack format and add to newSongs
+      let artistTracks = topTracks.tracks.map((t) => ({
+        id: t.id,
+        name: t.name,
+        artist_name: t.artists[0]?.name ?? null,
+        artist_id: t.artists[0]?.id ?? null,
+        popularity: t.popularity,
+      }));
+
+      newSongs.push(...artistTracks);
+    })
+  );
 
   let generatedPlaylist = await generatePlaylist({
     request: requestWithDefaults,
     familiarOptions: familiarPool,
     distribution,
-    newOptions: [],
+    topArtists: input.topArtists.map((a) => a.name),
+    newOptions: newSongs,
   });
+  // Add a specified track to the front and shuffle the rest
+  // if (generatedPlaylist?.playlist?.tracks) {
+  //   shuffleTracks(
+  //     generatedPlaylist.playlist.tracks as BuildPlaylistTrack[],
+  //     familiarPool.specifiedTracks
+  //   );
+  // }
+  let currentUser = await sdk.currentUser.profile();
+  const playlist = await sdk.playlists.createPlaylist(currentUser.id, {
+    name: dayjs().format("YYYY-MM-DD") + " " + generatedPlaylist.playlist.name,
+  });
+
+  await sdk.playlists.addItemsToPlaylist(
+    playlist.id,
+    generatedPlaylist.playlist.tracks.map((t) => `spotify:track:${t.id}`)
+  );
+  let finalPlaylist = await getPlaylist(sdk, playlist.id);
+  // TODO: save playlist to DB? or just start only using API for playlists?
 
   return {
     request: requestWithDefaults,
     familiarSongOptions: familiarPool,
-    // newSongOptions: newPool,
+    newSongOptions: newSongs,
     distribution,
-    playlist: generatedPlaylist,
+    playlist: finalPlaylist,
   };
 }
+export type BuildPlaylistOutput = Awaited<ReturnType<typeof buildPlaylist>>;
 /**
  * Calculate how many familiar vs new songs should be in the playlist
  * based on the newArtistsRatio in the request
@@ -87,7 +148,7 @@ async function buildFamiliarSongsPool(
   input: BuildPlaylistInput,
   sdk: SpotifySdk
 ): Promise<FamiliarSongsPool> {
-  const { artistIds, trackIds } = input.request;
+  let { artistIds, trackIds } = input.request;
 
   // 1. Get specified tracks with correct field selection
   const tracks = await sdk.tracks.get(trackIds.slice(0, 20));
@@ -98,8 +159,15 @@ async function buildFamiliarSongsPool(
     artist_name: track.artists[0]?.name ?? null,
     artist_id: track.artists[0]?.id ?? null,
   }));
-
-  console.log("🚀 | specifiedTracks | specifiedTracks:", specifiedTracks);
+  if (artistIds.length / input.request.numSongs < 10) {
+    artistIds = Array.from(
+      new Set([
+        ...input.request.artistIds,
+        ...specifiedTracks.map((t) => t.artist_id),
+      ])
+    ).filter(Boolean) as string[];
+    console.log("🚀 | specifiedTracks | specifiedTracks:", specifiedTracks);
+  }
   // Initialize our pool structure
 
   let allLikedTracks = input.likedTracks;
@@ -185,165 +253,36 @@ async function getAllArtistTracks(
   return tracks;
 }
 
-// /**
-//  * Build pool of new songs based on recommendations and similar artists
-//  */
-// async function buildNewSongsPool(
-//   sdk: SpotifySdk,
-//   request: PlaylistBuilderRequest,
-//   familiarPool: FamiliarSongsPool
-// ): Promise<NewSongsPool> {
-//   const { artistIds, trackIds } = request;
-//   const db = getDb();
-//   const pool: NewSongsPool = [];
+function shuffleTracks(
+  tracks: Omit<BuildPlaylistTrack, "artist_id">[],
+  specifiedTracks: BuildPlaylistTrack[]
+) {
+  if (!tracks) return;
 
-//   // Get user's top artists to exclude from recommendations
-//   let topArtistIds = (
-//     await spotifyDb
-//       .getTopArtists(db, { limit: 200 })
-//       .then((artists) => artists.map((a) => a.artist_id))
-//   ).filter(Boolean) as string[];
+  // Get a random specified track if available
+  if (specifiedTracks.length > 0) {
+    const randomSpecifiedTrack =
+      specifiedTracks[Math.floor(Math.random() * specifiedTracks.length)];
 
-//   // 1. Get similar artists for each specified artist
-//   for (const artistId of artistIds) {
-//     try {
-//       const relatedArtists = await sdk.artists.relatedArtists(artistId);
+    // Remove it from the tracks array if it exists
+    const specifiedTrackIndex = tracks.findIndex(
+      (t) => t.id === randomSpecifiedTrack.id
+    );
+    if (specifiedTrackIndex > -1) {
+      tracks.splice(specifiedTrackIndex, 1);
+    }
 
-//       // Filter out artists that are in user's top artists
-//       const newArtists = relatedArtists.artists.filter(
-//         (artist) => !topArtistIds.includes(artist.id)
-//       );
+    // Add it to the front
+    tracks.unshift({
+      id: randomSpecifiedTrack.id,
+      name: randomSpecifiedTrack.name,
+      artist_name: randomSpecifiedTrack.artist_name || "",
+    });
+  }
 
-//       // Get top tracks for each new artist
-//       for (const artist of newArtists.slice(0, 3)) {
-//         try {
-//           const topTracks = await sdk.artists.topTracks(artist.id, "US");
-//           pool.push(
-//             ...topTracks.tracks.map(
-//               (track): BuildPlaylistTrack => ({
-//                 id: track.id,
-//                 name: track.name,
-//                 popularity: track.popularity,
-//                 artist_id: artist.id,
-//                 artist_name: artist.name,
-//               })
-//             )
-//           );
-//         } catch (error) {
-//           console.warn(
-//             `Failed to fetch top tracks for artist ${artist.id}:`,
-//             error
-//           );
-//           continue;
-//         }
-//       }
-//     } catch (error) {
-//       console.warn(`Failed to fetch related artists for ${artistId}:`, error);
-//       continue;
-//     }
-//   }
-
-//   // 2. Get recommendations based on seed tracks
-//   for (const trackId of trackIds) {
-//     const recommendations = await sdk.recommendations.get({
-//       market: "US" as Market,
-//       limit: 10,
-//       seed_tracks: [trackId],
-//       // Exclude specified artists from recommendations
-//       min_popularity: 30, // Ensure somewhat popular tracks
-//     });
-
-//     pool.push(
-//       ...recommendations.tracks
-//         .filter(
-//           (track) =>
-//             // Exclude tracks from familiar artists
-//             !artistIds.some((id) =>
-//               track.artists.some((artist) => artist.id === id)
-//             )
-//         )
-//         .map(
-//           (track): BuildPlaylistTrack => ({
-//             id: track.id,
-//             name: track.name,
-//             popularity: track.popularity,
-//             artist_id: track.artists[0]?.id ?? null,
-//             artist_name: track.artists[0]?.name ?? null,
-//           })
-//         )
-//     );
-//   }
-
-//   // 3. Get recommendations based on seed artists
-//   for (const artistId of artistIds) {
-//     const recommendations = await sdk.recommendations.get({
-//       market: "US" as Market,
-//       limit: 10,
-//       seed_artists: [artistId],
-//       min_popularity: 30,
-//     });
-
-//     pool.push(
-//       ...recommendations.tracks
-//         .filter(
-//           (track) =>
-//             // Exclude tracks from familiar artists
-//             !artistIds.some((id) =>
-//               track.artists.some((artist) => artist.id === id)
-//             )
-//         )
-//         .map(
-//           (track): BuildPlaylistTrack => ({
-//             id: track.id,
-//             name: track.name,
-//             popularity: track.popularity,
-//             artist_id: track.artists[0]?.id ?? null,
-//             artist_name: track.artists[0]?.name ?? null,
-//           })
-//         )
-//     );
-//   }
-
-//   // Remove duplicates based on track ID
-//   const uniquePool = Array.from(
-//     new Map(pool.map((track) => [track.id, track])).values()
-//   );
-
-//   // Filter out any tracks that exist in familiar pools
-//   const filteredPool = uniquePool.filter((track) => {
-//     const isInFamiliar =
-//       familiarPool.specifiedTracks.some((t) => t.id === track.id) ||
-//       familiarPool.topTracks.some((t) => t.id === track.id) ||
-//       familiarPool.likedTracks.some((t) => t.id === track.id) ||
-//       Object.values(familiarPool.artistCatalogs).some((catalog) =>
-//         catalog.some((t) => t.id === track.id)
-//       );
-
-//     return !isInFamiliar;
-//   });
-
-//   return filteredPool;
-// }
-
-/**
- * Use LLM to curate the final playlist from the song pools
- */
-async function curatePlaylist(
-  familiarPool: FamiliarSongsPool,
-  newPool: NewSongsPool,
-  request: PlaylistBuilderRequest
-): Promise<LLMCurationResponse> {
-  // Implementation coming soon...
-  throw new Error("Not implemented");
-}
-
-/**
- * Create the final playlist in Spotify
- */
-async function createFinalPlaylist(
-  sdk: SpotifySdk,
-  curation: LLMCurationResponse
-): Promise<{ playlistId: string; playlistName: string }> {
-  // Implementation coming soon...
-  throw new Error("Not implemented");
+  // Shuffle the remaining tracks using Fisher-Yates
+  for (let i = tracks.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [tracks[i], tracks[j]] = [tracks[j], tracks[i]];
+  }
 }

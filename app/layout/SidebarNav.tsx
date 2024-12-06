@@ -141,9 +141,9 @@ export const SidebarNav = ({ playlists }: { playlists: SpotifyPlaylist[] }) => {
               {playlists.map?.((playlist) => (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
-                    <a target="_blank" href={playlist.external_urls?.spotify}>
+                    <Link to={`/playlist/${playlist.playlist_id}`}>
                       {playlist.playlist_name}
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

@@ -6,6 +6,7 @@ import {
   AvatarFallback,
 } from "~/shadcn/components/ui/avatar";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
+import { X } from "lucide-react";
 
 interface SelectedArtist {
   artist_id: string | null;
@@ -33,6 +34,8 @@ interface PlaylistBuilderSelectionProps {
   selectedTracks: SelectedTrack[];
   onBuildPlaylist: () => void;
   isBuilding: boolean;
+  onRemoveArtist?: (artistId: string) => void;
+  onRemoveTrack?: (trackId: string) => void;
 }
 
 export const PlaylistBuilderSelection = ({
@@ -40,6 +43,8 @@ export const PlaylistBuilderSelection = ({
   selectedTracks,
   onBuildPlaylist,
   isBuilding,
+  onRemoveArtist,
+  onRemoveTrack,
 }: PlaylistBuilderSelectionProps) => {
   return (
     <Card>
@@ -53,7 +58,7 @@ export const PlaylistBuilderSelection = ({
             {selectedArtists.map((artist) => (
               <div
                 key={artist.artist_id}
-                className="flex items-center space-x-2 mb-2"
+                className="group flex items-center space-x-2 mb-2"
               >
                 <Avatar className="w-8 h-8">
                   <AvatarImage
@@ -67,7 +72,15 @@ export const PlaylistBuilderSelection = ({
                     {artist.artist_name?.slice(0, 2).toUpperCase() || ""}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-sm">{artist.artist_name}</span>
+                <span className="text-sm flex-grow">{artist.artist_name}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onRemoveArtist?.(artist.artist_id!)}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
             ))}
           </div>
@@ -80,7 +93,7 @@ export const PlaylistBuilderSelection = ({
             {selectedTracks.map((track) => (
               <div
                 key={track.track_id}
-                className="flex items-center space-x-2 mb-2"
+                className="group flex items-center space-x-2 mb-2"
               >
                 <Avatar className="w-8 h-8">
                   <AvatarImage
@@ -94,9 +107,18 @@ export const PlaylistBuilderSelection = ({
                     {track.track_name?.slice(0, 2).toUpperCase() || ""}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-sm">
-                  {track.track_name} - {track.artist_name}
-                </span>
+                <div className="text-sm flex-grow">
+                  <div>{track.track_name}</div>
+                  <div className="text-gray-500">{track.artist_name}</div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onRemoveTrack?.(track.track_id!)}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
             ))}
           </div>

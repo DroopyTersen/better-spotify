@@ -33,7 +33,7 @@ export const TrackList = ({
         .filter((t) => t.track_id)
         .map((track) => (
           <Card key={track.track_id} className="relative group">
-            <CardContent className="p-4 flex items-center">
+            <CardContent className="p-4 grid grid-cols-[64px_1fr] gap-4 items-center">
               <img
                 src={
                   track.images?.[0]?.url ||
@@ -42,8 +42,10 @@ export const TrackList = ({
                 alt={track.track_name || ""}
                 className="w-16 h-16 object-cover rounded-full mr-4"
               />
-              <div className="flex-grow">
-                <h3 className="font-semibold truncate">{track.track_name}</h3>
+              <div className="w-full truncate">
+                <h3 className="font-semibold w-full truncate">
+                  {track.track_name}
+                </h3>
                 <p className="text-sm text-gray-500 truncate">
                   {track.artist_name}
                 </p>
@@ -51,7 +53,7 @@ export const TrackList = ({
               <Button
                 size="icon"
                 onClick={() => toggleSelection(track.track_id!)}
-                className={`p-1 rounded-full transition-opacity ${
+                className={`absolute top-4 right-3 rounded-full transition-opacity ${
                   isSelected(track.track_id!)
                     ? "opacity-80 bg-teal-500"
                     : "opacity-0 group-hover:opacity-100"

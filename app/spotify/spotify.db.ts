@@ -63,6 +63,7 @@ export const spotifyDb = {
         albumsTable.name,
         artistsTable.images
       )
+      .orderBy(desc(playHistoryTable.played_at))
       .limit(limit)
       .offset(offset);
 
@@ -263,6 +264,46 @@ export const spotifyDb = {
 
     return [...new Map(results.map((item) => [item.track_id, item])).values()];
   },
+  getRecentArtists: async (
+    db: DB,
+    { limit = 50, offset = 0 }: { limit?: number; offset?: number } = {}
+  ) => {
+    return db
+      .select({
+        artist_id: artistsTable.id,
+        artist_name: artistsTable.name,
+        artist_popularity: artistsTable.popularity,
+        genres: sql<string[]>`array_agg(distinct ${genresTable.name})`.as(
+          "genres"
+        ),
+        images: artistsTable.images,
+        last_played: sql<Date>`max(${playHistoryTable.played_at})`.as(
+          "last_played"
+        ),
+        play_count:
+          sql<number>`count(distinct ${playHistoryTable.played_at})`.as(
+            "play_count"
+          ),
+      })
+      .from(playHistoryTable)
+      .leftJoin(tracksTable, eq(playHistoryTable.track_id, tracksTable.id))
+      .leftJoin(artistTracks, eq(tracksTable.id, artistTracks.track_id))
+      .leftJoin(artistsTable, eq(artistTracks.artist_id, artistsTable.id))
+      .leftJoin(
+        artistGenresTable,
+        eq(artistsTable.id, artistGenresTable.artist_id)
+      )
+      .leftJoin(genresTable, eq(artistGenresTable.genre_id, genresTable.id))
+      .groupBy(
+        artistsTable.id,
+        artistsTable.name,
+        artistsTable.popularity,
+        artistsTable.images
+      )
+      .orderBy(desc(sql`max(${playHistoryTable.played_at})`))
+      .limit(limit)
+      .offset(offset);
+  },
 };
 
 export type SpotifyPlaylist = Awaited<
@@ -284,3 +325,7 @@ export type SpotifyLikedTrack = Awaited<
 export type SpotifyPlayedTrack = Prettify<
   Awaited<ReturnType<typeof spotifyDb.getPlayHistory>>[number]
 >;
+
+export type SpotifyRecentArtist = Awaited<
+  ReturnType<typeof spotifyDb.getRecentArtists>
+>[number];

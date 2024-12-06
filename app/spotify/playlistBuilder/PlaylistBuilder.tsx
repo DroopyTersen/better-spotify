@@ -10,6 +10,7 @@ import {
 import {
   SpotifyLikedTrack,
   SpotifyPlayedTrack,
+  SpotifyRecentArtist,
   SpotifyTopArtist,
   SpotifyTopTrack,
 } from "../spotify.db";
@@ -18,10 +19,14 @@ import { ArtistList } from "../components/ArtistList";
 import { TrackList } from "../components/TrackList";
 import { PlaylistBuilderSelection } from "./PlaylistBuilderSelection";
 import { BuildPlaylistInput } from "./playlistBuilder.types";
+import type { BuildPlaylistOutput } from "./buildPlaylist.server";
+import { PlaylistDisplay } from "../components/PlaylistDisplay";
+import { PlayHistoryItem } from "../components/PlayHistoryItem";
+import { RecentArtistItem } from "../components/RecentArtistItem";
 
 export const PlaylistBuilder = () => {
   const spotifyData = useSpotifyData();
-  const fetcher = useFetcher();
+  const fetcher = useFetcher<BuildPlaylistOutput>();
   const [selectedArtistIds, setSelectedArtistIds] = useState<string[]>([]);
   const [selectedTrackIds, setSelectedTrackIds] = useState<string[]>([]);
 
@@ -68,78 +73,100 @@ export const PlaylistBuilder = () => {
     );
   };
 
+  const handleRemoveArtist = (artistId: string) => {
+    setSelectedArtistIds((prev) => prev.filter((id) => id !== artistId));
+  };
+
+  const handleRemoveTrack = (trackId: string) => {
+    setSelectedTrackIds((prev) => prev.filter((id) => id !== trackId));
+  };
+
+  console.log(
+    "spotifyData.playHistory",
+    JSON.stringify(spotifyData.playHistory[0], null, 2)
+  );
   return (
     <div className="">
-      <div className="grid grid-cols-3 gap-6">
-        <div className="col-span-2">
-          <Tabs defaultValue="topArtists">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="topArtists">Top Artists</TabsTrigger>
-              <TabsTrigger value="topTracks">Top Tracks</TabsTrigger>
-              <TabsTrigger value="likedTracks">Liked Tracks</TabsTrigger>
-              <TabsTrigger value="playHistory">Play History</TabsTrigger>
-            </TabsList>
-            <TabsContent value="topArtists">
-              <ArtistList
-                artists={spotifyData.topArtists}
-                isSelected={isArtistSelected}
-                toggleSelection={toggleArtistSelection}
-              />
-            </TabsContent>
-            <TabsContent value="topTracks">
-              <TrackList
-                tracks={spotifyData.topTracks}
-                isSelected={isTrackSelected}
-                toggleSelection={toggleTrackSelection}
-              />
-            </TabsContent>
-            <TabsContent value="likedTracks">
-              <TrackList
-                tracks={spotifyData.likedTracks}
-                isSelected={isTrackSelected}
-                toggleSelection={toggleTrackSelection}
-              />
-            </TabsContent>
-            <TabsContent value="playHistory">
-              <TrackList
-                tracks={spotifyData.playHistory}
-                isSelected={isTrackSelected}
-                toggleSelection={toggleTrackSelection}
-              />
-            </TabsContent>
-          </Tabs>
-        </div>
-        <div>
-          <PlaylistBuilderSelection
-            selectedArtists={
-              spotifyData.topArtists.filter((a) =>
-                selectedArtistIds.includes(a.artist_id!)
-              ) as any
-            }
-            selectedTracks={
-              allTracks.filter((t) =>
-                selectedTrackIds.includes(t.track_id!)
-              ) as any
-            }
-            onBuildPlaylist={handleBuildPlaylist}
-            isBuilding={fetcher.state !== "idle"}
-          />
-        </div>
-      </div>
-      {fetcher.data && (
-        <div className="mt-8">
-          <h2 className="text-2xl font-semibold mb-4">Generated Playlist</h2>
-          <div className="bg-gray-100 p-4 rounded-lg">
-            <p className="mb-2">
-              {fetcher.data?.playlist?.name} has{" "}
-              {fetcher.data?.playlist?.tracks?.length} songs
-            </p>
-            <pre className="text-sm overflow-auto max-h-60">
-              {JSON.stringify(fetcher.data, null, 2)}
-            </pre>
+      {!fetcher?.data && (
+        <div className="grid grid-cols-3 gap-6">
+          <div className="col-span-2">
+            <Tabs defaultValue="topArtists">
+              <TabsList className="grid w-full grid-cols-5">
+                <TabsTrigger value="topArtists">Top Artists</TabsTrigger>
+                <TabsTrigger value="topTracks">Top Tracks</TabsTrigger>
+                <TabsTrigger value="likedTracks">Liked Tracks</TabsTrigger>
+                <TabsTrigger value="playHistory">Recent Tracks</TabsTrigger>
+                <TabsTrigger value="recentArtists">Recent Artists</TabsTrigger>
+              </TabsList>
+              <TabsContent value="topArtists">
+                <ArtistList
+                  artists={spotifyData.topArtists}
+                  isSelected={isArtistSelected}
+                  toggleSelection={toggleArtistSelection}
+                />
+              </TabsContent>
+              <TabsContent value="topTracks">
+                <TrackList
+                  tracks={spotifyData.topTracks}
+                  isSelected={isTrackSelected}
+                  toggleSelection={toggleTrackSelection}
+                />
+              </TabsContent>
+              <TabsContent value="likedTracks">
+                <TrackList
+                  tracks={spotifyData.likedTracks}
+                  isSelected={isTrackSelected}
+                  toggleSelection={toggleTrackSelection}
+                />
+              </TabsContent>
+              <TabsContent value="playHistory">
+                <div className="flex flex-col">
+                  {spotifyData.playHistory.map((track) => (
+                    <PlayHistoryItem
+                      track={track}
+                      isSelected={isTrackSelected(track.track_id!)}
+                      toggleSelection={toggleTrackSelection}
+                    />
+                  ))}
+                </div>
+                {/* <TrackList
+                  tracks={spotifyData.playHistory}
+                  isSelected={isTrackSelected}
+                  toggleSelection={toggleTrackSelection}
+                /> */}
+              </TabsContent>
+              <TabsContent value="recentArtists">
+                {spotifyData.recentArtists.map((artist) => (
+                  <RecentArtistItem
+                    artist={artist}
+                    isSelected={isArtistSelected(artist.artist_id!)}
+                    toggleSelection={toggleArtistSelection}
+                  />
+                ))}
+              </TabsContent>
+            </Tabs>
+          </div>
+          <div>
+            <PlaylistBuilderSelection
+              selectedArtists={
+                spotifyData.topArtists.filter((a) =>
+                  selectedArtistIds.includes(a.artist_id!)
+                ) as any
+              }
+              selectedTracks={
+                allTracks.filter((t) =>
+                  selectedTrackIds.includes(t.track_id!)
+                ) as any
+              }
+              onBuildPlaylist={handleBuildPlaylist}
+              isBuilding={fetcher.state !== "idle"}
+              onRemoveArtist={handleRemoveArtist}
+              onRemoveTrack={handleRemoveTrack}
+            />
           </div>
         </div>
       )}
+      {fetcher.data && <PlaylistDisplay playlist={fetcher.data.playlist} />}
     </div>
   );
 };
@@ -155,12 +182,16 @@ const useSpotifyData = () => {
   let likedTracks = useRouteData(
     (r) => r?.data?.likedTracks
   ) as SpotifyLikedTrack[];
+  let recentArtists = useRouteData(
+    (r) => r?.data?.recentArtists
+  ) as SpotifyRecentArtist[];
 
   return {
     topArtists,
     topTracks,
     playHistory,
     likedTracks,
+    recentArtists,
   };
 };
 

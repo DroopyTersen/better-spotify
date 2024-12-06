@@ -28,7 +28,7 @@ export const ArtistList = ({
   toggleSelection,
 }: ArtistListProps) => {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,350px))] gap-4 justify-center">
       {artists
         .filter((a) => a.artist_id)
         .map((artist) => (
@@ -39,15 +39,19 @@ export const ArtistList = ({
                 "/placeholder.svg?height=160&width=160"
               }
               alt={artist.artist_name || ""}
-              className="w-full object-cover rounded-t-md h-52"
+              className="w-full object-cover rounded-t-md aspect-square"
             />
             <CardContent className="p-4">
               <h3 className="font-semibold truncate mb-2">
                 {artist.artist_name}
               </h3>
-              <Badge variant={"secondary"} className="text-sm ">
-                {artist.genres?.[0] || ""}
-              </Badge>
+              <div className="flex flex-wrap gap-1 -mx-1">
+                {artist?.genres?.slice(0, 3)?.map((genre) => (
+                  <Badge variant={"secondary"} className="text-sm">
+                    {genre}
+                  </Badge>
+                ))}
+              </div>
               <Button
                 size="icon"
                 onClick={() => toggleSelection(artist.artist_id!)}

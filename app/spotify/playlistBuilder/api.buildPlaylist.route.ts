@@ -16,5 +16,5 @@ export const action = async ({ request }: Route.ActionArgs) => {
   console.log("🚀 | action | input:", input);
   let result = await buildPlaylist(input, sdk);
   console.log("🚀 | action | result:", result);
-  return Response.json(result.playlist);
+  return Response.json(result);
 };

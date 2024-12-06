@@ -20,7 +20,7 @@ export const SidebarLayout = ({
     <SidebarProvider>
       <SidebarNav playlists={playlists} />
       <SidebarInset>
-        <header className="flex h-16 items-center gap-4 border-b bg-white px-6 sticky top-0">
+        <header className="flex h-16 items-center gap-4 border-b bg-white px-6 sticky top-0 z-10">
           <SidebarTrigger />
           <Separator orientation="vertical" className="h-6" />
           <h1 className="text-lg font-bold" id="page-title"></h1>

@@ -57,6 +57,7 @@ export type GeneratePlaylistInput = {
   request: PlaylistBuilderRequest;
   familiarOptions: FamiliarSongsPool;
   distribution: SongDistribution;
+  topArtists: string[];
   newOptions: NewSongsPool;
 };
 export type NewSongsPool = BuildPlaylistTrack[];

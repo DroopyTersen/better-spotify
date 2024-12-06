@@ -11,6 +11,7 @@ export default [
   layout("layout/root.layout.tsx", [
     index("routes/home.tsx"),
     route("/builder", "spotify/playlistBuilder/builder.route.tsx"),
+    route("/playlist/:playlistId", "routes/playlist.$playlistId.route.tsx"),
   ]),
   route("/auth/callback", "auth/routes/auth.callback.route.tsx"),
   route("/spotify/sync", "spotify/sync/sync.route.tsx"),

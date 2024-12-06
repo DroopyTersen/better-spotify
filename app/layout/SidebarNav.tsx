@@ -108,7 +108,7 @@ export const SidebarNav = ({ playlists }: { playlists: SpotifyPlaylist[] }) => {
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-base font-bold">
-            Your Top
+            Your Favorites
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>

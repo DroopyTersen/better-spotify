@@ -16,6 +16,7 @@ import type { Route } from "./+types/root.layout";
 import { useEffect } from "react";
 import { syncPlayHistory } from "~/spotify/sync/syncPlayHistory";
 import { syncFullArtistData } from "~/spotify/sync/syncFullArtistData";
+import { PlaylistSelectionProvider } from "~/playlistBuilder/PlaylistSelectionContext";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -101,8 +102,10 @@ export default function RootLayout({ loaderData }: Route.ComponentProps) {
   }, []);
 
   return (
-    <SidebarLayout playlists={loaderData?.topPlaylists || []}>
-      <Outlet />
-    </SidebarLayout>
+    <PlaylistSelectionProvider>
+      <SidebarLayout playlists={loaderData?.topPlaylists || []}>
+        <Outlet />
+      </SidebarLayout>
+    </PlaylistSelectionProvider>
   );
 }

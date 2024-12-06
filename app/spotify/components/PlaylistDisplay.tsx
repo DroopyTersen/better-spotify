@@ -4,18 +4,15 @@ import { CheckIcon, ExternalLink, Plus } from "lucide-react";
 import { SpotifyApiPlaylist } from "../api/getPlaylist";
 import { SpotifyImage } from "./TrackImage";
 import dayjs from "dayjs";
+import { usePlaylistSelection } from "~/playlistBuilder/PlaylistSelectionContext";
 
 interface PlaylistDisplayProps {
   playlist: SpotifyApiPlaylist;
-  selectedTracks?: string[];
-  toggleSelection?: (trackId: string) => void;
 }
 
-export const PlaylistDisplay = ({
-  playlist,
-  selectedTracks = [],
-  toggleSelection,
-}: PlaylistDisplayProps) => {
+export const PlaylistDisplay = ({ playlist }: PlaylistDisplayProps) => {
+  const { selectedTrackIds, toggleTrackSelection } = usePlaylistSelection();
+
   return (
     <div className="space-y-4 max-w-5xl">
       <div className="flex justify-between items-center">
@@ -41,7 +38,7 @@ export const PlaylistDisplay = ({
         {playlist.tracks.items.map((item, index) => {
           const track = item?.track;
           if (!track) return null;
-          const isSelected = selectedTracks.includes(track.id);
+          const isSelected = selectedTrackIds.includes(track.id);
 
           return (
             <div
@@ -68,23 +65,21 @@ export const PlaylistDisplay = ({
                   <p>{dayjs(item.added_at).format("MM/DD/YYYY")}</p>
                   <p>{dayjs(item.added_at).format("h:mm A")}</p>
                 </div>
-                {toggleSelection && (
-                  <Button
-                    size="icon"
-                    onClick={() => toggleSelection(track.id)}
-                    className={`rounded-full transition-opacity ${
-                      isSelected
-                        ? "opacity-80 bg-teal-500"
-                        : "opacity-0 group-hover:opacity-100"
-                    }`}
-                  >
-                    {isSelected ? (
-                      <CheckIcon className="w-6 h-6 text-white" />
-                    ) : (
-                      <Plus className="w-12 h-12 text-white" />
-                    )}
-                  </Button>
-                )}
+                <Button
+                  size="icon"
+                  onClick={() => toggleTrackSelection(track.id)}
+                  className={`rounded-full transition-opacity ${
+                    isSelected
+                      ? "opacity-80 bg-teal-500"
+                      : "opacity-0 group-hover:opacity-100"
+                  }`}
+                >
+                  {isSelected ? (
+                    <CheckIcon className="w-6 h-6 text-white" />
+                  ) : (
+                    <Plus className="w-12 h-12 text-white" />
+                  )}
+                </Button>
               </div>
             </div>
           );

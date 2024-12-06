@@ -1,13 +1,19 @@
-import { Outlet } from "react-router";
-import { SidebarNav } from "./SidebarNav";
+import { ShoppingCart } from "lucide-react";
+import { CartPanel } from "~/playlistBuilder/CartPanel";
+import { usePlaylistSelection } from "~/playlistBuilder/PlaylistSelectionContext";
+import { Separator } from "~/shadcn/components/ui/separator";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "~/shadcn/components/ui/sheet";
 import {
   Sidebar,
-  SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "~/shadcn/components/ui/sidebar";
-import { Separator } from "~/shadcn/components/ui/separator";
 import { SpotifyPlaylist } from "~/spotify/spotify.db";
+import { SidebarNav } from "./SidebarNav";
 
 export const SidebarLayout = ({
   children,
@@ -16,18 +22,39 @@ export const SidebarLayout = ({
   children: React.ReactNode;
   playlists: SpotifyPlaylist[];
 }) => {
+  let { totalSelectedCount } = usePlaylistSelection();
+
   return (
     <SidebarProvider>
-      <SidebarNav playlists={playlists} />
-      <SidebarInset>
-        <header className="flex h-16 items-center gap-4 border-b bg-white px-6 sticky top-0 z-10">
-          <SidebarTrigger />
-          <Separator orientation="vertical" className="h-6" />
-          <h1 className="text-lg font-bold" id="page-title"></h1>
-          <div className="flex-1" />
-        </header>
-        <main className="flex-1 p-8">{children}</main>
-      </SidebarInset>
+      <div className="flex h-screen w-full">
+        <Sidebar>
+          <SidebarNav playlists={playlists} />
+        </Sidebar>
+        <div className="flex-1 flex flex-col w-full">
+          <header className="flex h-16 items-center gap-4 border-b px-6 w-full">
+            <SidebarTrigger />
+            <Separator orientation="vertical" className="h-6" />
+            <h1 className="text-lg font-bold" id="page-title"></h1>
+            <div className="flex-1" />
+            <Sheet>
+              <SheetTrigger asChild>
+                <button className="relative p-2 rounded-full hover:bg-gray-100">
+                  <ShoppingCart className="w-6 h-6" />
+                  {totalSelectedCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                      {totalSelectedCount}
+                    </span>
+                  )}
+                </button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-96">
+                <CartPanel />
+              </SheetContent>
+            </Sheet>
+          </header>
+          <main className="flex-1 overflow-y-auto p-6 w-full">{children}</main>
+        </div>
+      </div>
     </SidebarProvider>
   );
 };

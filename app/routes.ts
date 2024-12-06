@@ -14,6 +14,7 @@ export default [
     route("/artists", "routes/artists.route.tsx"),
     route("/builder", "spotify/playlistBuilder/builder.route.tsx"),
     route("/playlist/:playlistId", "routes/playlist.$playlistId.route.tsx"),
+    route("/play-history", "routes/play-history.route.tsx"),
   ]),
   route("/auth/callback", "auth/routes/auth.callback.route.tsx"),
   route("/spotify/sync", "spotify/sync/sync.route.tsx"),

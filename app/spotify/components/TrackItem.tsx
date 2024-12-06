@@ -37,7 +37,7 @@ export function TrackItem({
         <h3 className="font-semibold">{track.track_name}</h3>{" "}
         <p className="text-sm text-muted-foreground">{track.artist_name}</p>
         {track?.genres?.length && track?.genres?.length > 0 && (
-          <div className="mt-1 flex items-center space-x-2 -mx-1">
+          <div className="mt-1 flex items-center space-x-2 -mx-1 hidden md:flex">
             {track?.genres
               ?.filter((g) => g && g !== "NULL")
               .slice(0, 3)

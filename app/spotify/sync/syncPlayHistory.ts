@@ -6,7 +6,6 @@ import {
   playHistoryTable,
   tracksTable,
 } from "~/db/db.schema";
-import { wait } from "~/toolkit/utils/wait";
 import { getPlayHistory } from "../api/getPlayHistory";
 import { SpotifySdk } from "../createSpotifySdk";
 import { desc } from "drizzle-orm";

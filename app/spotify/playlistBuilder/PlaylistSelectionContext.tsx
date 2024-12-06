@@ -1,4 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { SpotifyRecentArtist } from "../spotify.db";
+import { SpotifyPlayedTrack, SpotifyLikedTrack } from "../spotify.db";
+import { SpotifyTopTrack } from "../spotify.db";
+import { SpotifyTopArtist } from "../spotify.db";
 
 type PlaylistSelectionContextValue = {
   selectedArtistIds: string[];
@@ -8,6 +12,13 @@ type PlaylistSelectionContextValue = {
   removeArtist: (id: string) => void;
   removeTrack: (id: string) => void;
   totalSelectedCount: number;
+  spotifyData: {
+    topArtists: SpotifyTopArtist[];
+    topTracks: SpotifyTopTrack[];
+    likedTracks: SpotifyLikedTrack[];
+    playHistory: SpotifyPlayedTrack[];
+    recentArtists: SpotifyRecentArtist[];
+  };
 };
 
 const PlaylistSelectionContext = createContext<PlaylistSelectionContextValue>(
@@ -16,8 +27,10 @@ const PlaylistSelectionContext = createContext<PlaylistSelectionContextValue>(
 
 export const PlaylistSelectionProvider = ({
   children,
+  spotifyData,
 }: {
   children: React.ReactNode;
+  spotifyData: PlaylistSelectionContextValue["spotifyData"];
 }) => {
   const [selectedArtistIds, setSelectedArtistIds] = useState<string[]>([]);
   const [selectedTrackIds, setSelectedTrackIds] = useState<string[]>([]);
@@ -70,6 +83,7 @@ export const PlaylistSelectionProvider = ({
         removeArtist,
         removeTrack,
         totalSelectedCount,
+        spotifyData,
       }}
     >
       {children}

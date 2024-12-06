@@ -10,6 +10,8 @@ export default [
   route("/logout", "auth/routes/auth.logout.route.tsx"),
   layout("layout/root.layout.tsx", [
     index("routes/home.tsx"),
+    route("/songs", "routes/songs.route.tsx"),
+    route("/artists", "routes/artists.route.tsx"),
     route("/builder", "spotify/playlistBuilder/builder.route.tsx"),
     route("/playlist/:playlistId", "routes/playlist.$playlistId.route.tsx"),
   ]),

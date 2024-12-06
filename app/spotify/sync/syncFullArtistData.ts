@@ -22,22 +22,25 @@ export const syncFullArtistData = async (sdk: SpotifySdk) => {
 
     // Get full artist data for current batch
     let fullArtists = await sdk.artists.get(batchIds);
-
-    // Update artists table with images
-    await db
-      .insert(artistsTable)
-      .values(fullArtists)
-      .onConflictDoUpdate({
-        target: artistsTable.id,
-        set: { images: sql`excluded.images` },
-      });
+    if (fullArtists.length > 0) {
+      // Update artists table with images
+      await db
+        .insert(artistsTable)
+        .values(fullArtists)
+        .onConflictDoUpdate({
+          target: artistsTable.id,
+          set: { images: sql`excluded.images` },
+        });
+    }
 
     // Insert genres for current batch
     let genres = fullArtists.flatMap((artist) => artist.genres);
-    await db
-      .insert(genresTable)
-      .values(genres.map((genre) => ({ id: genre, name: genre })))
-      .onConflictDoNothing();
+    if (genres.length > 0) {
+      await db
+        .insert(genresTable)
+        .values(genres.map((genre) => ({ id: genre, name: genre })))
+        .onConflictDoNothing();
+    }
 
     // Link artists to genres for current batch
     let artistGenres = fullArtists.flatMap((artist) =>
@@ -46,10 +49,12 @@ export const syncFullArtistData = async (sdk: SpotifySdk) => {
         genre_id: genre,
       }))
     );
-    await db
-      .insert(artistGenresTable)
-      .values(artistGenres)
-      .onConflictDoNothing();
+    if (artistGenres.length > 0) {
+      await db
+        .insert(artistGenresTable)
+        .values(artistGenres)
+        .onConflictDoNothing();
+    }
 
     // Log progress
     console.log(`Processed ${i + BATCH_SIZE} of ${artistIds.length} artists`);

@@ -16,12 +16,31 @@ export type SpotifyAuthStrategyOptions = {
   scopes: string[];
 };
 
-interface SpotifyProfile {
+export interface SpotifyProfile {
+  country: string;
+  display_name: string;
+  email: string;
+  explicit_content: {
+    filter_enabled: boolean;
+    filter_locked: boolean;
+  };
+  external_urls: {
+    spotify: string;
+  };
+  followers: {
+    href: string;
+    total: number;
+  };
+  href: string;
   id: string;
-  provider: string;
-  displayName: string;
-  emails: Array<{ value: string }>;
-  photos: Array<{ value: string }>;
+  images: {
+    url: string;
+    height: number;
+    width: number;
+  }[];
+  product: string;
+  type: string;
+  uri: string;
 }
 
 export class SpotifyAuthStrategy<User> extends Strategy<
@@ -46,10 +65,6 @@ export class SpotifyAuthStrategy<User> extends Strategy<
       options.clientSecret,
       options.redirectURI
     );
-  }
-
-  private get cookieName() {
-    return `${this.name}.auth.session`;
   }
 
   async authenticate(request: Request) {

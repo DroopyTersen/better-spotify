@@ -1,6 +1,5 @@
 import { ShoppingCart } from "lucide-react";
-import { CartPanel } from "~/playlistBuilder/CartPanel";
-import { usePlaylistSelection } from "~/playlistBuilder/PlaylistSelectionContext";
+import { CartPanel } from "~/spotify/playlistBuilder/CartPanel";
 import { Separator } from "~/shadcn/components/ui/separator";
 import {
   Sheet,
@@ -14,13 +13,17 @@ import {
 } from "~/shadcn/components/ui/sidebar";
 import { SpotifyPlaylist } from "~/spotify/spotify.db";
 import { SidebarNav } from "./SidebarNav";
+import { usePlaylistSelection } from "~/spotify/playlistBuilder/PlaylistSelectionContext";
+import { Device } from "@spotify/web-api-ts-sdk";
 
 export const SidebarLayout = ({
   children,
   playlists,
+  devices,
 }: {
   children: React.ReactNode;
   playlists: SpotifyPlaylist[];
+  devices: Device[];
 }) => {
   let { totalSelectedCount } = usePlaylistSelection();
 
@@ -28,7 +31,7 @@ export const SidebarLayout = ({
     <SidebarProvider>
       <div className="flex h-screen w-full">
         <Sidebar>
-          <SidebarNav playlists={playlists} />
+          <SidebarNav playlists={playlists} devices={devices} />
         </Sidebar>
         <div className="flex-1 flex flex-col w-full">
           <header className="flex h-16 items-center gap-4 border-b px-6 w-full">

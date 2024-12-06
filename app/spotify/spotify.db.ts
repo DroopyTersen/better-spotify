@@ -306,9 +306,14 @@ export const spotifyDb = {
   },
 };
 
-export type SpotifyPlaylist = Awaited<
-  ReturnType<typeof spotifyDb.getPlaylists>
->[number];
+export type SpotifyPlaylist = {
+  playlist_id: string;
+  playlist_name: string;
+  description: string | null;
+  images: any[];
+  external_urls: Record<string, string>;
+  track_count: number | null;
+};
 
 export type SpotifyTopTrack = Awaited<
   ReturnType<typeof spotifyDb.getPlayHistory>

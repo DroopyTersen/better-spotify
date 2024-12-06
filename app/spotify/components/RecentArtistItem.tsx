@@ -3,7 +3,8 @@ import { CheckIcon, Plus } from "lucide-react";
 import { Badge } from "~/shadcn/components/ui/badge";
 import { Button } from "~/shadcn/components/ui/button";
 import { SpotifyRecentArtist } from "../spotify.db";
-import { SpotifyImage } from "./TrackImage";
+import { SpotifyImage } from "./SpotifyImage";
+import { useCurrentUser } from "~/auth/useCurrentUser";
 
 export function RecentArtistItem({
   artist,
@@ -14,6 +15,7 @@ export function RecentArtistItem({
   isSelected?: boolean;
   toggleSelection?: (artistId: string) => void;
 }) {
+  let currentUser = useCurrentUser();
   return (
     <div
       key={artist.artist_id}
@@ -22,8 +24,8 @@ export function RecentArtistItem({
       <SpotifyImage
         src={artist.images?.[0]?.url!}
         alt={artist.artist_name!}
-        item_id={artist.artist_id!}
-        item_type="artist"
+        uri={`spotify:artist:${artist.artist_id}`}
+        canPlay={currentUser?.product === "premium"}
       />
       <div className="flex-grow">
         <h3 className="font-semibold">{artist.artist_name}</h3>{" "}

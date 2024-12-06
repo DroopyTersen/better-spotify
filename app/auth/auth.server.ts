@@ -3,12 +3,14 @@ import { authSessionStorage } from "./authSession.server";
 import { redirect } from "react-router";
 import { SpotifyAuthStrategy } from "./SpotifyAuthStrategy";
 import dayjs from "dayjs";
+import { LooseAutocomplete } from "~/toolkit/utils/typescript.utils";
 export type User = {
   id: string;
   email?: string;
   name: string;
   photo?: string;
   tokens: AuthTokens;
+  product: LooseAutocomplete<"free" | "premium" | "open">;
 };
 export type AuthTokens = {
   accessToken: string;
@@ -50,9 +52,10 @@ let strategy = new SpotifyAuthStrategy<User>(
   async ({ tokens, profile }) => {
     return {
       id: profile.id,
-      email: profile.emails?.[0]?.value,
-      name: profile.displayName || profile.emails?.[0]?.value || profile.id,
-      photo: profile.photos?.[0]?.value,
+      email: profile.email,
+      name: profile.display_name || profile.email || profile.id,
+      photo: profile.images?.[0]?.url,
+      product: profile.product,
       tokens: {
         accessToken: tokens.accessToken(),
         refreshToken: tokens.refreshToken(),

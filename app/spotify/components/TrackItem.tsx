@@ -1,18 +1,23 @@
+import { CheckIcon, Plus } from "lucide-react";
 import { Badge } from "~/shadcn/components/ui/badge";
-import { RecentlyPlayedTrack } from "../api/getPlayHistory";
-import { SpotifyPlayedTrack } from "../spotify.db";
-import { SpotifyImage } from "./SpotifyImage";
-import dayjs from "dayjs";
 import { Button } from "~/shadcn/components/ui/button";
-import { Plus, CheckIcon } from "lucide-react";
+import { SpotifyImage } from "./SpotifyImage";
 import { useCurrentUser } from "~/auth/useCurrentUser";
 
-export function PlayHistoryItem({
+export function TrackItem({
   track,
+  metadata,
   isSelected,
   toggleSelection,
 }: {
-  track: SpotifyPlayedTrack;
+  track: {
+    track_id: string | null;
+    track_name: string | null;
+    artist_name: string | null;
+    genres?: string[] | null;
+    images?: { url: string }[] | null;
+  };
+  metadata?: React.ReactNode | React.ReactNode[];
   isSelected?: boolean;
   toggleSelection?: (trackId: string) => void;
 }) {
@@ -31,19 +36,25 @@ export function PlayHistoryItem({
       <div className="flex-grow">
         <h3 className="font-semibold">{track.track_name}</h3>{" "}
         <p className="text-sm text-muted-foreground">{track.artist_name}</p>
-        <div className="mt-1 flex items-center space-x-2">
-          {track.genres?.slice(0, 3).map((genre) => (
-            <Badge variant="secondary" key={genre}>
-              {genre}
-            </Badge>
-          ))}
-        </div>
+        {track?.genres?.length && track?.genres?.length > 0 && (
+          <div className="mt-1 flex items-center space-x-2 -mx-1">
+            {track?.genres
+              ?.filter((g) => g && g !== "NULL")
+              .slice(0, 3)
+              .map((genre) => (
+                <Badge variant="secondary" key={genre}>
+                  {genre}
+                </Badge>
+              ))}
+          </div>
+        )}
       </div>
       <div className="flex items-end gap-4">
-        <div className="text-right text-sm text-muted-foreground">
-          <p>{dayjs(track.played_at).format("MM/DD/YYYY")}</p>
-          <p>{dayjs(track.played_at).format("h:mm A")}</p>
-        </div>
+        {metadata && (
+          <div className="text-right text-sm text-muted-foreground">
+            {metadata}
+          </div>
+        )}
         {toggleSelection && (
           <Button
             size="icon"

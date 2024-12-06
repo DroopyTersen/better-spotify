@@ -1,4 +1,4 @@
-import { usePlaylistSelection } from "./PlaylistSelectionContext";
+import { usePlaylistSelection } from "../spotify/playlistBuilder/PlaylistSelectionContext";
 import { Button } from "~/shadcn/components/ui/button";
 import { X } from "lucide-react";
 import { Form, useSubmit } from "react-router";

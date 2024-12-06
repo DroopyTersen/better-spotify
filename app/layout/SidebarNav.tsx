@@ -1,4 +1,4 @@
-import { Link, useFetcher } from "react-router";
+import { Link, useFetcher, useLocation, useNavigation } from "react-router";
 import {
   Music2,
   Play,
@@ -42,31 +42,30 @@ import { SpotifyPlaylist } from "~/spotify/spotify.db";
 import { Button } from "~/shadcn/components/ui/button";
 import { useAsyncData } from "~/toolkit/hooks/useAsyncData";
 import { createSpotifySdk } from "~/spotify/createSpotifySdk";
+import { cn } from "~/shadcn/lib/utils";
+import { Device } from "@spotify/web-api-ts-sdk";
 
-export const SidebarNav = ({ playlists }: { playlists: SpotifyPlaylist[] }) => {
+export const SidebarNav = ({
+  playlists,
+  devices,
+}: {
+  playlists: SpotifyPlaylist[];
+  devices: Device[];
+}) => {
   let currentUser = useCurrentUser();
   let fetcher = useFetcher();
+  let location = useLocation();
+  let navigation = useNavigation();
+  let pathname = navigation?.location?.pathname || location.pathname;
   let syncPlayHistory = () => {
     console.log("🚀 | syncPlayHistory | user:", currentUser);
     if (!currentUser?.tokens) return;
-    fetcher.submit(
-      { user: currentUser },
-      {
-        method: "POST",
-        action: "/spotify/sync",
-        encType: "application/json",
-      }
-    );
+    fetcher.submit({ user: currentUser } as any, {
+      method: "POST",
+      action: "/spotify/sync",
+      encType: "application/json",
+    });
   };
-  let { data: devices } = useAsyncData(
-    async () => {
-      let sdk = createSpotifySdk(currentUser?.tokens!);
-      let devicesResult = await sdk.player.getAvailableDevices();
-      return devicesResult.devices;
-    },
-    [],
-    []
-  );
   return (
     <Sidebar className="bg-white border-r">
       <SidebarHeader>
@@ -113,16 +112,28 @@ export const SidebarNav = ({ playlists }: { playlists: SpotifyPlaylist[] }) => {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild className="font-medium">
-                  <Link to="/top/tracks">
+                <SidebarMenuButton
+                  asChild
+                  className={cn(
+                    "font-medium",
+                    pathname?.startsWith("/songs") && "bg-gray-100"
+                  )}
+                >
+                  <Link to="/songs">
                     <Music2 className="h-5 w-5" />
                     <span>Songs</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild className="font-medium">
-                  <Link to="/top/artists">
+                <SidebarMenuButton
+                  asChild
+                  className={cn(
+                    "font-medium",
+                    pathname?.startsWith("/artists") && "bg-gray-100"
+                  )}
+                >
+                  <Link to="/artists">
                     <Mic2 className="h-5 w-5" />
                     <span>Artists</span>
                   </Link>
@@ -138,7 +149,7 @@ export const SidebarNav = ({ playlists }: { playlists: SpotifyPlaylist[] }) => {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {playlists.map?.((playlist) => (
+              {playlists.slice(0, 10).map?.((playlist) => (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
                     <Link to={`/playlist/${playlist.playlist_id}`}>

@@ -13,7 +13,7 @@ export const syncSavedTracks = async (sdk: SpotifySdk) => {
   const db = getDb();
 
   // Clear existing saved tracks
-  await db.delete(savedTracksTable);
+  // await db.delete(savedTracksTable);
 
   let count = 0;
   let nextUrl = "first page";
@@ -48,13 +48,16 @@ export const syncSavedTracks = async (sdk: SpotifySdk) => {
     await db.insert(artistTracks).values(trackArtists).onConflictDoNothing();
 
     // Insert saved tracks records
-    await db.insert(savedTracksTable).values(
-      savedTracks.map((item) => ({
-        id: crypto.randomUUID(),
-        track_id: item.track.id,
-        added_at: new Date(item.added_at),
-      }))
-    );
+    await db
+      .insert(savedTracksTable)
+      .values(
+        savedTracks.map((item) => ({
+          id: new Date(item.added_at).getTime().toString() + item.track.id,
+          track_id: item.track.id,
+          added_at: new Date(item.added_at),
+        }))
+      )
+      .onConflictDoNothing();
 
     count += savedTracks.length;
     nextUrl = nextPage?.next || "";

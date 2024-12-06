@@ -2,32 +2,38 @@ import { Button } from "~/shadcn/components/ui/button";
 import { Badge } from "~/shadcn/components/ui/badge";
 import { CheckIcon, ExternalLink, Plus } from "lucide-react";
 import { SpotifyApiPlaylist } from "../api/getPlaylist";
-import { SpotifyImage } from "./TrackImage";
+import { SpotifyImage } from "./SpotifyImage";
 import dayjs from "dayjs";
-import { usePlaylistSelection } from "~/playlistBuilder/PlaylistSelectionContext";
+import { usePlaylistSelection } from "../playlistBuilder/PlaylistSelectionContext";
+import { useCurrentUser } from "~/auth/useCurrentUser";
 
 interface PlaylistDisplayProps {
   playlist: SpotifyApiPlaylist;
 }
 
 export const PlaylistDisplay = ({ playlist }: PlaylistDisplayProps) => {
+  let currentUser = useCurrentUser();
   const { selectedTrackIds, toggleTrackSelection } = usePlaylistSelection();
 
   return (
     <div className="space-y-4 max-w-5xl">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">
-          {playlist.name}{" "}
-          <span className="text-muted-foreground font-medium text-lg">
-            {playlist.tracks.total} tracks
-          </span>
-        </h2>
+        <div className="flex items-center gap-4">
+          <SpotifyImage
+            src={playlist.images[0]?.url}
+            alt={playlist.name}
+            uri={`spotify:playlist:${playlist.id}`}
+            canPlay={currentUser?.product === "premium"}
+          />
+          <div>
+            <h2 className="text-2xl font-bold">{playlist.name} </h2>
+            <div className="text-muted-foreground font-medium text-base">
+              {playlist.tracks.total} tracks
+            </div>
+          </div>
+        </div>
         <Button asChild variant="outline">
-          <a
-            href={playlist.external_urls.spotify}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <a href={"spotify:playlist:" + playlist.id}>
             Open in Spotify
             <ExternalLink className="ml-2 h-4 w-4" />
           </a>
@@ -51,8 +57,8 @@ export const PlaylistDisplay = ({ playlist }: PlaylistDisplayProps) => {
               <SpotifyImage
                 src={track.album.images[0]?.url}
                 alt={track.name}
-                item_id={track.id}
-                item_type="track"
+                uri={`spotify:track:${track.id}`}
+                canPlay={currentUser?.product === "premium"}
               />
               <div className="flex-grow">
                 <h3 className="font-semibold">{track.name}</h3>

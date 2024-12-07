@@ -15,6 +15,7 @@ import { SpotifyPlaylist } from "~/spotify/spotify.db";
 import { SidebarNav } from "./SidebarNav";
 import { usePlaylistSelection } from "~/spotify/playlistBuilder/PlaylistSelectionContext";
 import { Device } from "@spotify/web-api-ts-sdk";
+import { SearchInput } from "~/spotify/components/SearchInput";
 
 export const SidebarLayout = ({
   children,
@@ -39,6 +40,7 @@ export const SidebarLayout = ({
             <Separator orientation="vertical" className="h-6" />
             <h1 className="text-lg font-bold" id="page-title"></h1>
             <div className="flex-1" />
+            <SearchInput />
             <Sheet>
               <SheetTrigger asChild>
                 <button className="relative p-2 rounded-full hover:bg-gray-100">

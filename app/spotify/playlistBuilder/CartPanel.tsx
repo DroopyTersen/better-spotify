@@ -9,68 +9,25 @@ import {
   AvatarImage,
   AvatarFallback,
 } from "~/shadcn/components/ui/avatar";
-
-interface SelectedArtist {
-  artist_id: string | null;
-  artist_name: string | null;
-  images?: {
-    url: string;
-    width: number;
-    height: number;
-  }[];
-}
-
-interface SelectedTrack {
-  track_id: string | null;
-  track_name: string | null;
-  artist_name: string | null;
-  images?: {
-    url: string;
-    width: number;
-    height: number;
-  }[];
-}
+import { Skeleton } from "~/shadcn/components/ui/skeleton";
 
 export function CartPanel() {
-  let {
-    selectedArtistIds,
-    selectedTrackIds,
+  const {
+    selectedArtists,
+    selectedTracks,
     removeArtist,
     removeTrack,
     totalSelectedCount,
-    spotifyData,
   } = usePlaylistSelection();
-  let submit = useSubmit();
-  let [isSubmitting, setIsSubmitting] = useState(false);
-
-  const selectedArtists = spotifyData.topArtists.filter((a) =>
-    selectedArtistIds.includes(a.artist_id!)
-  );
-
-  const allTracks = [
-    ...new Map(
-      [
-        ...spotifyData.topTracks,
-        ...spotifyData.likedTracks,
-        ...spotifyData.playHistory,
-      ].map((track) => [track.track_id, track])
-    ).values(),
-  ];
-
-  const selectedTracks = allTracks.filter((t) =>
-    selectedTrackIds.includes(t.track_id!)
-  );
+  const submit = useSubmit();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleBuildPlaylist = async () => {
     setIsSubmitting(true);
-    let input = {
-      topTracks: [],
-      likedTracks: [],
-      playHistory: [],
-      topArtists: [],
+    const input = {
       request: {
-        artistIds: selectedArtistIds,
-        trackIds: selectedTrackIds,
+        artistIds: selectedArtists.map((a) => a.artist_id),
+        trackIds: selectedTracks.map((t) => t.track_id),
         numSongs: 32,
       },
     };
@@ -79,6 +36,33 @@ export function CartPanel() {
       action: "/api/buildPlaylist",
       encType: "application/json",
     });
+  };
+
+  const renderArtistItem = (artist: (typeof selectedArtists)[number]) => {
+    return (
+      <div className="group flex items-center space-x-2 py-2 px-2 rounded-md hover:bg-gray-50">
+        <Avatar className="w-8 h-8">
+          <AvatarImage
+            src={
+              artist.images?.[0]?.url || "/placeholder.svg?height=32&width=32"
+            }
+            alt={artist?.artist_name || ""}
+          />
+          <AvatarFallback>
+            {artist?.artist_name?.slice(0, 2).toUpperCase() || ""}
+          </AvatarFallback>
+        </Avatar>
+        <span className="text-sm flex-grow">{artist.artist_name}</span>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => removeArtist(artist.artist_id)}
+          className="opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+    );
   };
 
   return (
@@ -98,32 +82,7 @@ export function CartPanel() {
             <p className="text-sm text-muted-foreground">No artists selected</p>
           ) : (
             selectedArtists.map((artist) => (
-              <div
-                key={artist.artist_id}
-                className="group flex items-center space-x-2 py-2 px-2 rounded-md hover:bg-gray-50"
-              >
-                <Avatar className="w-8 h-8">
-                  <AvatarImage
-                    src={
-                      artist.images?.[0]?.url ||
-                      "/placeholder.svg?height=32&width=32"
-                    }
-                    alt={artist.artist_name || ""}
-                  />
-                  <AvatarFallback>
-                    {artist.artist_name?.slice(0, 2).toUpperCase() || ""}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-sm flex-grow">{artist.artist_name}</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeArtist(artist.artist_id!)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
+              <div key={artist.artist_id}>{renderArtistItem(artist)}</div>
             ))
           )}
         </div>
@@ -157,7 +116,7 @@ export function CartPanel() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => removeTrack(track.track_id!)}
+                  onClick={() => removeTrack(track.track_id)}
                   className="opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   <X className="h-4 w-4" />

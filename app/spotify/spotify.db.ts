@@ -13,7 +13,7 @@ import {
   playlistTracksTable,
   savedTracksTable,
 } from "~/db/db.schema";
-import { eq, sql, desc } from "drizzle-orm";
+import { eq, sql, desc, inArray } from "drizzle-orm";
 import { Prettify } from "~/toolkit/utils/typescript.utils";
 
 export const spotifyDb = {
@@ -313,6 +313,79 @@ export const spotifyDb = {
       })
       .from(savedTracksTable);
   },
+  getArtistsByIds: async (db: DB, artistIds: string[]) => {
+    if (!artistIds.length) return [];
+
+    return db
+      .select({
+        artist_id: artistsTable.id,
+        artist_name: artistsTable.name,
+        artist_popularity: artistsTable.popularity,
+        genres: sql<string[]>`array_agg(distinct ${genresTable.name})`.as(
+          "genres"
+        ),
+        images: artistsTable.images,
+      })
+      .from(artistsTable)
+      .leftJoin(
+        artistGenresTable,
+        eq(artistsTable.id, artistGenresTable.artist_id)
+      )
+      .leftJoin(genresTable, eq(artistGenresTable.genre_id, genresTable.id))
+      .where(inArray(artistsTable.id, artistIds))
+      .groupBy(
+        artistsTable.id,
+        artistsTable.name,
+        artistsTable.popularity,
+        artistsTable.images
+      );
+  },
+  getTracksByIds: async (db: DB, trackIds: string[]) => {
+    if (!trackIds.length) return [];
+
+    const results = await db
+      .select({
+        track_name: tracksTable.name,
+        track_popularity: tracksTable.popularity,
+        track_duration_ms: tracksTable.duration_ms,
+        track_is_playable: tracksTable.is_playable,
+        track_id: tracksTable.id,
+        artist_id: artistsTable.id,
+        artist_name: artistsTable.name,
+        artist_popularity: artistsTable.popularity,
+        genres: sql<string[]>`array_agg(distinct ${genresTable.name})`.as(
+          "genres"
+        ),
+        release_date: albumsTable.release_date,
+        album_name: albumsTable.name,
+        images: artistsTable.images,
+      })
+      .from(tracksTable)
+      .leftJoin(artistTracks, eq(tracksTable.id, artistTracks.track_id))
+      .leftJoin(artistsTable, eq(artistTracks.artist_id, artistsTable.id))
+      .leftJoin(
+        artistGenresTable,
+        eq(artistsTable.id, artistGenresTable.artist_id)
+      )
+      .leftJoin(genresTable, eq(artistGenresTable.genre_id, genresTable.id))
+      .leftJoin(albumsTable, eq(tracksTable.album_id, albumsTable.id))
+      .where(inArray(tracksTable.id, trackIds))
+      .groupBy(
+        tracksTable.id,
+        tracksTable.name,
+        tracksTable.popularity,
+        tracksTable.duration_ms,
+        tracksTable.is_playable,
+        artistsTable.id,
+        artistsTable.name,
+        artistsTable.popularity,
+        albumsTable.release_date,
+        albumsTable.name,
+        artistsTable.images
+      );
+
+    return [...new Map(results.map((item) => [item.track_id, item])).values()];
+  },
 };
 
 export type SpotifyPlaylist = {
@@ -342,4 +415,12 @@ export type SpotifyPlayedTrack = Prettify<
 
 export type SpotifyRecentArtist = Awaited<
   ReturnType<typeof spotifyDb.getRecentArtists>
+>[number];
+
+export type SpotifyArtistById = Awaited<
+  ReturnType<typeof spotifyDb.getArtistsByIds>
+>[number];
+
+export type SpotifyTrackById = Awaited<
+  ReturnType<typeof spotifyDb.getTracksByIds>
 >[number];

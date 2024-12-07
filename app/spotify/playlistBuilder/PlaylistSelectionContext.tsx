@@ -1,24 +1,24 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { SpotifyRecentArtist } from "../spotify.db";
-import { SpotifyPlayedTrack, SpotifyLikedTrack } from "../spotify.db";
-import { SpotifyTopTrack } from "../spotify.db";
-import { SpotifyTopArtist } from "../spotify.db";
+import { createSpotifySdk } from "../createSpotifySdk";
+import { useCurrentUser } from "~/auth/useCurrentUser";
+import { getDb } from "~/db/db.client";
+import { spotifyDb, SpotifyArtistById, SpotifyTrackById } from "../spotify.db";
+import {
+  syncSearchSelectedArtist,
+  syncSearchSelectedTrack,
+} from "../sync/syncSearchSelectedItems";
+import usePersistedState from "~/toolkit/hooks/usePersistedState";
 
 type PlaylistSelectionContextValue = {
+  selectedArtists: SpotifyArtistById[];
+  selectedTracks: SpotifyTrackById[];
   selectedArtistIds: string[];
   selectedTrackIds: string[];
-  toggleArtistSelection: (id: string) => void;
-  toggleTrackSelection: (id: string) => void;
+  toggleArtistSelection: (id: string) => Promise<void>;
+  toggleTrackSelection: (id: string) => Promise<void>;
   removeArtist: (id: string) => void;
   removeTrack: (id: string) => void;
   totalSelectedCount: number;
-  spotifyData: {
-    topArtists: SpotifyTopArtist[];
-    topTracks: SpotifyTopTrack[];
-    likedTracks: SpotifyLikedTrack[];
-    playHistory: SpotifyPlayedTrack[];
-    recentArtists: SpotifyRecentArtist[];
-  };
 };
 
 const PlaylistSelectionContext = createContext<PlaylistSelectionContextValue>(
@@ -27,65 +27,97 @@ const PlaylistSelectionContext = createContext<PlaylistSelectionContextValue>(
 
 export const PlaylistSelectionProvider = ({
   children,
-  spotifyData,
 }: {
   children: React.ReactNode;
-  spotifyData: PlaylistSelectionContextValue["spotifyData"];
 }) => {
-  const [selectedArtistIds, setSelectedArtistIds] = useState<string[]>([]);
-  const [selectedTrackIds, setSelectedTrackIds] = useState<string[]>([]);
+  const user = useCurrentUser();
+  const [selectedArtists, setSelectedArtists] = usePersistedState<
+    SpotifyArtistById[]
+  >([], "playlist_selection_artists");
+  const [selectedTracks, setSelectedTracks] = usePersistedState<
+    SpotifyTrackById[]
+  >([], "playlist_selection_tracks");
 
-  useEffect(() => {
-    let stored = localStorage.getItem("playlist_selection");
-    if (stored) {
-      let { selectedArtistIds, selectedTrackIds } = JSON.parse(stored);
-      setSelectedArtistIds(selectedArtistIds || []);
-      setSelectedTrackIds(selectedTrackIds || []);
+  const toggleArtistSelection = async (artistId: string) => {
+    if (selectedArtists.some((a) => a.artist_id === artistId)) {
+      setSelectedArtists((prev) =>
+        prev.filter((a) => a.artist_id !== artistId)
+      );
+      return;
     }
-  }, []);
 
-  useEffect(() => {
-    localStorage.setItem(
-      "playlist_selection",
-      JSON.stringify({ selectedArtistIds, selectedTrackIds })
-    );
-  }, [selectedArtistIds, selectedTrackIds]);
+    setSelectedArtists((prev) => [
+      ...prev,
+      { artist_id: artistId } as SpotifyArtistById,
+    ]);
 
-  const toggleArtistSelection = (id: string) => {
-    setSelectedArtistIds((prev) =>
-      prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]
-    );
+    try {
+      const sdk = createSpotifySdk(user?.tokens!);
+      await syncSearchSelectedArtist(sdk, artistId);
+
+      const db = getDb();
+      const [artist] = await spotifyDb.getArtistsByIds(db, [artistId]);
+      if (artist) {
+        setSelectedArtists((prev) =>
+          prev.map((a) => (a.artist_id === artistId ? artist : a))
+        );
+      }
+    } catch (error) {
+      setSelectedArtists((prev) =>
+        prev.filter((a) => a.artist_id !== artistId)
+      );
+    }
   };
 
-  const toggleTrackSelection = (id: string) => {
-    setSelectedTrackIds((prev) =>
-      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
-    );
+  const toggleTrackSelection = async (trackId: string) => {
+    if (selectedTracks.some((t) => t.track_id === trackId)) {
+      setSelectedTracks((prev) => prev.filter((t) => t.track_id !== trackId));
+      return;
+    }
+
+    setSelectedTracks((prev) => [
+      ...prev,
+      { track_id: trackId } as SpotifyTrackById,
+    ]);
+
+    try {
+      const sdk = createSpotifySdk(user?.tokens!);
+      await syncSearchSelectedTrack(sdk, trackId);
+
+      const db = getDb();
+      const [track] = await spotifyDb.getTracksByIds(db, [trackId]);
+      if (track) {
+        setSelectedTracks((prev) =>
+          prev.map((t) => (t.track_id === trackId ? track : t))
+        );
+      }
+    } catch (error) {
+      setSelectedTracks((prev) => prev.filter((t) => t.track_id !== trackId));
+    }
   };
 
   const removeArtist = (id: string) => {
-    setSelectedArtistIds((prev) => prev.filter((a) => a !== id));
+    setSelectedArtists((prev) => prev.filter((a) => a.artist_id !== id));
   };
 
   const removeTrack = (id: string) => {
-    setSelectedTrackIds((prev) => prev.filter((t) => t !== id));
+    setSelectedTracks((prev) => prev.filter((t) => t.track_id !== id));
   };
 
-  const totalSelectedCount = selectedArtistIds.length + selectedTrackIds.length;
+  const value = {
+    selectedArtists,
+    selectedTracks,
+    selectedArtistIds: selectedArtists.map((a) => a.artist_id),
+    selectedTrackIds: selectedTracks.map((t) => t.track_id),
+    toggleArtistSelection,
+    toggleTrackSelection,
+    removeArtist,
+    removeTrack,
+    totalSelectedCount: selectedArtists.length + selectedTracks.length,
+  };
 
   return (
-    <PlaylistSelectionContext.Provider
-      value={{
-        selectedArtistIds,
-        selectedTrackIds,
-        toggleArtistSelection,
-        toggleTrackSelection,
-        removeArtist,
-        removeTrack,
-        totalSelectedCount,
-        spotifyData,
-      }}
-    >
+    <PlaylistSelectionContext.Provider value={value}>
       {children}
     </PlaylistSelectionContext.Provider>
   );

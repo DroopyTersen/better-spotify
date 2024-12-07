@@ -94,7 +94,13 @@ export const SidebarNav = ({
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild className="font-medium">
+                <SidebarMenuButton
+                  asChild
+                  className={cn(
+                    "font-medium",
+                    pathname?.startsWith("/play-history") && "bg-gray-100"
+                  )}
+                >
                   <Link to="/play-history">
                     <HistoryIcon className="h-5 w-5" />
                     <span>Play History</span>

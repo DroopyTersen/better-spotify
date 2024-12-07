@@ -5,6 +5,7 @@ import { createSingleton } from "~/toolkit/utils/createSingleton";
 import { drizzle, PgliteDatabase } from "drizzle-orm/pglite";
 import * as schema from "./db.schema";
 let _pg: PGlite;
+const VERSION = "0.0.1";
 export type DB = PgliteDatabase<typeof schema>;
 let _db: DB;
 export const initDb = async () => {
@@ -13,7 +14,11 @@ export const initDb = async () => {
   }
   _pg = await createSingleton("pg", async () => {
     let pg = new PGlite("idb://better-spotify");
-    await applyMigrations(pg);
+    let dbVersion = localStorage.getItem("dbVersion");
+    if (!dbVersion || dbVersion !== VERSION) {
+      await applyMigrations(pg);
+      localStorage.setItem("dbVersion", VERSION);
+    }
     return pg;
   });
   _db = drizzle({

@@ -48,18 +48,25 @@ export const clientLoader = async ({
   let { user, playlists, devices } = await serverLoader();
   let results = await db.transaction(
     async (tx) => {
-      let [topTracks, topArtists, playHistory, likedTracks, recentArtists] =
-        await Promise.all([
-          spotifyDb.getTopTracks(tx, {
-            limit: 200,
-          }),
-          spotifyDb.getTopArtists(tx, {
-            limit: 100,
-          }),
-          spotifyDb.getPlayHistory(tx, { limit: 100 }),
-          spotifyDb.getLikedTracks(tx, { limit: 100 }),
-          spotifyDb.getRecentArtists(tx, { limit: 100 }),
-        ]);
+      let [
+        topTracks,
+        topArtists,
+        playHistory,
+        likedTracks,
+        recentArtists,
+        basicLikedTracks,
+      ] = await Promise.all([
+        spotifyDb.getTopTracks(tx, {
+          limit: 200,
+        }),
+        spotifyDb.getTopArtists(tx, {
+          limit: 100,
+        }),
+        spotifyDb.getPlayHistory(tx, { limit: 100 }),
+        spotifyDb.getLikedTracks(tx, { limit: 100 }),
+        spotifyDb.getRecentArtists(tx, { limit: 100 }),
+        spotifyDb.getBasicLikedTracks(tx),
+      ]);
       return {
         topTracks,
         topArtists,
@@ -68,6 +75,7 @@ export const clientLoader = async ({
         recentArtists,
         playlists,
         devices,
+        basicLikedTracks,
       };
     },
     {

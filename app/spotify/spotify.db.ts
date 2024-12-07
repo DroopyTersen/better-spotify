@@ -304,6 +304,15 @@ export const spotifyDb = {
       .limit(limit)
       .offset(offset);
   },
+  getBasicLikedTracks: async (db: DB) => {
+    return db
+      .select({
+        saved_id: savedTracksTable.id,
+        track_id: savedTracksTable.track_id,
+        added_at: savedTracksTable.added_at,
+      })
+      .from(savedTracksTable);
+  },
 };
 
 export type SpotifyPlaylist = {

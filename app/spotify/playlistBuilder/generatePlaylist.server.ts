@@ -1,6 +1,6 @@
 import { openai } from "@ai-sdk/openai";
 import { anthropic } from "@ai-sdk/anthropic";
-import { generateObject } from "ai";
+import { generateObject, streamObject } from "ai";
 
 import { z } from "zod";
 import { GeneratePlaylistInput } from "./playlistBuilder.types";
@@ -43,11 +43,12 @@ export type PlaylistCurationResponse = z.infer<typeof PlaylistCurationResponse>;
 export const generatePlaylist = async (
   playlistRequest: GeneratePlaylistInput
 ) => {
-  console.log("🚀 | playlistRequest:", playlistRequest);
-  let result = await generateObject({
-    // model: openai("gpt-4o", { structuredOutputs: true }),
-    model: anthropic("claude-3-5-sonnet-20241022"),
+  const llmStartTime = performance.now();
+  let stream = streamObject({
+    model: openai("gpt-4o", { structuredOutputs: true }),
+    // model: anthropic("claude-3-5-sonnet-20241022"),
     schema: PlaylistCurationResponse,
+
     messages: [
       {
         role: "system",
@@ -94,7 +95,10 @@ ${JSON.stringify(playlistRequest.newOptions, null, 2)}
     ],
   });
 
-  return result.object;
+  for await (const chunk of stream.partialObjectStream) {
+    console.log(chunk);
+  }
+  return stream.object;
 };
 const PLAYLIST_CURATION_PROMPT = `You are a professional music curator with deep knowledge of music genres, artists, and song relationships. Your task is to create a cohesive playlist from two pools of songs, familiar songs and new songs, while following specific guidelines.
 

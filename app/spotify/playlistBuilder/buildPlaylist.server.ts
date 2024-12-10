@@ -11,21 +11,24 @@ import {
   SongDistribution,
 } from "./playlistBuilder.types";
 import { getPlaylist } from "../api/getPlaylist";
+import { buildFamiliarSongsPool } from "./buildFamiliarSongPool";
 
 export async function buildPlaylist(
   input: BuildPlaylistInput,
   sdk: SpotifySdk
 ) {
+  const totalStartTime = performance.now();
+
   const requestWithDefaults = {
     ...DEFAULT_PLAYLIST_BUILDER_REQUEST,
     ...input.request,
   };
-  console.log("🚀 | requestWithDefaults:", requestWithDefaults);
+
   // 1. Calculate distribution of songs
   const distribution = calculateSongDistribution(requestWithDefaults);
-  console.log("🚀 | distribution:", distribution);
 
   // 2. Build pools of songs to choose from
+  const familiarPoolStartTime = performance.now();
   const familiarPool = await buildFamiliarSongsPool(
     {
       ...input,
@@ -33,7 +36,14 @@ export async function buildPlaylist(
     },
     sdk
   );
+  console.log(
+    `⏱️ Building familiar songs pool took: ${
+      performance.now() - familiarPoolStartTime
+    }ms`
+  );
 
+  // 3. Process artists for recommendations
+  const artistProcessingStartTime = performance.now();
   let artistsToMatch = Array.from(
     new Set([
       ...familiarPool.specifiedTracks.map((t) => t.artist_name || ""),
@@ -49,25 +59,51 @@ export async function buildPlaylist(
       ...input.playHistory.map((t) => t.artist_name || ""),
     ])
   ).filter(Boolean);
+  console.log(
+    `⏱️ Artist list processing took: ${
+      performance.now() - artistProcessingStartTime
+    }ms`
+  );
+
+  // 4. Generate artist recommendations
+  const recommendationsStartTime = performance.now();
   let recommendedNewArtists: string[] = await generateArtistRecommendations({
     artistsToMatch,
     artistsToExclude,
     desiredArtistCount: Math.max(4, Math.floor(distribution.numNewSongs / 2)),
   });
+  console.log(
+    `⏱️ Artist recommendations generation took: ${
+      performance.now() - recommendationsStartTime
+    }ms`
+  );
+
   let newSongs: BuildPlaylistTrack[] = [];
 
-  // Search for each recommended artist and get their top tracks concurrently
+  // 5. Fetch new songs from recommended artists
+  const newSongsStartTime = performance.now();
   await Promise.all(
     recommendedNewArtists.map(async (artistName) => {
+      // const artistSearchStartTime = performance.now();
       let artistResults = await sdk.search(artistName, ["artist"], "US", 1);
       if (!artistResults.artists.items[0]) return;
+      // console.log(
+      //   `⏱️ Artist search for ${artistName} took: ${
+      //     performance.now() - artistSearchStartTime
+      //   }ms`
+      // );
 
+      // const topTracksStartTime = performance.now();
       let topTracks = await sdk.artists.topTracks(
         artistResults.artists.items[0].id,
         "US"
       );
+      // console.log(
+      //   `⏱️ Fetching top tracks for ${artistName} took: ${
+      //     performance.now() - topTracksStartTime
+      //   }ms`
+      // );
 
-      // Map tracks to BuildPlaylistTrack format and add to newSongs
       let artistTracks = topTracks.tracks.map((t) => ({
         id: t.id,
         name: t.name,
@@ -79,7 +115,14 @@ export async function buildPlaylist(
       newSongs.push(...artistTracks);
     })
   );
+  console.log(
+    `⏱️ Total new songs fetching took: ${
+      performance.now() - newSongsStartTime
+    }ms`
+  );
 
+  // 6. Generate final playlist
+  const playlistGenerationStartTime = performance.now();
   let generatedPlaylist = await generatePlaylist({
     request: requestWithDefaults,
     familiarOptions: familiarPool,
@@ -87,24 +130,55 @@ export async function buildPlaylist(
     topArtists: input.topArtists.map((a) => a.name),
     newOptions: newSongs,
   });
-  // Add a specified track to the front and shuffle the rest
-  // if (generatedPlaylist?.playlist?.tracks) {
-  //   shuffleTracks(
-  //     generatedPlaylist.playlist.tracks as BuildPlaylistTrack[],
-  //     familiarPool.specifiedTracks
-  //   );
-  // }
+  console.log(
+    `⏱️ Playlist generation took: ${
+      performance.now() - playlistGenerationStartTime
+    }ms`
+  );
+
+  // 7. Create and populate the playlist
+  const playlistCreationStartTime = performance.now();
   let currentUser = await sdk.currentUser.profile();
   const playlist = await sdk.playlists.createPlaylist(currentUser.id, {
     name: dayjs().format("YYYY-MM-DD") + " " + generatedPlaylist.playlist.name,
   });
 
+  const validTrackIds = new Set([
+    ...familiarPool.specifiedTracks.map((t) => t.id),
+    ...familiarPool.topTracks.map((t) => t.id),
+    ...familiarPool.likedTracks.map((t) => t.id),
+    ...Object.values(familiarPool.artistCatalogs).flatMap((catalog) =>
+      catalog.map((t) => t.id)
+    ),
+    ...newSongs.map((t) => t.id),
+  ]);
+
+  const validPlaylistTracks = generatedPlaylist.playlist.tracks.filter(
+    (track) => validTrackIds.has(track.id)
+  );
+
   await sdk.playlists.addItemsToPlaylist(
     playlist.id,
-    generatedPlaylist.playlist.tracks.map((t) => `spotify:track:${t.id}`)
+    validPlaylistTracks.map((t) => `spotify:track:${t.id}`)
   );
+  console.log(
+    `⏱️ Playlist creation and population took: ${
+      performance.now() - playlistCreationStartTime
+    }ms`
+  );
+
+  // 8. Fetch final playlist
+  const finalFetchStartTime = performance.now();
   let finalPlaylist = await getPlaylist(sdk, playlist.id);
-  // TODO: save playlist to DB? or just start only using API for playlists?
+  console.log(
+    `⏱️ Final playlist fetch took: ${performance.now() - finalFetchStartTime}ms`
+  );
+
+  console.log(
+    `⏱️ Total playlist building process took: ${
+      performance.now() - totalStartTime
+    }ms`
+  );
 
   return {
     request: requestWithDefaults,
@@ -134,123 +208,6 @@ function calculateSongDistribution(
     numFamiliarSongs,
     numNewSongs,
   };
-}
-
-/**
- * Build pool of familiar songs from specified artists and tracks
- * This includes:
- * - Specified tracks directly
- * - Top tracks from specified artists
- * - Liked tracks from specified artists
- * - Full artist catalogs (filtered by popularity based on deepCutsRatio)
- */
-async function buildFamiliarSongsPool(
-  input: BuildPlaylistInput,
-  sdk: SpotifySdk
-): Promise<FamiliarSongsPool> {
-  let { artistIds, trackIds } = input.request;
-
-  // 1. Get specified tracks with correct field selection
-  const tracks = await sdk.tracks.get(trackIds.slice(0, 20));
-  const specifiedTracks = tracks.map((track) => ({
-    id: track.id,
-    name: track.name,
-    popularity: track.popularity,
-    artist_name: track.artists[0]?.name ?? null,
-    artist_id: track.artists[0]?.id ?? null,
-  }));
-  if (artistIds.length / input.request.numSongs < 10) {
-    artistIds = Array.from(
-      new Set([
-        ...input.request.artistIds,
-        ...specifiedTracks.map((t) => t.artist_id),
-      ])
-    ).filter(Boolean) as string[];
-    console.log("🚀 | specifiedTracks | specifiedTracks:", specifiedTracks);
-  }
-  // Initialize our pool structure
-
-  let allLikedTracks = input.likedTracks;
-
-  let allTopTracks = input.topTracks;
-
-  const pool: FamiliarSongsPool = {
-    specifiedTracks,
-    topTracks: allTopTracks.filter(
-      (t) => t.artist_id && artistIds.includes(t.artist_id)
-    ),
-    artistCatalogs: {},
-    likedTracks: allLikedTracks.filter(
-      (t) => t.artist_id && artistIds.includes(t.artist_id)
-    ),
-  };
-
-  // 2. Process each artist concurrently
-  const artistPromises = artistIds.map(async (artistId) => {
-    // Get full artist catalog
-    const artistTracks = await getAllArtistTracks(sdk, artistId);
-
-    // Filter out any tracks that are already in liked or top tracks to avoid duplicates
-    const filteredArtistTracks = artistTracks.filter((track) => {
-      const isInLikedTracks = pool.likedTracks.some((t) => t.id === track.id);
-      const isInTopTracks = pool.topTracks.some((t) => t.id === track.id);
-      return !isInLikedTracks && !isInTopTracks;
-    });
-
-    return {
-      artistId,
-      tracks: filteredArtistTracks,
-    };
-  });
-
-  // Wait for all artist processing to complete
-  const artistResults = await Promise.all(artistPromises);
-
-  // Add results to pool
-  artistResults.forEach(({ artistId, tracks }) => {
-    pool.artistCatalogs[artistId] = tracks;
-  });
-
-  return pool;
-}
-
-/**
- * Helper function to get tracks from an artist's albums
- * Gets up to 20 albums and all their tracks
- */
-async function getAllArtistTracks(
-  sdk: SpotifySdk,
-  artistId: string
-): Promise<BuildPlaylistTrack[]> {
-  const tracks: BuildPlaylistTrack[] = [];
-  const limit = 20; // Number of albums to fetch
-
-  // Get first batch of albums
-  const response = await sdk.artists.albums(artistId, "album", "US", limit, 0);
-
-  // Get tracks from all albums in parallel
-  const albumTrackPromises = response.items.map((album) =>
-    sdk.albums.tracks(album.id)
-  );
-
-  const albumTracksResults = await Promise.all(albumTrackPromises);
-
-  // Process all album tracks
-  albumTracksResults.forEach((albumTracks) => {
-    tracks.push(
-      ...albumTracks.items.map(
-        (track): BuildPlaylistTrack => ({
-          id: track.id,
-          name: track.name,
-          popularity: null,
-          artist_id: artistId,
-          artist_name: track.artists[0]?.name ?? null,
-        })
-      )
-    );
-  });
-
-  return tracks;
 }
 
 function shuffleTracks(

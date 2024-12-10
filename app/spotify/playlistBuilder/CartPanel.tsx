@@ -10,6 +10,8 @@ import {
   AvatarFallback,
 } from "~/shadcn/components/ui/avatar";
 import { Skeleton } from "~/shadcn/components/ui/skeleton";
+import { getBuildPlaylistInput } from "./getPlaylistBuildInput";
+import { useSpotifyData } from "./useSpotifyData";
 
 export function CartPanel() {
   const {
@@ -20,17 +22,15 @@ export function CartPanel() {
     totalSelectedCount,
   } = usePlaylistSelection();
   const submit = useSubmit();
+  const spotifyData = useSpotifyData();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleBuildPlaylist = async () => {
     setIsSubmitting(true);
-    const input = {
-      request: {
-        artistIds: selectedArtists.map((a) => a.artist_id),
-        trackIds: selectedTracks.map((t) => t.track_id),
-        numSongs: 32,
-      },
-    };
+    const input = await getBuildPlaylistInput(spotifyData, {
+      selectedArtistIds: selectedArtists.map((a) => a.artist_id),
+      selectedTrackIds: selectedTracks.map((t) => t.track_id),
+    });
     submit(JSON.stringify(input), {
       method: "post",
       action: "/api/buildPlaylist",

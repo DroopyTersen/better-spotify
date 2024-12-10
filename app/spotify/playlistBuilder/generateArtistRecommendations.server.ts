@@ -33,8 +33,6 @@ ${
     : ""
 }`;
 
-  console.log("userPrompt", userPrompt);
-
   const result = await generateObject({
     // model: openai("gpt-4o", { structuredOutputs: true }),
     model: anthropic("claude-3-5-sonnet-20241022"),
@@ -54,7 +52,8 @@ ${
 
   console.log(
     "🚀 | result.object.recommended_artists:",
-    result.object.recommended_artists
+    result.usage,
+    result.object.recommended_artists.join(", ")
   );
   return result.object.recommended_artists;
 };

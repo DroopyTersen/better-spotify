@@ -27,8 +27,8 @@ export const BuildPlaylistTrack = z.object({
   id: z.string(),
   name: z.string(),
   popularity: z.number().nullable().optional(),
-  artist_name: z.string().nullable(),
-  artist_id: z.string().nullable(),
+  artist_name: z.string().nullable().optional(),
+  artist_id: z.string().nullable().optional(),
 });
 
 export type BuildPlaylistTrack = z.infer<typeof BuildPlaylistTrack>;

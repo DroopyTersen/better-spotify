@@ -22,7 +22,6 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   let sdk = createSpotifySdk(user.tokens!);
   let [playlists, devicesResults] = await Promise.all([
     sdk.currentUser.playlists.playlists(50).then((result) => {
-      console.log("🚀 | loader | result:", result);
       return result.items
         .filter((r) => r?.id)
         .map((r) => ({
@@ -125,7 +124,7 @@ export default function RootLayout({ loaderData }: Route.ComponentProps) {
   if (!("topTracks" in loaderData)) return null;
 
   return (
-    <PlaylistSelectionProvider spotifyData={loaderData as any}>
+    <PlaylistSelectionProvider>
       <SidebarLayout
         playlists={(loaderData?.playlists || []) as any}
         devices={loaderData.devices}

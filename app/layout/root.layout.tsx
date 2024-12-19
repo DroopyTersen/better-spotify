@@ -5,7 +5,6 @@ import { useCurrentUser } from "~/auth/useCurrentUser";
 import { getDb } from "~/db/db.client";
 import { SidebarLayout } from "~/layout/SidebarLayout";
 import { createSpotifySdk } from "~/spotify/createSpotifySdk";
-import { PlaylistSelectionProvider } from "~/spotify/playlistBuilder/PlaylistSelectionContext";
 import { spotifyDb } from "~/spotify/spotify.db";
 import { syncFullArtistData } from "~/spotify/sync/syncFullArtistData";
 import { syncPlayHistory } from "~/spotify/sync/syncPlayHistory";
@@ -45,46 +44,15 @@ export const clientLoader = async ({
   console.time("data-loading");
   let db = getDb();
   let { user, playlists, devices } = await serverLoader();
-  let results = await db.transaction(
-    async (tx) => {
-      let [
-        topTracks,
-        topArtists,
-        playHistory,
-        likedTracks,
-        recentArtists,
-        basicLikedTracks,
-      ] = await Promise.all([
-        spotifyDb.getTopTracks(tx, {
-          limit: 200,
-        }),
-        spotifyDb.getTopArtists(tx, {
-          limit: 100,
-        }),
-        spotifyDb.getPlayHistory(tx, { limit: 100 }),
-        spotifyDb.getLikedTracks(tx, { limit: 100 }),
-        spotifyDb.getRecentArtists(tx, { limit: 100 }),
-        spotifyDb.getBasicLikedTracks(tx),
-      ]);
-      return {
-        topTracks,
-        topArtists,
-        playHistory,
-        likedTracks,
-        recentArtists,
-        playlists,
-        devices,
-        basicLikedTracks,
-      };
-    },
-    {
-      accessMode: "read only",
-      isolationLevel: "repeatable read",
-    }
-  );
+  let dbResults = await spotifyDb.getAllSpotifyData(db);
 
   console.timeEnd("data-loading");
-  return results;
+  return {
+    ...dbResults,
+    user,
+    playlists,
+    devices,
+  };
 };
 
 export default function RootLayout({ loaderData }: Route.ComponentProps) {
@@ -93,13 +61,13 @@ export default function RootLayout({ loaderData }: Route.ComponentProps) {
     ? createSpotifySdk(currentUser?.tokens!)
     : null;
   let revalidator = useRevalidator();
-  console.log("🚀 | RootLayout | loaderData:", loaderData);
   useEffect(() => {
     revalidator.revalidate();
   }, []);
   useEffect(() => {
     if (sdk) {
       syncPlayHistory(sdk).then((data) => {
+        console.log("🚀 | syncPlayHistory | data:", data);
         if (data.inserted > 1) {
           syncFullArtistData(sdk).then(() => {
             revalidator.revalidate();
@@ -124,13 +92,11 @@ export default function RootLayout({ loaderData }: Route.ComponentProps) {
   if (!("topTracks" in loaderData)) return null;
 
   return (
-    <PlaylistSelectionProvider>
-      <SidebarLayout
-        playlists={(loaderData?.playlists || []) as any}
-        devices={loaderData.devices}
-      >
-        <Outlet />
-      </SidebarLayout>
-    </PlaylistSelectionProvider>
+    <SidebarLayout
+      playlists={(loaderData?.playlists || []) as any}
+      devices={loaderData.devices}
+    >
+      <Outlet />
+    </SidebarLayout>
   );
 }

@@ -1,9 +1,10 @@
+import { shuffleArray } from "~/toolkit/utils/shuffleArray";
 import { SpotifySdk } from "../createSpotifySdk";
 import { BuildPlaylistTrack } from "../playlistBuilder/playlistBuilder.types";
 
 /**
  * Helper function to get tracks from an artist's albums
- * Gets up to 20 albums and all their tracks
+ * Gets up to 20 albums and randomly selects 5 of them to get tracks from
  */
 export async function getAllArtistTracks(
   sdk: SpotifySdk,
@@ -11,32 +12,24 @@ export async function getAllArtistTracks(
 ): Promise<BuildPlaylistTrack[]> {
   const startTime = performance.now();
   const tracks: BuildPlaylistTrack[] = [];
-  const limit = 10; // Number of albums to fetch
+  const limit = 20; // Number of albums to fetch
 
   // Get first batch of albums
-  const albumsFetchStartTime = performance.now();
   const response = await sdk.artists.albums(artistId, "album", "US", limit, 0);
-  console.log(
-    `⏱️ Fetching albums for artist ${artistId} took: ${
-      performance.now() - albumsFetchStartTime
-    }ms`
-  );
 
-  // Get tracks from all albums in parallel
-  const tracksStartTime = performance.now();
-  const albumTrackPromises = response.items.map(async (album) =>
+  // Randomly select up to 5 albums
+  // Randomly select up to 5 albums
+  const albumCount = Math.min(5, response.items.length);
+  const selectedAlbums = shuffleArray(response.items).slice(0, albumCount);
+
+  // Get tracks from selected albums in parallel
+  const albumTrackPromises = selectedAlbums.map(async (album) =>
     sdk.albums.tracks(album.id)
   );
 
   const albumTracksResults = await Promise.all(albumTrackPromises);
-  console.log(
-    `⏱️ Fetching all album tracks for artist ${artistId} took: ${
-      performance.now() - tracksStartTime
-    }ms`
-  );
 
-  // Process all album tracks
-  const processingStartTime = performance.now();
+  // Process tracks from selected albums
   albumTracksResults.forEach((albumTracks) => {
     tracks.push(
       ...albumTracks.items.map(
@@ -50,16 +43,6 @@ export async function getAllArtistTracks(
       )
     );
   });
-  console.log(
-    `⏱️ Processing album tracks for artist ${artistId} took: ${
-      performance.now() - processingStartTime
-    }ms`
-  );
-  console.log(
-    `⏱️ Total time to get all tracks for artist ${artistId}: ${
-      performance.now() - startTime
-    }ms`
-  );
 
   return tracks;
 }

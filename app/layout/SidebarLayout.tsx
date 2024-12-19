@@ -13,9 +13,9 @@ import {
 } from "~/shadcn/components/ui/sidebar";
 import { SpotifyPlaylist } from "~/spotify/spotify.db";
 import { SidebarNav } from "./SidebarNav";
-import { usePlaylistSelection } from "~/spotify/playlistBuilder/PlaylistSelectionContext";
 import { Device } from "@spotify/web-api-ts-sdk";
 import { SearchInput } from "~/spotify/components/SearchInput";
+import { usePlaylistBuildingService } from "~/spotify/playlistBuilder/usePlaylistBuildingService";
 
 export const SidebarLayout = ({
   children,
@@ -26,7 +26,7 @@ export const SidebarLayout = ({
   playlists: SpotifyPlaylist[];
   devices: Device[];
 }) => {
-  let { totalSelectedCount } = usePlaylistSelection();
+  let { totalSelectedCount } = usePlaylistBuildingService();
 
   return (
     <SidebarProvider>

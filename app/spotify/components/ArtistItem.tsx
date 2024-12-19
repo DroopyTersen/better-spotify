@@ -2,16 +2,23 @@ import dayjs from "dayjs";
 import { CheckIcon, Plus } from "lucide-react";
 import { Badge } from "~/shadcn/components/ui/badge";
 import { Button } from "~/shadcn/components/ui/button";
-import { SpotifyRecentArtist } from "../spotify.db";
 import { SpotifyImage } from "./SpotifyImage";
 import { useCurrentUser } from "~/auth/useCurrentUser";
 
-export function RecentArtistItem({
+export function ArtistItem({
   artist,
+  metadata,
   isSelected,
   toggleSelection,
 }: {
-  artist: SpotifyRecentArtist;
+  artist: {
+    artist_id: string | null;
+    artist_name: string | null;
+    genres?: string[] | null;
+    images?: { url: string }[] | null;
+    play_count?: number;
+  };
+  metadata?: React.ReactNode | React.ReactNode[];
   isSelected?: boolean;
   toggleSelection?: (artistId: string) => void;
 }) {
@@ -28,21 +35,31 @@ export function RecentArtistItem({
         canPlay={currentUser?.product === "premium"}
       />
       <div className="flex-grow">
-        <h3 className="font-semibold">{artist.artist_name}</h3>{" "}
-        <p className="text-sm text-muted-foreground">
-          {artist.play_count} Recent Plays
-        </p>
-        <div className="mt-1 flex items-center space-x-2">
-          {artist.genres?.slice(0, 3).map((genre) => (
-            <Badge variant="secondary">{genre}</Badge>
-          ))}
-        </div>
+        <h3 className="font-semibold">{artist.artist_name}</h3>
+        {artist.play_count && artist?.play_count > 0 ? (
+          <p className="text-xs text-muted-foreground">
+            {artist.play_count} Recent Plays
+          </p>
+        ) : null}
+        {artist?.genres?.length && artist?.genres?.length > 0 && (
+          <div className="mt-1 items-center space-x-2 -mx-1 hidden md:flex">
+            {artist?.genres
+              ?.filter((g) => g && g !== "NULL")
+              .slice(0, 3)
+              .map((genre) => (
+                <Badge variant="secondary" key={genre}>
+                  {genre}
+                </Badge>
+              ))}
+          </div>
+        )}
       </div>
       <div className="flex items-end gap-4">
-        <div className="text-right text-sm text-muted-foreground">
-          <p>{dayjs(artist.last_played).format("MM/DD/YYYY")}</p>
-          <p>{dayjs(artist.last_played).format("h:mm A")}</p>
-        </div>
+        {metadata && (
+          <div className="text-right text-sm text-muted-foreground">
+            {metadata}
+          </div>
+        )}
         {toggleSelection && (
           <Button
             size="icon"

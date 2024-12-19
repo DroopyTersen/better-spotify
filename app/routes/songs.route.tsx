@@ -9,7 +9,7 @@ import {
   TabsTrigger,
 } from "~/shadcn/components/ui/tabs";
 import { TrackItem } from "~/spotify/components/TrackItem";
-import { usePlaylistSelection } from "~/spotify/playlistBuilder/PlaylistSelectionContext";
+import { usePlaylistBuildingService } from "~/spotify/playlistBuilder/usePlaylistBuildingService";
 import type { SpotifyPlayedTrack } from "~/spotify/spotify.db";
 import { spotifyDb } from "~/spotify/spotify.db";
 import { Route } from "./+types/songs.route";
@@ -25,9 +25,9 @@ export const clientLoader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export default function SongsRoute({ loaderData }: Route.ComponentProps) {
-  console.log("🚀 | SongsRoute | loaderData:", loaderData);
   const { topTracks, likedTracks, playHistory } = loaderData;
-  const { selectedTrackIds, toggleTrackSelection } = usePlaylistSelection();
+  const { selectedTrackIds, toggleTrackSelection } =
+    usePlaylistBuildingService();
 
   return (
     <>

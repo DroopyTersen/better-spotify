@@ -23,7 +23,7 @@ export const getPlayHistory = async (
   let hasMorePages = true;
   let before: string | undefined = options?.before;
   let after: string | undefined = options?.after;
-  console.log("🚀 | hasMorePages:", hasMorePages);
+
   while (hasMorePages) {
     // Add 'before' parameter if we have a timestamp from previous iteration
     if (before) {
@@ -34,8 +34,8 @@ export const getPlayHistory = async (
     if (after) {
       params.set("after", after);
     }
+    console.log("🚀 | params:", Object.fromEntries(params), options);
 
-    console.log("🚀 | params:", params.toString());
     // const page = await sdk.player.getRecentlyPlayedTracks(LIMIT, {
     //   timestamp: "",
     //   type: "b"
@@ -44,21 +44,19 @@ export const getPlayHistory = async (
       "GET",
       `me/player/recently-played?${params.toString()}`
     );
-    console.log("🚀 | page:", page);
 
     allTracks.push(...page.items);
 
-    // If we got fewer items than requested, we've reached the end
-    if (page.items.length < LIMIT) {
-      hasMorePages = false;
-    } else {
-      // Get timestamp of oldest track for next page request
-      // Convert to milliseconds and subtract 1 to avoid duplicates
-      before = page.items[page.items.length - 1].played_at;
-    }
-    console.log("🚀 | hasMorePages:", hasMorePages);
+    hasMorePages = false;
+
+    // if (page.items.length < LIMIT) {
+    //   hasMorePages = false;
+    // } else {
+    //   // Get timestamp of oldest track for next page request
+    //   // Convert to milliseconds and subtract 1 to avoid duplicates
+    //   before = page.items[page.items.length - 1].played_at;
+    // }
   }
-  console.log("🚀 | allTracks:", allTracks);
 
   return allTracks;
 };

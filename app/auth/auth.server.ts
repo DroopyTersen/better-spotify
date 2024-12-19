@@ -72,13 +72,13 @@ export async function requireAuth(request: Request) {
     request.headers.get("cookie")
   );
   let user = session.get("user") as User;
-  console.log(
-    "🚀 | requireAuth | time until token expires:",
-    dayjs(user.tokens.expiresAt).diff(dayjs(), "minutes"),
-    "minutes"
-  );
 
   if (user) {
+    console.log(
+      "🚀 | requireAuth | time until token expires:",
+      dayjs(user.tokens.expiresAt).diff(dayjs(), "minutes"),
+      "minutes"
+    );
     if (
       request.method === "GET" &&
       user?.tokens.refreshToken &&

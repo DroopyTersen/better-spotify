@@ -20,7 +20,11 @@ export default [
   route("/auth/callback", "auth/routes/auth.callback.route.tsx"),
   route("/spotify/sync", "spotify/sync/sync.route.tsx"),
   route(
-    "api/buildPlaylist",
+    "api/build-playlist",
     "spotify/playlistBuilder/api.buildPlaylist.route.ts"
+  ),
+  route(
+    "api/new-artist-recommendations",
+    "spotify/playlistBuilder/api.new-artist-recommendations.route.ts"
   ),
 ] satisfies RouteConfig;

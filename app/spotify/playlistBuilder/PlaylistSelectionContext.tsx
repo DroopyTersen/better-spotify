@@ -3,10 +3,7 @@ import { createSpotifySdk } from "../createSpotifySdk";
 import { useCurrentUser } from "~/auth/useCurrentUser";
 import { getDb } from "~/db/db.client";
 import { spotifyDb, SpotifyArtistById, SpotifyTrackById } from "../spotify.db";
-import {
-  syncSearchSelectedArtist,
-  syncSearchSelectedTrack,
-} from "../sync/syncSearchSelectedItems";
+import { syncNewArtists, syncNewTracks } from "../sync/syncNewItems";
 import usePersistedState from "~/toolkit/hooks/usePersistedState";
 
 type PlaylistSelectionContextValue = {
@@ -53,7 +50,7 @@ export const PlaylistSelectionProvider = ({
 
     try {
       const sdk = createSpotifySdk(user?.tokens!);
-      await syncSearchSelectedArtist(sdk, artistId);
+      await syncNewArtists(sdk, [artistId]);
 
       const db = getDb();
       const [artist] = await spotifyDb.getArtistsByIds(db, [artistId]);
@@ -82,7 +79,7 @@ export const PlaylistSelectionProvider = ({
 
     try {
       const sdk = createSpotifySdk(user?.tokens!);
-      await syncSearchSelectedTrack(sdk, trackId);
+      await syncNewTracks(sdk, [trackId]);
 
       const db = getDb();
       const [track] = await spotifyDb.getTracksByIds(db, [trackId]);

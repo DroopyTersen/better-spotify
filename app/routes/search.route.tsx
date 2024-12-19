@@ -1,25 +1,20 @@
-import { PageHeader } from "~/layout/PageHeader";
-import { requireAuth } from "~/auth/auth.server";
-import { createSpotifySdk } from "~/spotify/createSpotifySdk";
-import { ArtistList } from "~/spotify/components/ArtistList";
-import { TrackItem } from "~/spotify/components/TrackItem";
-import { usePlaylistSelection } from "~/spotify/playlistBuilder/PlaylistSelectionContext";
-import { Button } from "~/shadcn/components/ui/button";
-import { useNavigation, useLoaderData } from "react-router";
-import { useState } from "react";
-import { LoaderFunctionArgs } from "react-router";
-import { AlbumItem } from "~/spotify/components/AlbumItem";
-import { Route } from "./+types/search.route";
 import { CheckIcon, Plus } from "lucide-react";
-import { Badge } from "~/shadcn/components/ui/badge";
-import { SpotifyImage } from "~/spotify/components/SpotifyImage";
+import { requireAuth } from "~/auth/auth.server";
 import { useCurrentUser } from "~/auth/useCurrentUser";
+import { PageHeader } from "~/layout/PageHeader";
+import { Badge } from "~/shadcn/components/ui/badge";
+import { Button } from "~/shadcn/components/ui/button";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "~/shadcn/components/ui/tabs";
+import { SpotifyImage } from "~/spotify/components/SpotifyImage";
+import { TrackItem } from "~/spotify/components/TrackItem";
+import { createSpotifySdk } from "~/spotify/createSpotifySdk";
+import { usePlaylistBuildingService } from "~/spotify/playlistBuilder/usePlaylistBuildingService";
+import { Route } from "./+types/search.route";
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
   const user = await requireAuth(request);
@@ -61,7 +56,7 @@ export default function SearchRoute({ loaderData }: Route.ComponentProps) {
     selectedTrackIds,
     toggleArtistSelection,
     toggleTrackSelection,
-  } = usePlaylistSelection();
+  } = usePlaylistBuildingService();
   const currentUser = useCurrentUser();
 
   if (!loaderData.results) {

@@ -1,11 +1,10 @@
-import { Button } from "~/shadcn/components/ui/button";
-import { Badge } from "~/shadcn/components/ui/badge";
-import { CheckIcon, ExternalLink, Plus } from "lucide-react";
-import { SpotifyApiPlaylist } from "../api/getPlaylist";
-import { SpotifyImage } from "./SpotifyImage";
 import dayjs from "dayjs";
-import { usePlaylistSelection } from "../playlistBuilder/PlaylistSelectionContext";
+import { CheckIcon, ExternalLink, Plus } from "lucide-react";
 import { useCurrentUser } from "~/auth/useCurrentUser";
+import { Button } from "~/shadcn/components/ui/button";
+import { SpotifyApiPlaylist } from "../api/getPlaylist";
+import { usePlaylistBuildingService } from "../playlistBuilder/usePlaylistBuildingService";
+import { SpotifyImage } from "./SpotifyImage";
 
 interface PlaylistDisplayProps {
   playlist: SpotifyApiPlaylist;
@@ -13,7 +12,8 @@ interface PlaylistDisplayProps {
 
 export const PlaylistDisplay = ({ playlist }: PlaylistDisplayProps) => {
   let currentUser = useCurrentUser();
-  const { selectedTrackIds, toggleTrackSelection } = usePlaylistSelection();
+  const { selectedTrackIds, toggleTrackSelection } =
+    usePlaylistBuildingService();
 
   return (
     <div className="space-y-4 max-w-5xl">

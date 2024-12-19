@@ -1,14 +1,12 @@
-import { Link, useFetcher, useLocation, useNavigation } from "react-router";
 import {
+  History as HistoryIcon,
+  LogOut,
+  Mic2,
   Music2,
   Play,
-  Mic2,
-  Plus,
-  User,
-  LogOut,
   Settings,
-  History as HistoryIcon,
 } from "lucide-react";
+import { Link, useFetcher, useLocation, useNavigation } from "react-router";
 import {
   Avatar,
   AvatarFallback,
@@ -18,6 +16,7 @@ import {
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -25,10 +24,12 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarFooter,
   SidebarRail,
 } from "~/shadcn/components/ui/sidebar";
 
+import { Device } from "@spotify/web-api-ts-sdk";
+import { useCurrentUser } from "~/auth/useCurrentUser";
+import { Button } from "~/shadcn/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,13 +38,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "~/shadcn/components/ui/dropdown-menu";
-import { useCurrentUser } from "~/auth/useCurrentUser";
-import { SpotifyPlaylist } from "~/spotify/spotify.db";
-import { Button } from "~/shadcn/components/ui/button";
-import { useAsyncData } from "~/toolkit/hooks/useAsyncData";
-import { createSpotifySdk } from "~/spotify/createSpotifySdk";
 import { cn } from "~/shadcn/lib/utils";
-import { Device } from "@spotify/web-api-ts-sdk";
+import { SpotifyPlaylist } from "~/spotify/spotify.db";
 
 export const SidebarNav = ({
   playlists,
@@ -86,11 +82,16 @@ export const SidebarNav = ({
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild className="font-medium">
-                  <Link to="/now-playing">
+                <SidebarMenuButton
+                  asChild
+                  className="font-medium text-gray-400"
+                  disabled={true}
+                  title="Coming soon"
+                >
+                  <span>
                     <Play className="h-5 w-5" />
                     <span>Now Playing</span>
-                  </Link>
+                  </span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
@@ -156,7 +157,7 @@ export const SidebarNav = ({
           <SidebarGroupContent>
             <SidebarMenu>
               {playlists.slice(0, 10).map?.((playlist) => (
-                <SidebarMenuItem>
+                <SidebarMenuItem key={playlist.playlist_id}>
                   <SidebarMenuButton asChild>
                     <Link to={`/playlist/${playlist.playlist_id}`}>
                       {playlist.playlist_name}
@@ -203,7 +204,9 @@ export const SidebarNav = ({
                 <DropdownMenuContent align="start" className="w-56">
                   <DropdownMenuLabel>Devices</DropdownMenuLabel>
                   {devices?.map((device) => (
-                    <DropdownMenuItem>{device.name}</DropdownMenuItem>
+                    <DropdownMenuItem key={device.id}>
+                      {device.name}
+                    </DropdownMenuItem>
                   ))}
                   <DropdownMenuSeparator />
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>

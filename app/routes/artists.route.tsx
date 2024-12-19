@@ -1,23 +1,17 @@
 import { LoaderFunctionArgs } from "react-router";
+import { getDb } from "~/db/db.client";
 import { PageHeader } from "~/layout/PageHeader";
-import { requireAuth } from "~/auth/auth.server";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "~/shadcn/components/ui/tabs";
-import { useRouteData } from "~/toolkit/remix/useRouteData";
-import { ArtistList } from "~/spotify/components/ArtistList";
-import { RecentArtistItem } from "~/spotify/components/RecentArtistItem";
-import type {
-  SpotifyTopArtist,
-  SpotifyRecentArtist,
-} from "~/spotify/spotify.db";
-import { getDb } from "~/db/db.client";
+import { ArtistItem } from "~/spotify/components/ArtistItem";
+import { usePlaylistBuildingService } from "~/spotify/playlistBuilder/usePlaylistBuildingService";
 import { spotifyDb } from "~/spotify/spotify.db";
 import { Route } from "./+types/artists.route";
-import { usePlaylistSelection } from "~/spotify/playlistBuilder/PlaylistSelectionContext";
+import dayjs from "dayjs";
 
 export const clientLoader = async ({ request }: LoaderFunctionArgs) => {
   let db = getDb();
@@ -30,31 +24,43 @@ export const clientLoader = async ({ request }: LoaderFunctionArgs) => {
 
 export default function ArtistsRoute({ loaderData }: Route.ComponentProps) {
   const { topArtists, recentArtists } = loaderData;
-  const { selectedArtistIds, toggleArtistSelection } = usePlaylistSelection();
+  const { selectedArtistIds, toggleArtistSelection } =
+    usePlaylistBuildingService();
 
   return (
     <>
       <PageHeader title="Artists" />
-      <Tabs defaultValue="top" className="w-full">
+      <Tabs defaultValue="top" className="w-full max-w-5xl mx-auto">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="top">Top</TabsTrigger>
           <TabsTrigger value="recent">Recent</TabsTrigger>
         </TabsList>
         <TabsContent value="top">
-          <ArtistList
-            artists={topArtists}
-            isSelected={(id) => selectedArtistIds.includes(id)}
-            toggleSelection={toggleArtistSelection}
-          />
-        </TabsContent>
-        <TabsContent value="recent">
           <div className="flex flex-col">
-            {recentArtists.map((artist) => (
-              <RecentArtistItem
+            {topArtists.map((artist) => (
+              <ArtistItem
                 key={artist.artist_id}
                 artist={artist}
                 isSelected={selectedArtistIds.includes(artist.artist_id!)}
                 toggleSelection={toggleArtistSelection}
+              />
+            ))}
+          </div>
+        </TabsContent>
+        <TabsContent value="recent">
+          <div className="flex flex-col">
+            {recentArtists.map((artist) => (
+              <ArtistItem
+                key={artist.artist_id}
+                artist={artist}
+                isSelected={selectedArtistIds.includes(artist.artist_id!)}
+                toggleSelection={toggleArtistSelection}
+                metadata={
+                  <>
+                    <p>{dayjs(artist.last_played).format("MM/DD/YYYY")}</p>
+                    <p>{dayjs(artist.last_played).format("h:mm A")}</p>
+                  </>
+                }
               />
             ))}
           </div>

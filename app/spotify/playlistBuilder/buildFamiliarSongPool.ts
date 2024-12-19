@@ -1,6 +1,8 @@
+import { AsyncReturnType } from "~/toolkit/utils/typescript.utils";
 import { getAllArtistTracks } from "../api/getAllArtistTracks";
 import { SpotifySdk } from "../createSpotifySdk";
-import { BuildPlaylistInput, FamiliarSongsPool } from "./playlistBuilder.types";
+import { FamiliarSongsPool } from "./playlistBuilder.types";
+import { useSpotifyData } from "./useSpotifyData";
 
 /**
  * Build pool of familiar songs from specified artists and tracks
@@ -11,7 +13,7 @@ import { BuildPlaylistInput, FamiliarSongsPool } from "./playlistBuilder.types";
  * - Full artist catalogs (filtered by popularity based on deepCutsRatio)
  */
 export async function buildFamiliarSongsPool(
-  input: BuildPlaylistInput,
+  input: GetFamiliarSongPoolInput,
   sdk: SpotifySdk
 ): Promise<FamiliarSongsPool> {
   const poolStartTime = performance.now();
@@ -19,7 +21,8 @@ export async function buildFamiliarSongsPool(
 
   // 1. Get specified tracks with correct field selection
   const tracksStartTime = performance.now();
-  const tracks = await sdk.tracks.get(trackIds.slice(0, 20));
+  const tracks =
+    trackIds.length > 0 ? await sdk.tracks.get(trackIds.slice(0, 20)) : [];
   const specifiedTracks = tracks.map((track) => ({
     id: track.id,
     name: track.name,
@@ -106,3 +109,51 @@ export async function buildFamiliarSongsPool(
 
   return pool;
 }
+
+export const getBuildFamiliarSongPoolInput = async (
+  spotifyData: ReturnType<typeof useSpotifyData>,
+  {
+    selectedArtistIds,
+    selectedTrackIds,
+  }: {
+    selectedArtistIds: string[];
+    selectedTrackIds: string[];
+  }
+) => {
+  let input = {
+    topTracks: spotifyData.topTracks.map((t) => ({
+      id: t.track_id!,
+      name: t.track_name!,
+      artist_id: t.artist_id!,
+      artist_name: t.artist_name!,
+      popularity: t.track_popularity,
+    })),
+    topArtists: spotifyData.topArtists.map((a) => ({
+      id: a.artist_id!,
+      name: a.artist_name!,
+    })),
+    playHistory: spotifyData.playHistory.map((t) => ({
+      id: t.track_id!,
+      name: t.track_name!,
+      artist_id: t.artist_id!,
+      artist_name: t.artist_name!,
+      popularity: t.track_popularity,
+    })),
+    likedTracks: spotifyData.likedTracks.map((t) => ({
+      id: t.track_id!,
+      name: t.track_name!,
+      artist_id: t.artist_id!,
+      artist_name: t.artist_name!,
+      popularity: t.track_popularity,
+    })),
+    request: {
+      artistIds: selectedArtistIds,
+      trackIds: selectedTrackIds,
+      numSongs: 32,
+    },
+  };
+  return input;
+};
+export type GetFamiliarSongPoolInput = AsyncReturnType<
+  typeof getBuildFamiliarSongPoolInput
+>;

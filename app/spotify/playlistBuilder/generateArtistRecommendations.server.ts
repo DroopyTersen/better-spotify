@@ -1,5 +1,6 @@
 import { openai } from "@ai-sdk/openai";
 import { anthropic } from "@ai-sdk/anthropic";
+import { google } from "@ai-sdk/google";
 
 import { generateObject } from "ai";
 import { z } from "zod";
@@ -14,29 +15,53 @@ const ArtistRecommendationsResponse = z.object({
     .array(z.string())
     .describe("Array of artist names that would complement the input artists"),
 });
-
+export const GenerateArtistRecommendationInput = z.object({
+  artistsToMatch: z
+    .array(z.string())
+    .describe("Array of artist names to match"),
+  artistsToExclude: z
+    .array(z.string())
+    .describe("Array of artist names to exclude"),
+  customInstructions: z
+    .string()
+    .describe("Custom instructions for the artist recommendations")
+    .optional(),
+  desiredArtistCount: z
+    .number()
+    .describe("Desired number of artists to recommend"),
+});
+export type GenerateArtistRecommendationInput = z.infer<
+  typeof GenerateArtistRecommendationInput
+>;
 export const generateArtistRecommendations = async (input: {
   artistsToMatch: string[];
   artistsToExclude: string[];
   customInstructions?: string;
   desiredArtistCount?: number;
 }) => {
+  const desiredArtistCount = (input.desiredArtistCount || 10) + 1;
   const userPrompt = `Please recommend ${
     input.desiredArtistCount || 10
   } artists similar to: \n\n${input.artistsToMatch.join("\n")}
 
-DO NOT include these artists: \n\n${input.artistsToExclude.join("\n")}
+DO NOT recommend these artists because the user already listens to them and we are looking for fresh new artist recommendations: 
+<artists_to_exclude>
+${input.artistsToExclude.join("\n")}
+</artists_to_exclude>
 
 ${
   input.customInstructions
-    ? `Additional instructions: ${input.customInstructions}`
+    ? `The user has provided the following additional instructions regarding the playlist and artist recommendations they are striving for: ${input.customInstructions}`
     : ""
 }`;
+  console.log("🚀 | userPrompt:", userPrompt);
+
+  // Generate random temperature between 0.2 and 1.2
+  const temperature = Math.random() * (1.2 - 0.2) + 0.2;
 
   const result = await generateObject({
-    // model: openai("gpt-4o", { structuredOutputs: true }),
-    model: anthropic("claude-3-5-sonnet-20241022"),
-
+    model: google("gemini-2.0-flash-exp"),
+    temperature,
     schema: ArtistRecommendationsResponse,
     messages: [
       {
@@ -49,13 +74,12 @@ ${
       },
     ],
   });
-
-  console.log(
-    "🚀 | result.object.recommended_artists:",
-    result.usage,
-    result.object.recommended_artists.join(", ")
+  let recommendedArtists = result.object.recommended_artists.filter(
+    (artist) => !input.artistsToExclude.includes(artist)
   );
-  return result.object.recommended_artists;
+  console.log("🚀 | recommendedArtists:", result.usage, recommendedArtists);
+
+  return recommendedArtists;
 };
 
 const ARTIST_RECOMMENDATION_PROMPT = `You are a music expert with deep knowledge of artists across all genres and eras. Your task is to recommend artists that would complement a given set of artists while following specific guidelines.

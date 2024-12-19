@@ -12,7 +12,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 // Define the image type
-type SpotifyImage = {
+export type SpotifyImage = {
   url: string;
   height: number;
   width: number;

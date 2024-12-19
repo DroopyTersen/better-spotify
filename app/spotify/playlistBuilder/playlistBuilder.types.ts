@@ -1,4 +1,56 @@
 import { z } from "zod";
+import type { SpotifyImage } from "~/db/db.schema";
+
+export const BuildPlaylistTrack = z.object({
+  id: z.string(),
+  name: z.string(),
+  popularity: z.number().nullable().optional(),
+  artist_name: z.string().nullable().optional(),
+  artist_id: z.string().nullable().optional(),
+});
+
+export type BuildPlaylistTrack = z.infer<typeof BuildPlaylistTrack>;
+
+export type SelectedPlaylistArtist = {
+  artist_id: string;
+  artist_name?: string;
+  images?: SpotifyImage[] | null;
+};
+
+export type NewStuffAmount = "none" | "sprinkle" | "half" | "all";
+export type BuildPlaylistFormData = {
+  customInstructions?: string;
+  newStuffAmount: NewStuffAmount;
+  songCount: number;
+};
+
+export interface PlaylistBuilderData {
+  // Selection state
+  hashedSelection: string;
+  selectedTracks: SelectedPlaylistTrack[];
+  selectedArtists: SelectedPlaylistArtist[];
+  // Computed results
+  familiarSongsPool: FamiliarSongsPool | null;
+  recommendedArtists: SelectedPlaylistArtist[];
+}
+
+export type BuildPlaylistInput = {
+  formData: BuildPlaylistFormData;
+  data: Required<Omit<PlaylistBuilderData, "hashedSelection">>;
+};
+
+export type GeneratePlaylistInput = {
+  formData: BuildPlaylistFormData;
+  data: Required<Omit<PlaylistBuilderData, "hashedSelection">>;
+  newSongs: BuildPlaylistTrack[];
+};
+
+export interface FamiliarSongsPool {
+  specifiedTracks: BuildPlaylistTrack[];
+  topTracks: BuildPlaylistTrack[];
+  artistCatalogs: Record<string, BuildPlaylistTrack[]>;
+  likedTracks: BuildPlaylistTrack[];
+}
 
 export const PlaylistBuilderRequest = z.object({
   numSongs: z.number().optional().default(30),
@@ -16,67 +68,10 @@ export const PlaylistBuilderRequest = z.object({
     .describe("Ratio of new artists vs top artists"),
 });
 
-export type BuildPlaylistInput = z.infer<typeof BuildPlaylistInput>;
-
-export interface SongDistribution {
-  numFamiliarSongs: number;
-  numNewSongs: number;
-}
-
-export const BuildPlaylistTrack = z.object({
-  id: z.string(),
-  name: z.string(),
-  popularity: z.number().nullable().optional(),
-  artist_name: z.string().nullable().optional(),
-  artist_id: z.string().nullable().optional(),
-});
-
-export type BuildPlaylistTrack = z.infer<typeof BuildPlaylistTrack>;
-
-export interface FamiliarSongsPool {
-  specifiedTracks: BuildPlaylistTrack[];
-  topTracks: BuildPlaylistTrack[];
-  artistCatalogs: Record<string, BuildPlaylistTrack[]>;
-  likedTracks: BuildPlaylistTrack[];
-}
-
-export const BuildPlaylistInput = z.object({
-  topTracks: z.array(BuildPlaylistTrack),
-  likedTracks: z.array(BuildPlaylistTrack),
-  playHistory: z.array(BuildPlaylistTrack),
-  topArtists: z.array(
-    z.object({
-      id: z.string(),
-      name: z.string(),
-    })
-  ),
-  request: PlaylistBuilderRequest,
-});
-
-export type GeneratePlaylistInput = {
-  request: PlaylistBuilderRequest;
-  familiarOptions: FamiliarSongsPool;
-  distribution: SongDistribution;
-  topArtists: string[];
-  newOptions: NewSongsPool;
+export type SelectedPlaylistTrack = {
+  track_id: string;
+  track_name?: string;
+  artist_id?: string | null;
+  artist_name?: string | null;
+  images?: SpotifyImage[] | null;
 };
-export type NewSongsPool = BuildPlaylistTrack[];
-
-export interface LLMCurationResponse {
-  thought: string;
-  playlist: {
-    name: string;
-    trackIds: string[];
-  };
-}
-
-export const DEFAULT_PLAYLIST_BUILDER_REQUEST = {
-  artistIds: [],
-  trackIds: [],
-  numSongs: 32,
-  deepCutsRatio: 0.3,
-  newArtistsRatio: 0.2,
-  instructions: "",
-} satisfies PlaylistBuilderRequest;
-
-export type PlaylistBuilderRequest = z.infer<typeof PlaylistBuilderRequest>;

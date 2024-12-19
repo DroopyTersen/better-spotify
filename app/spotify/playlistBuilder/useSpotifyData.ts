@@ -4,6 +4,7 @@ import {
   SpotifyTopTrack,
   SpotifyRecentArtist,
   SpotifyTopArtist,
+  SpotifyData,
 } from "../spotify.db";
 
 import { useRouteData } from "~/toolkit/remix/useRouteData";
@@ -29,5 +30,5 @@ export const useSpotifyData = () => {
     playHistory,
     likedTracks,
     recentArtists,
-  };
+  } as unknown as SpotifyData;
 };

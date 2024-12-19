@@ -1,17 +1,21 @@
-import { usePlaylistSelection } from "./PlaylistSelectionContext";
-import { Button } from "~/shadcn/components/ui/button";
-import { X } from "lucide-react";
-import { Form, useSubmit } from "react-router";
-import { SheetHeader, SheetTitle } from "~/shadcn/components/ui/sheet";
-import { useState } from "react";
+import { Check, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useSubmit } from "react-router";
 import {
   Avatar,
-  AvatarImage,
   AvatarFallback,
+  AvatarImage,
 } from "~/shadcn/components/ui/avatar";
-import { Skeleton } from "~/shadcn/components/ui/skeleton";
-import { getBuildPlaylistInput } from "./getPlaylistBuildInput";
+import { Button } from "~/shadcn/components/ui/button";
+import { SheetHeader, SheetTitle } from "~/shadcn/components/ui/sheet";
+import { usePlaylistBuildingService } from "./usePlaylistBuildingService";
 import { useSpotifyData } from "./useSpotifyData";
+import { Label } from "~/shadcn/components/ui/label";
+import { Slider } from "~/shadcn/components/ui/slider";
+import { RadioGroupItem } from "~/shadcn/components/ui/radio-group";
+import { RadioGroup } from "~/shadcn/components/ui/radio-group";
+import { Textarea } from "~/shadcn/components/ui/textarea";
+import { ScrollArea } from "~/shadcn/components/ui/scroll-area";
 
 export function CartPanel() {
   const {
@@ -20,23 +24,24 @@ export function CartPanel() {
     removeArtist,
     removeTrack,
     totalSelectedCount,
-  } = usePlaylistSelection();
-  const submit = useSubmit();
-  const spotifyData = useSpotifyData();
+    warmup,
+    clearSelection,
+    buildPlaylist,
+  } = usePlaylistBuildingService();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleBuildPlaylist = async () => {
     setIsSubmitting(true);
-    const input = await getBuildPlaylistInput(spotifyData, {
-      selectedArtistIds: selectedArtists.map((a) => a.artist_id),
-      selectedTrackIds: selectedTracks.map((t) => t.track_id),
-    });
-    submit(JSON.stringify(input), {
-      method: "post",
-      action: "/api/buildPlaylist",
-      encType: "application/json",
-    });
+    let result = await buildPlaylist();
+    console.log("🚀 | handleBuildPlaylist= | result:", result);
+    setIsSubmitting(false);
   };
+  useEffect(() => {
+    warmup();
+    return () => {
+      console.log("Closing cart panel");
+    };
+  }, []);
 
   const renderArtistItem = (artist: (typeof selectedArtists)[number]) => {
     return (
@@ -70,65 +75,153 @@ export function CartPanel() {
       <SheetHeader>
         <SheetTitle>Your Playlist Selection</SheetTitle>
       </SheetHeader>
-
-      <p className="text-sm text-muted-foreground mt-2">
-        {totalSelectedCount} items selected
-      </p>
-
-      <div className="flex-1 overflow-auto mt-4 space-y-6">
-        <div className="space-y-2">
-          <h3 className="font-semibold">Artists ({selectedArtists.length})</h3>
-          {selectedArtists.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No artists selected</p>
-          ) : (
-            selectedArtists.map((artist) => (
-              <div key={artist.artist_id}>{renderArtistItem(artist)}</div>
-            ))
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <h3 className="font-semibold">Tracks ({selectedTracks.length})</h3>
-          {selectedTracks.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No tracks selected</p>
-          ) : (
-            selectedTracks.map((track) => (
-              <div
-                key={track.track_id}
-                className="group flex items-center space-x-2 py-2 px-2 rounded-md hover:bg-gray-50"
+      <ScrollArea className="-m-2">
+        <div className="m-2">
+          <div className="flex justify-between items-center">
+            <p className="text-sm text-muted-foreground mt-2">
+              {totalSelectedCount} items selected
+            </p>
+            {totalSelectedCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearSelection}
+                className="ml-2 text-muted-foreground hover:text-destructive"
               >
-                <Avatar className="w-8 h-8">
-                  <AvatarImage
-                    src={
-                      track.images?.[0]?.url ||
-                      "/placeholder.svg?height=32&width=32"
-                    }
-                    alt={track.track_name || ""}
-                  />
-                  <AvatarFallback>
-                    {track.track_name?.slice(0, 2).toUpperCase() || ""}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="text-sm flex-grow">
-                  <div>{track.track_name}</div>
-                  <div className="text-gray-500">{track.artist_name}</div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeTrack(track.track_id)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))
-          )}
+                <X className="h-4 w-4 mr-2" />
+                Clear All
+              </Button>
+            )}
+          </div>
+
+          <div className="flex-1 overflow-auto mt-4 mb-12 space-y-6">
+            <div className="space-y-2">
+              <h3 className="font-semibold">
+                Artists ({selectedArtists.length})
+              </h3>
+              {selectedArtists.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No artists selected
+                </p>
+              ) : (
+                selectedArtists.map((artist) => (
+                  <div key={artist.artist_id}>{renderArtistItem(artist)}</div>
+                ))
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="font-semibold">
+                Tracks ({selectedTracks.length})
+              </h3>
+              {selectedTracks.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No tracks selected
+                </p>
+              ) : (
+                selectedTracks.map((track) => (
+                  <div
+                    key={track.track_id}
+                    className="group flex items-center space-x-2 py-2 px-2 rounded-md hover:bg-gray-50"
+                  >
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage
+                        src={
+                          track.images?.[0]?.url ||
+                          "/placeholder.svg?height=32&width=32"
+                        }
+                        alt={track.track_name || ""}
+                      />
+                      <AvatarFallback>
+                        {track.track_name?.slice(0, 2).toUpperCase() || ""}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="text-sm flex-grow">
+                      <div>{track.track_name}</div>
+                      <div className="text-gray-500">{track.artist_name}</div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeTrack(track.track_id)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-12">
+            <div className="space-y-4">
+              <Label htmlFor="song-count">Number of Songs: 32</Label>
+              <Slider
+                id="song-count"
+                defaultValue={[32]}
+                max={100}
+                min={12}
+                step={1}
+                className="w-full"
+              />
+            </div>
+
+            <div className="space-y-4">
+              <Label>How much new stuff?</Label>
+              <RadioGroup defaultValue="sprinkle" className="space-y-1">
+                {[
+                  {
+                    value: "none",
+                    label: "No new stuff. Stick to only what I've selected",
+                  },
+                  {
+                    value: "sprinkle",
+                    label: "Sprinkle a little new stuff in there",
+                  },
+                  { value: "half", label: "Yeah make it about 50/50" },
+                  {
+                    value: "all",
+                    label: "Yes, ONLY new stuff based on what I've picked out",
+                  },
+                ].map((option) => (
+                  <Label
+                    key={option.value}
+                    htmlFor={option.value}
+                    className="flex items-center space-x-3 space-y-0 rounded-md border py-4 hover:bg-accent cursor-pointer"
+                  >
+                    <RadioGroupItem
+                      value={option.value}
+                      id={option.value}
+                      className="sr-only"
+                    />
+                    <div className="flex items-center justify-center">
+                      <div className="w-6 h-6 rounded-full border flex items-center justify-center">
+                        <Check className="w-4 h-4 hidden [&:has([data-state=checked])]:block" />
+                      </div>
+                    </div>
+                    <span className="text-sm font-normal leading-5">
+                      {option.label}
+                    </span>
+                  </Label>
+                ))}
+              </RadioGroup>
+            </div>
+
+            <div className="space-y-4">
+              <Label htmlFor="instructions">Custom Instructions</Label>
+              <Textarea
+                id="instructions"
+                placeholder="Add any special instructions for your playlist..."
+                className="min-h-[100px]"
+              />
+            </div>
+          </div>
         </div>
-      </div>
+      </ScrollArea>
 
       <Button
-        className="mt-4 w-full"
+        className="mt-12 w-full"
         disabled={totalSelectedCount === 0 || isSubmitting}
         onClick={handleBuildPlaylist}
       >

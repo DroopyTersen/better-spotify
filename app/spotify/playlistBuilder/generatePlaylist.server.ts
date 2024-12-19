@@ -11,16 +11,24 @@ export const PlaylistCurationResponse = z.object({
     .describe(
       "First restate the user's playlist request in your own words. Then explain your thought process on how you will curate the playlist to meet the request. Do not cluster songs by the same artist together. Try to sprinkle new stuff in the middle of familiar stuff."
     ),
-  _02_track_name_candidates: z
-    .array(z.string())
-    .describe(
-      "Array of track names followed by artist names that you think could be good for the playlist. Format as <track_name> | <artist_name>. Don't cluster songs by the same artist together."
-    ),
-  _03_track_name_candidate_review: z
-    .string()
-    .describe(
-      "A review of the track_name_candidates array. Explain why you included or excluded certain tracks. Do not cluster songs by the same artist together. Try to sprinkle new stuff in the middle of familiar stuff."
-    ),
+  _02_track_name_candidates: z.string().describe(
+    `Numbered list of track names followed by artist names that you think could be good for the playlist. Format as: 
+1. <track_name> | <artist_name> 
+2. <track_name> | <artist_name> 
+3. <track_name> | <artist_name>
+...
+
+Don't cluster songs by the same artist together. Stop once you have reached the desired number of songs.`
+  ),
+  _03_track_name_candidate_review: z.string().describe(
+    `A review of the track_name_candidates array. How could you improve the playlist based on the following guidelines:
+- Do not cluster songs by the same artist together. 
+- Try to sprinkle new stuff in the middle of familiar stuff. 
+- Make sure the song count matches the desired number of songs. 
+- Everything should be mixed up
+
+Write suggestions on how to improve the playlist.`
+  ),
   playlist: z.object({
     name: z.string().describe("2-3 word creative name for the playlist"),
     tracks: z
@@ -40,7 +48,6 @@ export const PlaylistCurationResponse = z.object({
 export type PlaylistCurationResponse = z.infer<typeof PlaylistCurationResponse>;
 
 export const generatePlaylist = async (input: GeneratePlaylistInput) => {
-
   let stream = streamObject({
     model: google("gemini-2.0-flash-exp"),
     schema: PlaylistCurationResponse,
@@ -140,7 +147,7 @@ CURATION GUIDELINES:
 REQUIRED OUTPUT FORMAT:
 {
   "thought": "Explain your understanding of the request and curation approach",
-  "track_name_candidates": ["<track_name> | <artist_name>"],
+  "track_name_candidates": "1. <track_name> | <artist_name>\n2. <track_name> | <artist_name>\n3. <track_name> | <artist_name>\n...",
   "track_name_candidate_review": "Review of your selection process",
   "playlist": {
     "name": "2-3 word creative name",

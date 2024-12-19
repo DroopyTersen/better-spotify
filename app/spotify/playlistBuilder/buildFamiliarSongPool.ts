@@ -55,7 +55,7 @@ export async function buildFamiliarSongsPool(
     topTracks: allTopTracks.filter(
       (t) => t.artist_id && artistIds.includes(t.artist_id)
     ),
-    artistCatalogs: {},
+    artistCatalogs: [],
     likedTracks: allLikedTracks.filter(
       (t) => t.artist_id && artistIds.includes(t.artist_id)
     ),
@@ -93,12 +93,17 @@ export async function buildFamiliarSongsPool(
     }ms`
   );
 
-  // Add results to pool
+  // Add results to pool (modified to use array structure)
   artistResults.forEach(({ artistId, tracks }) => {
-    pool.artistCatalogs[artistId] = tracks?.map((t) => ({
-      id: t.id,
-      name: t.name,
-    }));
+    const artistName = tracks[0]?.artist_name ?? ""; // Get artist name from first track
+    pool.artistCatalogs.push({
+      artist_id: artistId,
+      artist_name: artistName,
+      tracks: tracks?.map((t) => ({
+        id: t.id,
+        name: t.name,
+      })),
+    });
   });
 
   console.log(

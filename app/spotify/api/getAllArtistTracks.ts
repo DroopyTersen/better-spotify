@@ -12,7 +12,7 @@ export async function getAllArtistTracks(
 ): Promise<BuildPlaylistTrack[]> {
   const startTime = performance.now();
   const tracks: BuildPlaylistTrack[] = [];
-  const limit = 20; // Number of albums to fetch
+  const limit = 50; // Number of albums to fetch
 
   // Get first batch of albums
   const response = await sdk.artists.albums(artistId, "album", "US", limit, 0);

@@ -64,9 +64,9 @@ export async function buildPlaylist(
     ...(input.data.familiarSongsPool?.specifiedTracks?.map((t) => t.id) || []),
     ...(input.data.familiarSongsPool?.topTracks?.map((t) => t.id) || []),
     ...(input.data.familiarSongsPool?.likedTracks?.map((t) => t.id) || []),
-    ...Object.values(
-      input.data.familiarSongsPool?.artistCatalogs || {}
-    ).flatMap((catalog) => catalog.map((t) => t.id)),
+    ...(input.data.familiarSongsPool?.artistCatalogs || []).flatMap((catalog) =>
+      catalog.tracks.map((t) => t.id)
+    ),
     ...newSongs.map((t) => t.id),
   ]);
 

@@ -112,6 +112,9 @@ export class PlaylistBuildingService extends EventEmitter<void> {
     if (!this.familiarSongsPool) return;
     let artistsToMatch = Array.from(
       new Set([
+        ...this.familiarSongsPool.artistCatalogs.map(
+          (a) => a.artist_name || ""
+        ),
         ...this.familiarSongsPool.specifiedTracks.map(
           (t) => t.artist_name || ""
         ),

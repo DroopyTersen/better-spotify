@@ -48,7 +48,11 @@ export type GeneratePlaylistInput = {
 export interface FamiliarSongsPool {
   specifiedTracks: BuildPlaylistTrack[];
   topTracks: BuildPlaylistTrack[];
-  artistCatalogs: Record<string, BuildPlaylistTrack[]>;
+  artistCatalogs: Array<{
+    artist_id: string;
+    artist_name: string;
+    tracks: BuildPlaylistTrack[];
+  }>;
   likedTracks: BuildPlaylistTrack[];
 }
 

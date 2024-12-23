@@ -35,7 +35,9 @@ export function ArtistItem({
         canPlay={currentUser?.product === "premium"}
       />
       <div className="flex-grow">
-        <h3 className="font-semibold">{artist.artist_name}</h3>
+        <h3 className="font-semibold text-sm md:text-base">
+          {artist.artist_name}
+        </h3>
         {artist.play_count && artist?.play_count > 0 ? (
           <p className="text-xs text-muted-foreground">
             {artist.play_count} Recent Plays
@@ -56,7 +58,7 @@ export function ArtistItem({
       </div>
       <div className="flex items-end gap-4">
         {metadata && (
-          <div className="text-right text-sm text-muted-foreground">
+          <div className="text-right text-sm text-muted-foreground hidden md:block">
             {metadata}
           </div>
         )}
@@ -66,7 +68,7 @@ export function ArtistItem({
             onClick={() => toggleSelection?.(artist.artist_id!)}
             className={`rounded-full transition-opacity ${
               isSelected
-                ? "opacity-80 bg-teal-500"
+                ? "opacity-100 bg-primary/80 text-white"
                 : "opacity-0 group-hover:opacity-100"
             }`}
           >

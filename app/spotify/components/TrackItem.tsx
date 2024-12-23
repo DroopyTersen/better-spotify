@@ -51,7 +51,7 @@ export function TrackItem({
       </div>
       <div className="flex items-end gap-4">
         {metadata && (
-          <div className="text-right text-sm text-muted-foreground">
+          <div className="hidden md:block text-right text-sm text-muted-foreground">
             {metadata}
           </div>
         )}
@@ -61,7 +61,7 @@ export function TrackItem({
             onClick={() => toggleSelection?.(track.track_id!)}
             className={`rounded-full transition-opacity ${
               isSelected
-                ? "opacity-80 bg-teal-500"
+                ? "opacity-80 bg-primary"
                 : "opacity-0 group-hover:opacity-100"
             }`}
           >

@@ -110,7 +110,7 @@ export default function SearchRoute({ loaderData }: Route.ComponentProps) {
                     onClick={() => toggleArtistSelection(artist.artist_id)}
                     className={`rounded-full transition-opacity ${
                       selectedArtistIds.includes(artist.artist_id)
-                        ? "opacity-80 bg-teal-500"
+                        ? "opacity-80 bg-primary"
                         : "opacity-0 group-hover:opacity-100"
                     }`}
                   >

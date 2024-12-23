@@ -55,7 +55,7 @@ export const TrackList = ({
                 onClick={() => toggleSelection(track.track_id!)}
                 className={`absolute top-4 right-3 rounded-full transition-opacity ${
                   isSelected(track.track_id!)
-                    ? "opacity-80 bg-teal-500"
+                    ? "opacity-80 bg-primary"
                     : "opacity-0 group-hover:opacity-100"
                 }`}
               >

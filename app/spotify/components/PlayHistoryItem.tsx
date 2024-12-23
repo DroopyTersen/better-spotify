@@ -50,7 +50,7 @@ export function PlayHistoryItem({
             onClick={() => toggleSelection?.(track.track_id!)}
             className={`rounded-full transition-opacity ${
               isSelected
-                ? "opacity-80 bg-teal-500"
+                ? "opacity-80 bg-primary"
                 : "opacity-0 group-hover:opacity-100"
             }`}
           >

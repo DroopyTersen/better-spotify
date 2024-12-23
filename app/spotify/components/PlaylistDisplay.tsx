@@ -76,7 +76,7 @@ export const PlaylistDisplay = ({ playlist }: PlaylistDisplayProps) => {
                   onClick={() => toggleTrackSelection(track.id)}
                   className={`rounded-full transition-opacity ${
                     isSelected
-                      ? "opacity-80 bg-teal-500"
+                      ? "opacity-80 bg-primary"
                       : "opacity-0 group-hover:opacity-100"
                   }`}
                 >

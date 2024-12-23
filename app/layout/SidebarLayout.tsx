@@ -43,7 +43,7 @@ export const SidebarLayout = ({
             <SearchInput />
             <Sheet>
               <SheetTrigger asChild>
-                <button className="relative p-2 rounded-full hover:bg-gray-100">
+                <button className="relative p-2 rounded-full hover:bg-primary">
                   <ShoppingCart className="w-6 h-6" />
                   {totalSelectedCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">

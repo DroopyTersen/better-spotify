@@ -25,6 +25,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  useSidebar,
 } from "~/shadcn/components/ui/sidebar";
 
 import { Device } from "@spotify/web-api-ts-sdk";
@@ -40,6 +41,8 @@ import {
 } from "~/shadcn/components/ui/dropdown-menu";
 import { cn } from "~/shadcn/lib/utils";
 import { SpotifyPlaylist } from "~/spotify/spotify.db";
+import { useEffect } from "react";
+import { useUpdateEffect } from "~/toolkit/hooks/useUpdateEffect";
 
 export const SidebarNav = ({
   playlists,
@@ -62,6 +65,12 @@ export const SidebarNav = ({
       encType: "application/json",
     });
   };
+  let sidebar = useSidebar();
+  useUpdateEffect(() => {
+    if (sidebar.isMobile && sidebar.openMobile) {
+      sidebar.setOpenMobile(false);
+    }
+  }, [location.pathname]);
   return (
     <Sidebar className="bg-white border-r">
       <SidebarHeader>
@@ -99,7 +108,8 @@ export const SidebarNav = ({
                   asChild
                   className={cn(
                     "font-medium",
-                    pathname?.startsWith("/play-history") && "bg-gray-100"
+                    pathname?.startsWith("/play-history") &&
+                      "bg-sidebar-accent text-sidebar-foreground border-r-4 border-r-primary rounded-r-sm"
                   )}
                 >
                   <Link to="/play-history">
@@ -123,7 +133,8 @@ export const SidebarNav = ({
                   asChild
                   className={cn(
                     "font-medium",
-                    pathname?.startsWith("/songs") && "bg-gray-100"
+                    pathname?.startsWith("/songs") &&
+                      "bg-sidebar-accent text-sidebar-foreground border-r-4 border-r-primary rounded-r-sm"
                   )}
                 >
                   <Link to="/songs">
@@ -137,7 +148,8 @@ export const SidebarNav = ({
                   asChild
                   className={cn(
                     "font-medium",
-                    pathname?.startsWith("/artists") && "bg-gray-100"
+                    pathname?.startsWith("/artists") &&
+                      "bg-sidebar-accent text-sidebar-foreground border-r-4 border-r-primary rounded-r-sm"
                   )}
                 >
                   <Link to="/artists">

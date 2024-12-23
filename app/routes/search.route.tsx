@@ -15,6 +15,8 @@ import { TrackItem } from "~/spotify/components/TrackItem";
 import { createSpotifySdk } from "~/spotify/createSpotifySdk";
 import { usePlaylistBuildingService } from "~/spotify/playlistBuilder/usePlaylistBuildingService";
 import { Route } from "./+types/search.route";
+import { ArtistItem } from "~/spotify/components/ArtistItem";
+import { SearchInput } from "~/spotify/components/SearchInput";
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
   const user = await requireAuth(request);
@@ -71,85 +73,64 @@ export default function SearchRoute({ loaderData }: Route.ComponentProps) {
   }
 
   const { artists, tracks } = loaderData.results;
+  console.log("🚀 | SearchRoute | artists:", artists, tracks);
 
   return (
     <>
       <PageHeader title={`Search: "${loaderData.query}"`} />
-      <Tabs defaultValue="artists" className="w-full">
-        <TabsList className="">
-          <TabsTrigger value="artists">Artists</TabsTrigger>
-          <TabsTrigger value="tracks">Songs</TabsTrigger>
-        </TabsList>
+      <div className="max-w-3xl mx-auto">
+        <SearchInput className="md:hidden mb-2" />
+        <Tabs defaultValue="artists" className="w-full">
+          <TabsList className="">
+            <TabsTrigger value="artists">Artists</TabsTrigger>
+            <TabsTrigger value="tracks">Songs</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="artists">
-          {artists.length > 0 ? (
-            <div className="flex flex-col">
-              {artists.map((artist) => (
-                <div
-                  key={artist.artist_id}
-                  className="flex items-center space-x-4 py-4 border-b last:border-b-0 relative group"
-                >
-                  <SpotifyImage
-                    src={artist.images?.[0]?.url}
-                    alt={artist.artist_name}
-                    uri={`spotify:artist:${artist.artist_id}`}
-                    canPlay={currentUser?.product === "premium"}
+          <TabsContent value="artists">
+            {artists.length > 0 ? (
+              <div className="flex flex-col">
+                {artists.map((artist) => (
+                  <ArtistItem
+                    key={artist.artist_id}
+                    artist={{
+                      artist_id: artist.artist_id,
+                      artist_name: artist.artist_name,
+                      images: artist.images,
+                      genres: artist.genres,
+                    }}
+                    isSelected={selectedArtistIds.includes(artist.artist_id)}
+                    toggleSelection={toggleArtistSelection}
                   />
-                  <div className="flex-grow">
-                    <h3 className="font-semibold">{artist.artist_name}</h3>
-                    <div className="mt-1 flex items-center space-x-2">
-                      {artist.genres?.slice(0, 3).map((genre) => (
-                        <Badge key={genre} variant="secondary">
-                          {genre}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                  <Button
-                    size="icon"
-                    onClick={() => toggleArtistSelection(artist.artist_id)}
-                    className={`rounded-full transition-opacity ${
-                      selectedArtistIds.includes(artist.artist_id)
-                        ? "opacity-80 bg-primary"
-                        : "opacity-0 group-hover:opacity-100"
-                    }`}
-                  >
-                    {selectedArtistIds.includes(artist.artist_id) ? (
-                      <CheckIcon className="w-6 h-6 text-white" />
-                    ) : (
-                      <Plus className="w-12 h-12 text-white" />
-                    )}
-                  </Button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-muted-foreground">No artists found</div>
-          )}
-        </TabsContent>
+                ))}
+              </div>
+            ) : (
+              <div className="text-muted-foreground">No artists found</div>
+            )}
+          </TabsContent>
 
-        <TabsContent value="tracks">
-          {tracks.length > 0 ? (
-            <div className="flex flex-col">
-              {tracks.map((track) => (
-                <TrackItem
-                  key={track.id}
-                  track={{
-                    track_id: track.id,
-                    track_name: track.name,
-                    artist_name: track.artists[0]?.name || null,
-                    images: track.album.images,
-                  }}
-                  isSelected={selectedTrackIds.includes(track.id)}
-                  toggleSelection={toggleTrackSelection}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-muted-foreground">No songs found</div>
-          )}
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="tracks">
+            {tracks.length > 0 ? (
+              <div className="flex flex-col">
+                {tracks.map((track) => (
+                  <TrackItem
+                    key={track.id}
+                    track={{
+                      track_id: track.id,
+                      track_name: track.name,
+                      artist_name: track.artists[0]?.name || null,
+                      images: track.album.images,
+                    }}
+                    isSelected={selectedTrackIds.includes(track.id)}
+                    toggleSelection={toggleTrackSelection}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-muted-foreground">No songs found</div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
     </>
   );
 }

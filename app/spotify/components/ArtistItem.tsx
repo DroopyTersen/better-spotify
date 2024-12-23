@@ -69,7 +69,7 @@ export function ArtistItem({
             className={`rounded-full transition-opacity ${
               isSelected
                 ? "opacity-100 bg-primary/80 text-white"
-                : "opacity-0 group-hover:opacity-100"
+                : "opacity-20 md:opacity-0 group-hover:opacity-100"
             }`}
           >
             {isSelected ? (

@@ -43,6 +43,7 @@ import { cn } from "~/shadcn/lib/utils";
 import { SpotifyPlaylist } from "~/spotify/spotify.db";
 import { useEffect } from "react";
 import { useUpdateEffect } from "~/toolkit/hooks/useUpdateEffect";
+import { SearchInput } from "~/spotify/components/SearchInput";
 
 export const SidebarNav = ({
   playlists,
@@ -82,6 +83,9 @@ export const SidebarNav = ({
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+        <div className="md:hidden">
+          <SearchInput />
+        </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>

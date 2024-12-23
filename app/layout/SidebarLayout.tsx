@@ -35,7 +35,7 @@ export const SidebarLayout = ({
             <Separator orientation="vertical" className="h-6" />
             <h1 className="text-lg font-bold" id="page-title"></h1>
             <div className="flex-1" />
-            <SearchInput />
+            <SearchInput className="hidden md:block" />
             <Link
               to="/builder"
               className="relative p-2 rounded-full hover:bg-primary"

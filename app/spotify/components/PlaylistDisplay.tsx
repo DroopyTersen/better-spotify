@@ -1,11 +1,13 @@
+import { useNavigate } from "react-router";
 import dayjs from "dayjs";
-import { CheckIcon, ExternalLink, Plus } from "lucide-react";
+import { CheckIcon, ExternalLink, Plus, Trash2 } from "lucide-react";
 import { useCurrentUser } from "~/auth/useCurrentUser";
 import { Button } from "~/shadcn/components/ui/button";
 import { SpotifyApiPlaylist } from "../api/getPlaylist";
 import { usePlaylistBuildingService } from "../playlistBuilder/usePlaylistBuildingService";
 import { SpotifyImage } from "./SpotifyImage";
 import { TrackItem } from "./TrackItem";
+import { createSpotifySdk } from "../createSpotifySdk";
 
 interface PlaylistDisplayProps {
   playlist: SpotifyApiPlaylist;
@@ -13,12 +15,32 @@ interface PlaylistDisplayProps {
 
 export const PlaylistDisplay = ({ playlist }: PlaylistDisplayProps) => {
   let currentUser = useCurrentUser();
+  let navigate = useNavigate();
   const { selectedTrackIds, toggleTrackSelection } =
     usePlaylistBuildingService();
+  const isPlaylistOwner = currentUser?.id === playlist.owner?.id;
+  console.log("🚀 | PlaylistDisplay | playlist:", playlist, currentUser);
+
+  const handleDeletePlaylist = async () => {
+    if (!confirm(`Are you sure you want to delete "${playlist.name}"?`)) {
+      return;
+    }
+    try {
+      const sdk = createSpotifySdk(currentUser?.tokens!);
+      await sdk.currentUser.playlists.unfollow(playlist.id);
+      alert(
+        "Success! Playlist deleted. Sending you back to your play history..."
+      );
+      navigate("/play-history");
+    } catch (error) {
+      console.error("Failed to delete playlist:", error);
+      alert("Failed to delete playlist. Please try again.");
+    }
+  };
 
   return (
     <div className="space-y-4 w-full max-w-[100vw] md:max-w-5xl md:mx-auto">
-      <div className="flex flex-wrap gap-y-4 justify-between items-center mb-8">
+      <div className="flex flex-wrap gap-y-4 items-center mb-8">
         <div className="flex items-center gap-4">
           <SpotifyImage
             src={playlist.images[0]?.url}
@@ -26,8 +48,21 @@ export const PlaylistDisplay = ({ playlist }: PlaylistDisplayProps) => {
             uri={`spotify:playlist:${playlist.id}`}
             canPlay={currentUser?.product === "premium"}
           />
-          <div>
-            <h2 className="md:text-2xl font-bold">{playlist.name} </h2>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-4">
+              <h2 className="md:text-2xl font-bold">{playlist.name}</h2>
+              {isPlaylistOwner && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="rounded-full"
+                  onClick={handleDeletePlaylist}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span className="hidden md:block">Delete Playlist</span>
+                </Button>
+              )}
+            </div>
             <div className="text-muted-foreground font-normal text-sm md:text-base">
               {playlist.tracks.total} tracks
             </div>

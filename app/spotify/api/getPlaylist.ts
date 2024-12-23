@@ -41,6 +41,10 @@ export interface SpotifyApiPlaylist {
   id: string;
   images: SpotifyImage[];
   name: string;
+  owner?: {
+    id: string;
+    display_name?: string;
+  };
   tracks: {
     total: number;
     items: SpotifyPlaylistTrack[];
@@ -48,7 +52,7 @@ export interface SpotifyApiPlaylist {
 }
 
 export const getPlaylist = async (sdk: SpotifyApi, playlistId: string) => {
-  let fields = `name,id,external_urls,images,tracks.total,tracks.items(added_at,track(id,name,href,artists,album(id,name,href,images)))`;
+  let fields = `name,id,external_urls,images,owner,tracks.total,tracks.items(added_at,track(id,name,href,artists,album(id,name,href,images)))`;
   const playlist = await sdk.playlists.getPlaylist(playlistId, "US", fields);
   return playlist as SpotifyApiPlaylist;
 };

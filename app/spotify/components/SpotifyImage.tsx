@@ -11,13 +11,13 @@ interface SpotifyImage {
 
 export function SpotifyImage({ src, alt, uri }: SpotifyImage) {
   return (
-    <div className="relative group w-16 h-16">
+    <div className="relative group w-12 h-12 md:w-16 md:h-16">
       <img
         src={src}
         alt={alt}
         width={64}
         height={64}
-        className="rounded-md aspect-square object-cover w-16 h-16"
+        className="rounded-md aspect-square object-cover w-12 h-12 md:w-16 md:h-16"
       />
       <a
         href={uri}

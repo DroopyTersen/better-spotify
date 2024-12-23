@@ -25,7 +25,7 @@ export function TrackItem({
   return (
     <div
       key={track.track_id}
-      className="flex items-center space-x-4 py-4 border-b last:border-b-0 relative group"
+      className="grid grid-cols-[auto_1fr_auto] items-center space-x-4 py-4 border-b last:border-b-0 relative group"
     >
       <SpotifyImage
         src={track.images?.[0]?.url!}

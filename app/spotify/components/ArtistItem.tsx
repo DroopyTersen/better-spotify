@@ -26,7 +26,7 @@ export function ArtistItem({
   return (
     <div
       key={artist.artist_id}
-      className="flex items-center space-x-4 py-4 border-b last:border-b-0 relative group"
+      className="grid grid-cols-[auto_1fr_auto] items-center gap-x-4 py-4 border-b last:border-b-0 relative group"
     >
       <SpotifyImage
         src={artist.images?.[0]?.url!}

@@ -13,7 +13,6 @@ interface PlaylistDisplayProps {
 
 export const PlaylistDisplay = ({ playlist }: PlaylistDisplayProps) => {
   let currentUser = useCurrentUser();
-  console.log("🚀 | PlaylistDisplay | currentUser:", currentUser);
   const { selectedTrackIds, toggleTrackSelection } =
     usePlaylistBuildingService();
 

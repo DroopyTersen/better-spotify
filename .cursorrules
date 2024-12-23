@@ -1,0 +1,1 @@
+- For react-router or Remix stuff, the import should ALWAYS be from "react-router" for everything. Not "react-router-dom" and not anything remix.

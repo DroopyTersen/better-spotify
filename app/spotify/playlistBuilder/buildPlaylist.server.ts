@@ -70,9 +70,11 @@ export async function buildPlaylist(
     ...newSongs.map((t) => t.id),
   ]);
 
-  const validPlaylistTracks = generatedPlaylist.playlist.tracks.filter(
-    (track) => validTrackIds.has(track.id)
-  );
+  const validPlaylistTracks = await Promise.all(
+    generatedPlaylist.playlist.tracks.map((track) =>
+      ensurePlaylistTrack(track, validTrackIds, sdk)
+    )
+  ).then((tracks) => tracks.filter((track) => track.id));
 
   await sdk.playlists.addItemsToPlaylist(
     playlist.id,
@@ -136,4 +138,33 @@ function shuffleTracks(
     const j = Math.floor(Math.random() * (i + 1));
     [tracks[i], tracks[j]] = [tracks[j], tracks[i]];
   }
+}
+
+async function ensurePlaylistTrack(
+  track: BuildPlaylistTrack,
+  validTrackIds: Set<string>,
+  sdk: SpotifySdk
+): Promise<BuildPlaylistTrack> {
+  // If track has an ID and it's valid, return as-is
+  if (track.id && validTrackIds.has(track.id)) {
+    return track;
+  }
+
+  // Search for the track if no ID or invalid ID
+  const searchQuery = `${track.name} ${track.artist_name}`;
+  const searchResult = await sdk.search(searchQuery, ["track"], "US", 1);
+
+  if (searchResult.tracks.items.length > 0) {
+    const foundTrack = searchResult.tracks.items[0];
+    return {
+      id: foundTrack.id,
+      name: foundTrack.name,
+      artist_name: foundTrack.artists[0]?.name ?? track.artist_name,
+      artist_id: foundTrack.artists[0]?.id ?? null,
+      popularity: foundTrack.popularity,
+    };
+  }
+
+  // If no match found, return original track (it won't be included in final playlist)
+  return track;
 }

@@ -52,6 +52,7 @@ export async function buildFamiliarSongsPool(
 
   const pool: FamiliarSongsPool = {
     specifiedTracks,
+    recentlyPlayedTracks: input.playHistory.slice(0, 100),
     topTracks: allTopTracks.filter(
       (t) => t.artist_id && artistIds.includes(t.artist_id)
     ),

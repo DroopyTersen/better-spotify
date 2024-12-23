@@ -1,21 +1,19 @@
 import { Check, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useSubmit } from "react-router";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "~/shadcn/components/ui/avatar";
 import { Button } from "~/shadcn/components/ui/button";
-import { SheetHeader, SheetTitle } from "~/shadcn/components/ui/sheet";
-import { usePlaylistBuildingService } from "./usePlaylistBuildingService";
-import { useSpotifyData } from "./useSpotifyData";
 import { Label } from "~/shadcn/components/ui/label";
-import { Slider } from "~/shadcn/components/ui/slider";
-import { RadioGroupItem } from "~/shadcn/components/ui/radio-group";
-import { RadioGroup } from "~/shadcn/components/ui/radio-group";
-import { Textarea } from "~/shadcn/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "~/shadcn/components/ui/radio-group";
 import { ScrollArea } from "~/shadcn/components/ui/scroll-area";
+import { SheetHeader, SheetTitle } from "~/shadcn/components/ui/sheet";
+import { Slider } from "~/shadcn/components/ui/slider";
+import { Textarea } from "~/shadcn/components/ui/textarea";
+import { NewStuffAmount } from "./playlistBuilder.types";
+import { usePlaylistBuildingService } from "./usePlaylistBuildingService";
 
 export function CartPanel() {
   const {
@@ -27,14 +25,17 @@ export function CartPanel() {
     warmup,
     clearSelection,
     buildPlaylist,
+    formData,
+    updateFormData,
   } = usePlaylistBuildingService();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleBuildPlaylist = async () => {
     setIsSubmitting(true);
-    let result = await buildPlaylist();
+    let result = await buildPlaylist().finally(() => {
+      setIsSubmitting(false);
+    });
     console.log("🚀 | handleBuildPlaylist= | result:", result);
-    setIsSubmitting(false);
   };
   useEffect(() => {
     warmup();
@@ -156,20 +157,30 @@ export function CartPanel() {
 
           <div className="space-y-12">
             <div className="space-y-4">
-              <Label htmlFor="song-count">Number of Songs: 32</Label>
+              <Label htmlFor="song-count">
+                Number of Songs: {formData.songCount}
+              </Label>
               <Slider
                 id="song-count"
-                defaultValue={[32]}
+                value={[formData.songCount]}
                 max={100}
                 min={12}
                 step={1}
                 className="w-full"
+                onValueChange={([value]) => updateFormData("songCount", value)}
               />
             </div>
 
             <div className="space-y-4">
               <Label>How much new stuff?</Label>
-              <RadioGroup defaultValue="sprinkle" className="space-y-1">
+              <RadioGroup
+                value={formData.newStuffAmount}
+                onValueChange={(value) => {
+                  console.log("🚀 | CartPanel | value:", value);
+                  updateFormData("newStuffAmount", value as NewStuffAmount);
+                }}
+                className="space-y-1"
+              >
                 {[
                   {
                     value: "none",
@@ -188,16 +199,27 @@ export function CartPanel() {
                   <Label
                     key={option.value}
                     htmlFor={option.value}
-                    className="flex items-center space-x-3 space-y-0 rounded-md border py-4 hover:bg-accent cursor-pointer"
+                    className={`flex items-center space-x-3 space-y-0 rounded-md border py-4 hover:bg-accent cursor-pointer ${
+                      formData.newStuffAmount === option.value
+                        ? "border-primary"
+                        : ""
+                    }`}
                   >
                     <RadioGroupItem
+                      checked={formData.newStuffAmount === option.value}
                       value={option.value}
                       id={option.value}
                       className="sr-only"
                     />
                     <div className="flex items-center justify-center">
                       <div className="w-6 h-6 rounded-full border flex items-center justify-center">
-                        <Check className="w-4 h-4 hidden [&:has([data-state=checked])]:block" />
+                        <Check
+                          className={`w-5 h-5 ${
+                            formData.newStuffAmount === option.value
+                              ? "block"
+                              : "hidden"
+                          }`}
+                        />
                       </div>
                     </div>
                     <span className="text-sm font-normal leading-5">
@@ -214,6 +236,10 @@ export function CartPanel() {
                 id="instructions"
                 placeholder="Add any special instructions for your playlist..."
                 className="min-h-[100px]"
+                value={formData.customInstructions}
+                onChange={(e) =>
+                  updateFormData("customInstructions", e.target.value)
+                }
               />
             </div>
           </div>
@@ -222,7 +248,10 @@ export function CartPanel() {
 
       <Button
         className="mt-12 w-full"
-        disabled={totalSelectedCount === 0 || isSubmitting}
+        disabled={
+          (totalSelectedCount === 0 && !formData.customInstructions) ||
+          isSubmitting
+        }
         onClick={handleBuildPlaylist}
       >
         {isSubmitting ? "Building..." : "Build Playlist"}

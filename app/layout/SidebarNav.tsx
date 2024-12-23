@@ -175,7 +175,7 @@ export const SidebarNav = ({
           disabled={fetcher.state !== "idle"}
           onClick={syncPlayHistory}
         >
-          Sync Play History
+          Sync Spotify Data
         </Button>
         <SidebarMenu>
           {currentUser && (

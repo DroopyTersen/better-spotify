@@ -48,7 +48,7 @@ export const PlaylistDisplay = ({ playlist }: PlaylistDisplayProps) => {
 
           return (
             <div
-              key={track.id}
+              key={track.id + index}
               className="flex items-center space-x-4 py-4 relative group"
             >
               <div className="w-8 h-8 flex items-center justify-center font-bold text-sm mr-4 text-muted-foreground bg-gray-100 rounded-full">

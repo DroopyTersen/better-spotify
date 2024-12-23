@@ -13,6 +13,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
   let user = await requireAuth(request);
   let sdk = await createSpotifySdk(user.tokens);
   let body = (await request.json()) as BuildPlaylistInput;
+  console.log("🚀 | action | body:", body);
   let result = await buildPlaylist(body, sdk);
   // console.log("🚀 | action | result:", result);
   // return redirect(`/playlist/${result.playlist.id}`);

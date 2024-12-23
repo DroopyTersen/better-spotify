@@ -44,5 +44,6 @@ export const usePlaylistBuildingService = () => {
     clearSelection: playlistBuildingService.clearSelections,
     warmup: playlistBuildingService.warmUpPlaylist,
     buildPlaylist: playlistBuildingService.buildPlaylist,
+    updateFormData: playlistBuildingService.updateFormData,
   };
 };

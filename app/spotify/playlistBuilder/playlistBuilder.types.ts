@@ -32,11 +32,15 @@ export interface PlaylistBuilderData {
   // Computed results
   familiarSongsPool: FamiliarSongsPool | null;
   recommendedArtists: SelectedPlaylistArtist[];
+  // Add form data
+  formData?: BuildPlaylistFormData;
 }
 
 export type BuildPlaylistInput = {
   formData: BuildPlaylistFormData;
-  data: Required<Omit<PlaylistBuilderData, "hashedSelection">>;
+  data: Required<Omit<PlaylistBuilderData, "hashedSelection" | "formData">> & {
+    formData: BuildPlaylistFormData;
+  };
 };
 
 export type GeneratePlaylistInput = {
@@ -54,6 +58,7 @@ export interface FamiliarSongsPool {
     tracks: BuildPlaylistTrack[];
   }>;
   likedTracks: BuildPlaylistTrack[];
+  recentlyPlayedTracks: BuildPlaylistTrack[];
 }
 
 export const PlaylistBuilderRequest = z.object({

@@ -62,6 +62,9 @@ export class PlaylistBuildingService extends EventEmitter<void> {
       this._selectedArtists = state.selectedArtists;
       this.familiarSongsPool = state.familiarSongsPool;
       this.newArtists = state.recommendedArtists;
+      if (state.formData) {
+        this._formData = state.formData;
+      }
       setTimeout(() => {
         this.emit();
       }, 750);
@@ -130,6 +133,11 @@ export class PlaylistBuildingService extends EventEmitter<void> {
         ...this.spotifyData.playHistory.map((t) => t.artist_name || ""),
       ])
     ).filter(Boolean);
+    if (artistsToMatch.length < 1) {
+      this.newArtists = [];
+      return;
+    }
+
     this.newArtists = await jsonRequest("/api/new-artist-recommendations", {
       method: "POST",
       body: JSON.stringify({
@@ -148,10 +156,6 @@ export class PlaylistBuildingService extends EventEmitter<void> {
   };
 
   private buildFamiliarSongsPool = async () => {
-    if (!this._selectedArtists.length && !this._selectedTracks.length) {
-      this.familiarSongsPool = null;
-      return;
-    }
     let input = await getBuildFamiliarSongPoolInput(this.spotifyData, {
       selectedArtistIds: this._selectedArtists.map((a) => a.artist_id),
       selectedTrackIds: this._selectedTracks.map((t) => t.track_id),
@@ -167,6 +171,7 @@ export class PlaylistBuildingService extends EventEmitter<void> {
     const selectionsString = JSON.stringify({
       artists: this._selectedArtists.map((a) => a.artist_id).sort(),
       tracks: this._selectedTracks.map((t) => t.track_id).sort(),
+      formData: this._formData,
     });
     return createHash(selectionsString);
   }
@@ -180,6 +185,7 @@ export class PlaylistBuildingService extends EventEmitter<void> {
         // Clear computed results when selection changes
         familiarSongsPool: null,
         recommendedArtists: [],
+        formData: this._formData,
       };
       await this.cache.setItem(PlaylistBuildingService.CACHE_KEY, cacheData);
     } catch (err) {
@@ -260,6 +266,7 @@ export class PlaylistBuildingService extends EventEmitter<void> {
       selectedTracks: this._selectedTracks,
       selectedTrackIds: this._selectedTracks.map((t) => t.track_id),
       selectedArtistIds: this._selectedArtists.map((a) => a.artist_id),
+      formData: this._formData,
       totalSelectedCount:
         this._selectedArtists.length + this._selectedTracks.length,
     };
@@ -300,7 +307,8 @@ export class PlaylistBuildingService extends EventEmitter<void> {
     value: BuildPlaylistFormData[TKey]
   ) => {
     this._formData[key] = value;
-    this.triggerChange();
+    this.saveSelectionToCache();
+    this.emit();
   };
 
   public buildPlaylist = async () => {
@@ -310,24 +318,25 @@ export class PlaylistBuildingService extends EventEmitter<void> {
       newArtists: this.newArtists,
     });
     let state = this.getState();
-    if (!state.selectedArtists.length && !state.selectedTracks.length) {
-      throw new Error("No selection to build playlist from");
-    }
+    // if (!state.selectedArtists.length && !state.selectedTracks.length) {
+    //   throw new Error("No selection to build playlist from");
+    // }
     if (!this.familiarSongsPool) {
       throw new Error("No familiar songs pool to build playlist from");
     }
-    if (!this.newArtists.length) {
-      throw new Error("No new artists to build playlist from");
-    }
+    // if (!this.newArtists.length) {
+    //   throw new Error("No new artists to build playlist from");
+    // }
     let data = await jsonRequest("/api/build-playlist", {
       method: "POST",
       body: JSON.stringify({
         formData: this._formData,
         data: {
-          selectedTracks: state.selectedTracks,
-          selectedArtists: state.selectedArtists,
+          selectedTracks: state.selectedTracks || [],
+          selectedArtists: state.selectedArtists || [],
           familiarSongsPool: this.familiarSongsPool,
-          recommendedArtists: this.newArtists,
+          recommendedArtists: this.newArtists || [],
+          formData: this._formData,
         },
       } satisfies BuildPlaylistInput),
     });

@@ -32,61 +32,63 @@ export default function SongsRoute({ loaderData }: Route.ComponentProps) {
   return (
     <>
       <PageHeader title="Songs" />
-      <Tabs defaultValue="top" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="top">Top</TabsTrigger>
-          <TabsTrigger value="liked">Liked</TabsTrigger>
-          <TabsTrigger value="recent">Recent</TabsTrigger>
-        </TabsList>
-        <TabsContent value="top">
-          <div className="flex flex-col">
-            {topTracks.map((track) => (
-              <TrackItem
-                key={track.track_id}
-                track={track!}
-                metadata={<p>Popularity: {track.track_popularity}</p>}
-                isSelected={selectedTrackIds.includes(track.track_id!)}
-                toggleSelection={toggleTrackSelection}
-              />
-            ))}
-          </div>
-        </TabsContent>
-        <TabsContent value="liked">
-          <div className="flex flex-col">
-            {likedTracks.map((track) => (
-              <TrackItem
-                key={track.track_id}
-                track={track!}
-                metadata={
-                  <>
-                    <p>Liked on {dayjs(track.added_at).format("M/D/YYYY")}</p>
-                  </>
-                }
-                isSelected={selectedTrackIds.includes(track.track_id!)}
-                toggleSelection={toggleTrackSelection}
-              />
-            ))}
-          </div>
-        </TabsContent>
-        <TabsContent value="recent">
-          <div className="flex flex-col">
-            {playHistory.map((track: SpotifyPlayedTrack) => (
-              <TrackItem
-                key={track.track_id}
-                track={track!}
-                metadata={
-                  <>
-                    <p>{dayjs(track.played_at).format("MM/DD/YYYY")}</p>
-                    <p>{dayjs(track.played_at).format("h:mm A")}</p>
-                  </>
-                }
-                isSelected={selectedTrackIds.includes(track.track_id!)}
-                toggleSelection={toggleTrackSelection}
-              />
-            ))}
-          </div>
-        </TabsContent>
-      </Tabs>
+      <div className="max-w-4xl mx-auto">
+        <Tabs defaultValue="top" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="top">Top</TabsTrigger>
+            <TabsTrigger value="liked">Liked</TabsTrigger>
+            <TabsTrigger value="recent">Recent</TabsTrigger>
+          </TabsList>
+          <TabsContent value="top">
+            <div className="flex flex-col">
+              {topTracks.map((track) => (
+                <TrackItem
+                  key={track.track_id}
+                  track={track!}
+                  metadata={<p>Popularity: {track.track_popularity}</p>}
+                  isSelected={selectedTrackIds.includes(track.track_id!)}
+                  toggleSelection={toggleTrackSelection}
+                />
+              ))}
+            </div>
+          </TabsContent>
+          <TabsContent value="liked">
+            <div className="flex flex-col">
+              {likedTracks.map((track) => (
+                <TrackItem
+                  key={track.track_id}
+                  track={track!}
+                  metadata={
+                    <>
+                      <p>Liked on {dayjs(track.added_at).format("M/D/YYYY")}</p>
+                    </>
+                  }
+                  isSelected={selectedTrackIds.includes(track.track_id!)}
+                  toggleSelection={toggleTrackSelection}
+                />
+              ))}
+            </div>
+          </TabsContent>
+          <TabsContent value="recent">
+            <div className="flex flex-col">
+              {playHistory.map((track: SpotifyPlayedTrack) => (
+                <TrackItem
+                  key={track.track_id}
+                  track={track!}
+                  metadata={
+                    <>
+                      <p>{dayjs(track.played_at).format("MM/DD/YYYY")}</p>
+                      <p>{dayjs(track.played_at).format("h:mm A")}</p>
+                    </>
+                  }
+                  isSelected={selectedTrackIds.includes(track.track_id!)}
+                  toggleSelection={toggleTrackSelection}
+                />
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
     </>
   );
 }

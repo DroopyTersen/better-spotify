@@ -24,6 +24,10 @@ export default function PlayHistoryRoute({ loaderData }: Route.ComponentProps) {
       ? dayjs(playHistory[playHistory.length - 1].played_at).format("M/D/YY")
       : null;
 
+  // Sort play history by played_at in descending order (most recent first)
+  playHistory.sort((a, b) => {
+    return dayjs(b.played_at).valueOf() - dayjs(a.played_at).valueOf();
+  });
   return (
     <>
       <PageHeader title="Play History" />

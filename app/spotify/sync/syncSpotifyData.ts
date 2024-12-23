@@ -6,10 +6,11 @@ import { syncTopArtists } from "./syncTopArtists";
 import { syncTopTracks } from "./syncTopTracks";
 
 export const syncSpotifyData = async (sdk: SpotifySdk) => {
-  await syncTopTracks(sdk);
-  await syncTopArtists(sdk);
-  await syncPlayHistory(sdk);
-  // await syncPlaylists(sdk);
-  await syncSavedTracks(sdk);
+  await Promise.all([
+    syncTopTracks(sdk),
+    syncTopArtists(sdk),
+    syncPlayHistory(sdk),
+    syncSavedTracks(sdk),
+  ]);
   await syncFullArtistData(sdk);
 };

@@ -21,16 +21,9 @@ export const getPlayHistory = async (
   });
 
   let hasMorePages = true;
-  let before: string | undefined = options?.before;
-  let after: string | undefined = options?.after;
+  let after: string | undefined = options?.after || "2000-01-01";
 
-  while (hasMorePages) {
-    // Add 'before' parameter if we have a timestamp from previous iteration
-    if (before) {
-      // Convert ISO timestamp to Unix timestamp in milliseconds
-      const beforeTimestamp = new Date(before).getTime();
-      params.set("before", beforeTimestamp.toString());
-    }
+  while (hasMorePages && allTracks.length < MAX_LIMIT) {
     if (after) {
       params.set("after", after);
     }
@@ -47,15 +40,12 @@ export const getPlayHistory = async (
 
     allTracks.push(...page.items);
 
-    hasMorePages = false;
-
-    // if (page.items.length < LIMIT) {
-    //   hasMorePages = false;
-    // } else {
-    //   // Get timestamp of oldest track for next page request
-    //   // Convert to milliseconds and subtract 1 to avoid duplicates
-    //   before = page.items[page.items.length - 1].played_at;
-    // }
+    if (page.items.length < LIMIT) {
+      hasMorePages = false;
+    } else {
+      // Get timestamp of oldest track for next page request
+      after = page.items[page.items.length - 1].played_at;
+    }
   }
 
   return allTracks;

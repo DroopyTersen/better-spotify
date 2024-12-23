@@ -30,42 +30,44 @@ export default function ArtistsRoute({ loaderData }: Route.ComponentProps) {
   return (
     <>
       <PageHeader title="Artists" />
-      <Tabs defaultValue="top" className="w-full max-w-5xl mx-auto">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="top">Top</TabsTrigger>
-          <TabsTrigger value="recent">Recent</TabsTrigger>
-        </TabsList>
-        <TabsContent value="top">
-          <div className="flex flex-col">
-            {topArtists.map((artist) => (
-              <ArtistItem
-                key={artist.artist_id}
-                artist={artist}
-                isSelected={selectedArtistIds.includes(artist.artist_id!)}
-                toggleSelection={toggleArtistSelection}
-              />
-            ))}
-          </div>
-        </TabsContent>
-        <TabsContent value="recent">
-          <div className="flex flex-col">
-            {recentArtists.map((artist) => (
-              <ArtistItem
-                key={artist.artist_id}
-                artist={artist}
-                isSelected={selectedArtistIds.includes(artist.artist_id!)}
-                toggleSelection={toggleArtistSelection}
-                metadata={
-                  <>
-                    <p>{dayjs(artist.last_played).format("MM/DD/YYYY")}</p>
-                    <p>{dayjs(artist.last_played).format("h:mm A")}</p>
-                  </>
-                }
-              />
-            ))}
-          </div>
-        </TabsContent>
-      </Tabs>
+      <div className="max-w-4xl mx-auto">
+        <Tabs defaultValue="top" className="w-full max-w-5xl mx-auto">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="top">Top</TabsTrigger>
+            <TabsTrigger value="recent">Recent</TabsTrigger>
+          </TabsList>
+          <TabsContent value="top">
+            <div className="flex flex-col">
+              {topArtists.map((artist) => (
+                <ArtistItem
+                  key={artist.artist_id}
+                  artist={artist}
+                  isSelected={selectedArtistIds.includes(artist.artist_id!)}
+                  toggleSelection={toggleArtistSelection}
+                />
+              ))}
+            </div>
+          </TabsContent>
+          <TabsContent value="recent">
+            <div className="flex flex-col">
+              {recentArtists.map((artist) => (
+                <ArtistItem
+                  key={artist.artist_id}
+                  artist={artist}
+                  isSelected={selectedArtistIds.includes(artist.artist_id!)}
+                  toggleSelection={toggleArtistSelection}
+                  metadata={
+                    <>
+                      <p>{dayjs(artist.last_played).format("MM/DD/YYYY")}</p>
+                      <p>{dayjs(artist.last_played).format("h:mm A")}</p>
+                    </>
+                  }
+                />
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
     </>
   );
 }

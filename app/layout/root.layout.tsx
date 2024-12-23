@@ -9,6 +9,9 @@ import { spotifyDb } from "~/spotify/spotify.db";
 import { syncFullArtistData } from "~/spotify/sync/syncFullArtistData";
 import { syncPlayHistory } from "~/spotify/sync/syncPlayHistory";
 import type { Route } from "./+types/root.layout";
+import { tracksTable } from "~/db/db.schema";
+import { syncSpotifyData } from "~/spotify/sync/syncSpotifyData";
+import { wait } from "~/toolkit/utils/wait";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -44,6 +47,12 @@ export const clientLoader = async ({
   console.time("data-loading");
   let db = getDb();
   let { user, playlists, devices } = await serverLoader();
+  let sdk = createSpotifySdk(user.tokens!);
+  let trackCount = await db.$count(tracksTable);
+  if (trackCount === 0) {
+    syncSpotifyData(sdk);
+    await wait(3000);
+  }
   let dbResults = await spotifyDb.getAllSpotifyData(db);
 
   console.timeEnd("data-loading");

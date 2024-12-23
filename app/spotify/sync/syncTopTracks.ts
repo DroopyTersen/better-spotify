@@ -67,12 +67,7 @@ export const syncTopTracks = async (sdk: SpotifySdk) => {
       .onConflictDoNothing();
 
     nextUrl = nextPage?.next && nextPage.next !== nextUrl ? nextPage.next : "";
-
-    const artistCount = await db.$count(artistsTable);
-    console.log("🚀 | resyncPlayHistory | artistCount:", artistCount);
-
-    const trackDBCount = await db.$count(tracksTable);
-    console.log("🚀 | resyncPlayHistory | trackDBCount:", trackDBCount);
+    console.log("🚀 | resyncTopTracks | nextUrl:", nextUrl);
   }
   console.log("🚀 | resyncTopTracks | trackCount:", count);
 };

@@ -29,8 +29,8 @@ export const SidebarLayout = ({
         <Sidebar>
           <SidebarNav playlists={playlists} devices={devices} />
         </Sidebar>
-        <div className="flex-1 flex flex-col w-full">
-          <header className="flex h-16 items-center gap-4 border-b px-6 w-full">
+        <div className="grid grid-rows-[auto_1fr] w-full relative">
+          <header className="flex h-16 items-center gap-4 border-b px-6 w-full sticky top-0 bg-background z-10">
             <SidebarTrigger />
             <Separator orientation="vertical" className="h-6" />
             <h1 className="text-lg font-bold" id="page-title"></h1>
@@ -48,7 +48,9 @@ export const SidebarLayout = ({
               )}
             </Link>
           </header>
-          <main className="flex-1 overflow-y-auto p-6 w-full">{children}</main>
+          <main className="flex-1 p-6 w-full h-[calc(100vh-64px)]">
+            {children}
+          </main>
         </div>
       </div>
     </SidebarProvider>

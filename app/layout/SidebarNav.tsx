@@ -99,7 +99,7 @@ export const SidebarNav = ({
                 >
                   <span>
                     <Play className="h-5 w-5" />
-                    <span>Now Playing</span>
+                    <span>Now Playing (coming soon)</span>
                   </span>
                 </SidebarMenuButton>
               </SidebarMenuItem>

@@ -34,10 +34,12 @@ export function TrackItem({
         canPlay={currentUser?.product === "premium"}
       />
       <div className="flex-grow">
-        <h3 className="font-semibold">{track.track_name}</h3>{" "}
+        <h3 className="text-sm md:text-base font-semibold line-clamp-1">
+          {track.track_name}
+        </h3>{" "}
         <p className="text-sm text-muted-foreground">{track.artist_name}</p>
         {track?.genres?.length && track?.genres?.length > 0 && (
-          <div className="mt-1 flex items-center space-x-2 -mx-1 hidden md:flex">
+          <div className="mt-1 items-center space-x-2 -mx-1 hidden md:flex">
             {track?.genres
               ?.filter((g) => g && g !== "NULL")
               .slice(0, 3)
@@ -62,7 +64,7 @@ export function TrackItem({
             className={`rounded-full transition-opacity ${
               isSelected
                 ? "opacity-80 bg-primary"
-                : "opacity-0 group-hover:opacity-100"
+                : "opacity-20 md:opacity-0 group-hover:opacity-100"
             }`}
           >
             {isSelected ? (

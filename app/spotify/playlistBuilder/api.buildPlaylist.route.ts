@@ -1,13 +1,8 @@
-import {
-  BuildPlaylistTrack,
-  BuildPlaylistInput,
-} from "./playlistBuilder.types";
-import type { Route } from "./+types/api.buildPlaylist.route";
-import { z } from "zod";
 import { requireAuth } from "~/auth/auth.server";
 import { createSpotifySdk } from "../createSpotifySdk";
+import type { Route } from "./+types/api.buildPlaylist.route";
 import { buildPlaylist } from "./buildPlaylist.server";
-import { redirect } from "react-router";
+import { BuildPlaylistInput } from "./playlistBuilder.types";
 
 export const action = async ({ request }: Route.ActionArgs) => {
   let user = await requireAuth(request);
@@ -19,3 +14,4 @@ export const action = async ({ request }: Route.ActionArgs) => {
   // return redirect(`/playlist/${result.playlist.id}`);
   return Response.json(result);
 };
+export type BuildPlaylistResult = Awaited<ReturnType<typeof buildPlaylist>>;

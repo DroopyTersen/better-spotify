@@ -1,7 +1,5 @@
 import { PageHeader } from "~/layout/PageHeader";
 import type { Route } from "./+types/playlist.$playlistId.route";
-import { PlaylistBuilder } from "~/spotify/playlistBuilder/PlaylistBuilder";
-import { useRouteData } from "~/toolkit/remix/useRouteData";
 import { LoaderFunctionArgs } from "react-router";
 import { requireAuth, type User } from "~/auth/auth.server";
 import { useCurrentUser } from "~/auth/useCurrentUser";

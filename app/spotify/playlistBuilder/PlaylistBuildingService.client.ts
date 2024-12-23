@@ -1,7 +1,16 @@
 import { DB, getDb } from "~/db/db.client";
+import { EventEmitter } from "~/toolkit/utils/EventEmitter";
+import { CacheManager, LocalStorageCache } from "~/toolkit/utils/cache.client";
+import { createHash } from "~/toolkit/utils/createHash.client";
+import { jsonRequest } from "~/toolkit/utils/fetch.utils";
 import { SpotifySdk } from "../createSpotifySdk";
-import { syncNewArtists, syncNewTracks } from "../sync/syncNewItems";
 import { SpotifyData, spotifyDb } from "../spotify.db";
+import { syncNewArtists, syncNewTracks } from "../sync/syncNewItems";
+import type { BuildPlaylistResult } from "./api.buildPlaylist.route";
+import {
+  buildFamiliarSongsPool,
+  getBuildFamiliarSongPoolInput,
+} from "./buildFamiliarSongPool";
 import {
   BuildPlaylistFormData,
   BuildPlaylistInput,
@@ -10,15 +19,6 @@ import {
   SelectedPlaylistArtist,
   SelectedPlaylistTrack,
 } from "./playlistBuilder.types";
-import {
-  buildFamiliarSongsPool,
-  getBuildFamiliarSongPoolInput,
-} from "./buildFamiliarSongPool";
-import { jsonRequest } from "~/toolkit/utils/fetch.utils";
-import { EventEmitter } from "~/toolkit/utils/EventEmitter";
-import { createHash } from "~/toolkit/utils/createHash.client";
-import { CacheManager, LocalStorageCache } from "~/toolkit/utils/cache.client";
-import { z } from "zod";
 
 export class PlaylistBuildingService extends EventEmitter<void> {
   private static CACHE_KEY = "playlist-builder-state";
@@ -84,6 +84,11 @@ export class PlaylistBuildingService extends EventEmitter<void> {
   public clearSelections = async () => {
     this._selectedArtists = [];
     this._selectedTracks = [];
+    this._formData = {
+      newStuffAmount: "sprinkle",
+      songCount: 32,
+      customInstructions: "",
+    };
     this.lastWarmUp = null;
     await this.cache.removeItem(PlaylistBuildingService.CACHE_KEY);
     this.triggerChange();
@@ -327,7 +332,7 @@ export class PlaylistBuildingService extends EventEmitter<void> {
     // if (!this.newArtists.length) {
     //   throw new Error("No new artists to build playlist from");
     // }
-    let data = await jsonRequest("/api/build-playlist", {
+    let data = (await jsonRequest)<BuildPlaylistResult>("/api/build-playlist", {
       method: "POST",
       body: JSON.stringify({
         formData: this._formData,
@@ -340,7 +345,6 @@ export class PlaylistBuildingService extends EventEmitter<void> {
         },
       } satisfies BuildPlaylistInput),
     });
-    console.log("🚀 | buildPlaylist= | data:", data);
     return data;
   };
 }

@@ -83,6 +83,7 @@ export async function jsonRequest<T = any>(
       );
     }
   } catch (err: any) {
+    console.error("🚀 | jsonRequest | err:", err);
     throw new Error(
       await getFetchErrorMessage(err?.message, { url, ...reqOptions })
     );

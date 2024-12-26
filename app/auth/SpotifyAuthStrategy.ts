@@ -8,6 +8,7 @@ import {
   ArcticFetchError,
 } from "arctic";
 import { redirect } from "react-router";
+import { jsonRequest } from "~/toolkit/utils/fetch.utils";
 
 export type SpotifyAuthStrategyOptions = {
   clientId: string;
@@ -96,10 +97,13 @@ export class SpotifyAuthStrategy<User> extends Strategy<
       const tokens = await this.client.validateAuthorizationCode(code);
       let accessToken = tokens.accessToken();
       if (!accessToken) throw new Error("No access token");
-      let response = await fetch(`https://api.spotify.com/v1/me`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      let data = await response.json();
+      let data = await jsonRequest<SpotifyProfile>(
+        `https://api.spotify.com/v1/me`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+
       let user = await this.verify({ request, tokens, profile: data });
       return user;
     } catch (e) {

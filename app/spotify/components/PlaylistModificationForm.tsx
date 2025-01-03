@@ -57,7 +57,7 @@ export function PlaylistModificationForm({
         placeholder="Enter modification instructions (e.g., 'add 4 songs by Everclear' or 'replace slow songs with upbeat ones')"
         value={instructions}
         onChange={(e) => setInstructions(e.target.value)}
-        className="min-h-[100px] bg-secondary text-lg"
+        className="min-h-[100px] bg-secondary md:text-base"
         disabled={isLoading}
       />
 

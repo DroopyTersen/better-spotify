@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router";
 import dayjs from "dayjs";
-import { CheckIcon, ExternalLink, Plus, Trash2 } from "lucide-react";
+import { ExternalLink, Plus, Trash2 } from "lucide-react";
 import { useCurrentUser } from "~/auth/useCurrentUser";
 import { Button } from "~/shadcn/components/ui/button";
 import { SpotifyApiPlaylist } from "../api/getPlaylist";
@@ -10,6 +10,7 @@ import { TrackItem } from "./TrackItem";
 import { createSpotifySdk } from "../createSpotifySdk";
 import { useState } from "react";
 import { PlaylistModificationForm } from "./PlaylistModificationForm";
+import { EditablePlaylistName } from "./EditablePlaylistName";
 
 interface PlaylistDisplayProps {
   playlist: SpotifyApiPlaylist;
@@ -42,40 +43,55 @@ export const PlaylistDisplay = ({ playlist }: PlaylistDisplayProps) => {
 
   return (
     <div className="space-y-4 w-full max-w-[100vw] md:max-w-5xl md:mx-auto">
-      <div className="flex flex-wrap gap-y-4 items-center mb-8">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col md:flex-row md:items-center gap-4 flex-wrap">
+        <div className="md:hidden">
+          <EditablePlaylistName
+            playlistId={playlist.id}
+            initialName={playlist.name}
+            isOwner={isPlaylistOwner}
+            userTokens={currentUser?.tokens!}
+          />
+        </div>
+        <div className="grid grid-cols-[auto_1fr_auto] gap-4 w-full">
           <SpotifyImage
             src={playlist.images[0]?.url}
             alt={playlist.name}
             uri={`spotify:playlist:${playlist.id}`}
             canPlay={currentUser?.product === "premium"}
           />
-          <div className="flex flex-col">
-            <div className="flex items-center gap-4">
-              <h2 className="md:text-2xl font-bold">{playlist.name}</h2>
-              {isPlaylistOwner && (
-                <div className="flex gap-2">
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    className="rounded-full"
-                    onClick={handleDeletePlaylist}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    <span className="hidden md:block">Delete Playlist</span>
-                  </Button>
-                </div>
-              )}
-            </div>
-            <div className="text-muted-foreground font-normal text-sm md:text-base">
+          <div className="hidden md:block">
+            <EditablePlaylistName
+              playlistId={playlist.id}
+              initialName={playlist.name}
+              isOwner={isPlaylistOwner}
+              userTokens={currentUser?.tokens!}
+            />
+            <div className="text-muted-foreground font-normal text-sm md:text-base md:block hidden">
               {playlist.tracks.total} tracks
             </div>
           </div>
+          <div className="md:hidden"></div>
+          {isPlaylistOwner && (
+            <div className="flex gap-2">
+              <Button
+                variant="destructive"
+                size="sm"
+                className="rounded-full"
+                onClick={handleDeletePlaylist}
+              >
+                <Trash2 className="w-4 h-4" />
+                <span className="hidden md:block">Delete Playlist</span>
+              </Button>
+            </div>
+          )}
         </div>
+      </div>
+      <div className="text-muted-foreground font-normal text-sm md:text-base md:hidden">
+        {playlist.tracks.total} tracks
       </div>
 
       {showModifyForm ? (
-        <div className="mb-8">
+        <div className="my-8">
           <PlaylistModificationForm
             playlistId={playlist.id}
             currentTracks={playlist.tracks.items.map((item) => ({

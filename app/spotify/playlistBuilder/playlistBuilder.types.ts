@@ -84,3 +84,16 @@ export type SelectedPlaylistTrack = {
   artist_name?: string | null;
   images?: SpotifyImage[] | null;
 };
+
+/**
+ * Input type for playlist modification requests
+ */
+export type PlaylistModificationInput = {
+  playlistId: string;
+  instructions: string;
+  currentTracks: Array<{
+    id: string;
+    name: string;
+    artist_name: string;
+  }>;
+};

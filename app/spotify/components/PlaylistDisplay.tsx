@@ -8,6 +8,8 @@ import { usePlaylistBuildingService } from "../playlistBuilder/usePlaylistBuildi
 import { SpotifyImage } from "./SpotifyImage";
 import { TrackItem } from "./TrackItem";
 import { createSpotifySdk } from "../createSpotifySdk";
+import { useState } from "react";
+import { PlaylistModificationForm } from "./PlaylistModificationForm";
 
 interface PlaylistDisplayProps {
   playlist: SpotifyApiPlaylist;
@@ -19,7 +21,7 @@ export const PlaylistDisplay = ({ playlist }: PlaylistDisplayProps) => {
   const { selectedTrackIds, toggleTrackSelection } =
     usePlaylistBuildingService();
   const isPlaylistOwner = currentUser?.id === playlist.owner?.id;
-  console.log("🚀 | PlaylistDisplay | playlist:", playlist, currentUser);
+  const [showModifyForm, setShowModifyForm] = useState(false);
 
   const handleDeletePlaylist = async () => {
     if (!confirm(`Are you sure you want to delete "${playlist.name}"?`)) {
@@ -52,15 +54,17 @@ export const PlaylistDisplay = ({ playlist }: PlaylistDisplayProps) => {
             <div className="flex items-center gap-4">
               <h2 className="md:text-2xl font-bold">{playlist.name}</h2>
               {isPlaylistOwner && (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="rounded-full"
-                  onClick={handleDeletePlaylist}
-                >
-                  <Trash2 className="w-4 h-4" />
-                  <span className="hidden md:block">Delete Playlist</span>
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="rounded-full"
+                    onClick={handleDeletePlaylist}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span className="hidden md:block">Delete Playlist</span>
+                  </Button>
+                </div>
               )}
             </div>
             <div className="text-muted-foreground font-normal text-sm md:text-base">
@@ -69,6 +73,29 @@ export const PlaylistDisplay = ({ playlist }: PlaylistDisplayProps) => {
           </div>
         </div>
       </div>
+
+      {showModifyForm ? (
+        <div className="mb-8">
+          <PlaylistModificationForm
+            playlistId={playlist.id}
+            currentTracks={playlist.tracks.items.map((item) => ({
+              id: item.track.id,
+              name: item.track.name,
+              artist_name: item.track.artists.map((a) => a.name).join(", "),
+            }))}
+            onClose={() => setShowModifyForm(false)}
+          />
+        </div>
+      ) : (
+        <Button
+          variant="secondary"
+          size="lg"
+          onClick={() => setShowModifyForm(!showModifyForm)}
+          className="w-full"
+        >
+          {showModifyForm ? "Cancel Modification" : "Tweak Playlist"}
+        </Button>
+      )}
 
       <div className="divide-y">
         {playlist.tracks.items.map((item, index) => {

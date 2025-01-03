@@ -140,7 +140,7 @@ function shuffleTracks(
   }
 }
 
-async function ensurePlaylistTrack(
+export async function ensurePlaylistTrack(
   track: BuildPlaylistTrack,
   validTrackIds: Set<string>,
   sdk: SpotifySdk
@@ -152,7 +152,13 @@ async function ensurePlaylistTrack(
 
   // Search for the track if no ID or invalid ID
   const searchQuery = `${track.name} ${track.artist_name}`;
-  const searchResult = await sdk.search(searchQuery, ["track"], "US", 1);
+  // console.log("🚀 | searchQuery:", searchQuery);
+  const searchResult = await sdk.search(
+    searchQuery.slice(0, 249),
+    ["track"],
+    "US",
+    1
+  );
 
   if (searchResult.tracks.items.length > 0) {
     const foundTrack = searchResult.tracks.items[0];

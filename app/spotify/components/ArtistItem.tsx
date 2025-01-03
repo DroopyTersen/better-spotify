@@ -4,6 +4,7 @@ import { Badge } from "~/shadcn/components/ui/badge";
 import { Button } from "~/shadcn/components/ui/button";
 import { SpotifyImage } from "./SpotifyImage";
 import { useCurrentUser } from "~/auth/useCurrentUser";
+import { TooltipWrapper } from "~/toolkit/components/TooltipWrapper";
 
 export function ArtistItem({
   artist,
@@ -63,21 +64,29 @@ export function ArtistItem({
           </div>
         )}
         {toggleSelection && (
-          <Button
-            size="icon"
-            onClick={() => toggleSelection?.(artist.artist_id!)}
-            className={`rounded-full transition-opacity ${
+          <TooltipWrapper
+            tooltip={
               isSelected
-                ? "opacity-100 bg-primary/80 text-white"
-                : "opacity-20 md:opacity-0 group-hover:opacity-100"
-            }`}
+                ? `${artist.artist_name} has been added to your new playlist.`
+                : `Add ${artist.artist_name} to your new playlist.`
+            }
           >
-            {isSelected ? (
-              <CheckIcon className="w-6 h-6 text-white" />
-            ) : (
-              <Plus className="w-12 h-12 text-white" />
-            )}
-          </Button>
+            <Button
+              size="icon"
+              onClick={() => toggleSelection?.(artist.artist_id!)}
+              className={`rounded-full transition-opacity ${
+                isSelected
+                  ? "opacity-100 bg-primary/80 text-white"
+                  : "opacity-20 md:opacity-0 group-hover:opacity-100"
+              }`}
+            >
+              {isSelected ? (
+                <CheckIcon className="w-6 h-6 text-white" />
+              ) : (
+                <Plus className="w-12 h-12 text-white" />
+              )}
+            </Button>
+          </TooltipWrapper>
         )}
       </div>
     </div>

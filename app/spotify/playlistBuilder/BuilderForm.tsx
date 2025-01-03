@@ -108,7 +108,7 @@ export function BuilderForm() {
         <Textarea
           id="instructions"
           placeholder="Add any special instructions for your playlist..."
-          className="min-h-[100px] text-lg"
+          className="min-h-[100px] md:text-base bg-secondary"
           value={formData.customInstructions}
           onChange={(e) => updateFormData("customInstructions", e.target.value)}
         />

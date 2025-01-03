@@ -3,6 +3,7 @@ import { Badge } from "~/shadcn/components/ui/badge";
 import { Button } from "~/shadcn/components/ui/button";
 import { SpotifyImage } from "./SpotifyImage";
 import { useCurrentUser } from "~/auth/useCurrentUser";
+import { TooltipWrapper } from "~/toolkit/components/TooltipWrapper";
 
 export function TrackItem({
   track,
@@ -58,21 +59,29 @@ export function TrackItem({
           </div>
         )}
         {toggleSelection && (
-          <Button
-            size="icon"
-            onClick={() => toggleSelection?.(track.track_id!)}
-            className={`rounded-full transition-opacity ${
+          <TooltipWrapper
+            tooltip={
               isSelected
-                ? "opacity-80 bg-primary"
-                : "opacity-20 md:opacity-0 group-hover:opacity-100"
-            }`}
+                ? `${track.track_name} has been added to your new playlist.`
+                : `Add ${track.track_name} to your new playlist.`
+            }
           >
-            {isSelected ? (
-              <CheckIcon className="w-6 h-6 text-white" />
-            ) : (
-              <Plus className="w-12 h-12 text-white" />
-            )}
-          </Button>
+            <Button
+              size="icon"
+              onClick={() => toggleSelection?.(track.track_id!)}
+              className={`rounded-full transition-opacity ${
+                isSelected
+                  ? "opacity-80 bg-primary"
+                  : "opacity-20 md:opacity-0 group-hover:opacity-100"
+              }`}
+            >
+              {isSelected ? (
+                <CheckIcon className="w-6 h-6 text-white" />
+              ) : (
+                <Plus className="w-12 h-12 text-white" />
+              )}
+            </Button>
+          </TooltipWrapper>
         )}
       </div>
     </div>

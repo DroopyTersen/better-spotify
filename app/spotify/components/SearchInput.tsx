@@ -16,7 +16,7 @@ export function SearchInput({ className }: { className?: string }) {
         type="search"
         placeholder="Search artists, songs, albums..."
         name="query"
-        className="pl-8"
+        className="pl-8 bg-secondary"
         defaultValue={query ?? ""}
       />
     </Form>

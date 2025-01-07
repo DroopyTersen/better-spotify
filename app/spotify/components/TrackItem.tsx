@@ -4,6 +4,7 @@ import { Button } from "~/shadcn/components/ui/button";
 import { SpotifyImage } from "./SpotifyImage";
 import { useCurrentUser } from "~/auth/useCurrentUser";
 import { TooltipWrapper } from "~/toolkit/components/TooltipWrapper";
+import { Link } from "react-router";
 
 export function TrackItem({
   track,
@@ -15,6 +16,7 @@ export function TrackItem({
     track_id: string | null;
     track_name: string | null;
     artist_name: string | null;
+    artist_id: string | null;
     genres?: string[] | null;
     images?: { url: string }[] | null;
   };
@@ -38,7 +40,12 @@ export function TrackItem({
         <h3 className="text-sm md:text-base font-semibold line-clamp-1">
           {track.track_name}
         </h3>{" "}
-        <p className="text-sm text-muted-foreground">{track.artist_name}</p>
+        <Link
+          to={`/artists/${track.artist_id}`}
+          className="text-sm text-muted-foreground hover:underline"
+        >
+          {track.artist_name}
+        </Link>
         {track?.genres?.length && track?.genres?.length > 0 && (
           <div className="mt-1 items-center space-x-2 -mx-1 hidden md:flex">
             {track?.genres

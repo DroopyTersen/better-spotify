@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Outlet, useRevalidator } from "react-router";
-import { requireAuth } from "~/auth/auth.server";
+import { requireAuth, User } from "~/auth/auth.server";
 import { useCurrentUser } from "~/auth/useCurrentUser";
 import { getDb } from "~/db/db.client";
 import { SidebarLayout } from "~/layout/SidebarLayout";
@@ -40,6 +40,11 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   return { user, playlists, devices: devicesResults.devices };
 };
 
+declare global {
+  interface Window {
+    __currentUser: User;
+  }
+}
 export const clientLoader = async ({
   request,
   serverLoader,
@@ -47,6 +52,7 @@ export const clientLoader = async ({
   console.time("data-loading");
   let db = getDb();
   let { user, playlists, devices } = await serverLoader();
+  window.__currentUser = user as User;
   let sdk = createSpotifySdk(user.tokens!);
   let trackCount = await db.$count(tracksTable);
   if (trackCount === 0) {

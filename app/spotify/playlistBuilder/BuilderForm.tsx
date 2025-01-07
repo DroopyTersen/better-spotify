@@ -13,7 +13,7 @@ import { Textarea } from "~/shadcn/components/ui/textarea";
 import { NewStuffAmount } from "./playlistBuilder.types";
 import { usePlaylistBuildingService } from "./usePlaylistBuildingService";
 import { cn } from "~/shadcn/lib/utils";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 export function BuilderForm() {
   const {
@@ -79,6 +79,7 @@ export function BuilderForm() {
                 key={artist.artist_id}
                 name={artist.artist_name || ""}
                 imageUrl={artist.images?.[0]?.url}
+                itemLink={`/artists/${artist.artist_id}`}
                 onRemove={() => removeArtist(artist.artist_id)}
               />
             ))
@@ -210,11 +211,13 @@ function SelectionItem({
   name,
   subText,
   imageUrl,
+  itemLink,
   onRemove,
 }: {
   name: string;
   subText?: string;
   imageUrl?: string;
+  itemLink?: string;
   onRemove: () => void;
 }) {
   return (
@@ -227,7 +230,13 @@ function SelectionItem({
         <AvatarFallback>{name?.slice(0, 2).toUpperCase() || ""}</AvatarFallback>
       </Avatar>
       <div className="text-sm flex-grow">
-        <div>{name}</div>
+        {itemLink ? (
+          <Link to={itemLink} className="hover:underline">
+            {name}
+          </Link>
+        ) : (
+          <div>{name}</div>
+        )}
         {subText && <div className="text-gray-500">{subText}</div>}
       </div>
       <Button

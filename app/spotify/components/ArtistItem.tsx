@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import dayjs from "dayjs";
 import { CheckIcon, Plus } from "lucide-react";
 import { Badge } from "~/shadcn/components/ui/badge";
@@ -36,9 +37,12 @@ export function ArtistItem({
         canPlay={currentUser?.product === "premium"}
       />
       <div className="flex-grow">
-        <h3 className="font-semibold text-sm md:text-base">
+        <Link
+          to={`/artists/${artist.artist_id}`}
+          className="font-semibold text-sm md:text-base hover:underline"
+        >
           {artist.artist_name}
-        </h3>
+        </Link>
         {artist.play_count && artist?.play_count > 0 ? (
           <p className="text-xs text-muted-foreground">
             {artist.play_count} Recent Plays

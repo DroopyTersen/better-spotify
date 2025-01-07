@@ -129,7 +129,8 @@ export const PlaylistDisplay = ({ playlist }: PlaylistDisplayProps) => {
                   track={{
                     track_id: track.id,
                     track_name: track.name,
-                    artist_name: track.artists.map((a) => a.name).join(", "),
+                    artist_name: track.artists[0]?.name,
+                    artist_id: track.artists[0]?.id,
                     images: track.album.images,
                   }}
                   metadata={

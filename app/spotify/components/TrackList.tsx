@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import { Card, CardContent } from "~/shadcn/components/ui/card";
 import { Plus, CheckIcon } from "lucide-react";
 import { Button } from "~/shadcn/components/ui/button";
@@ -46,9 +47,12 @@ export const TrackList = ({
                 <h3 className="font-semibold w-full truncate">
                   {track.track_name}
                 </h3>
-                <p className="text-sm text-gray-500 truncate">
+                <Link
+                  to={`/artists/${track.artist_id}`}
+                  className="text-sm text-gray-500 truncate hover:underline"
+                >
                   {track.artist_name}
-                </p>
+                </Link>
               </div>
               <Button
                 size="icon"

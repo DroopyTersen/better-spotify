@@ -7,17 +7,24 @@ interface SpotifyImage {
   // If the user has a premium account, they can play the track from the app,
   // otherwise we'll deep link to the Spotify app.
   canPlay: boolean;
+  // Size in pixels - defaults to 64 if not provided
+  size?: number;
 }
 
-export function SpotifyImage({ src, alt, uri }: SpotifyImage) {
+export function SpotifyImage({ src, alt, uri, size = 64 }: SpotifyImage) {
+  // Calculate responsive sizes based on the provided size
+  const smallSize = Math.floor(size * 0.75); // 75% of original size for mobile
+
   return (
-    <div className="relative group w-12 h-12 md:w-16 md:h-16">
+    <div
+      className={`relative group w-${smallSize}px h-${smallSize}px md:w-${size}px md:h-${size}px`}
+    >
       <img
         src={src}
         alt={alt}
-        width={64}
-        height={64}
-        className="rounded-md aspect-square object-cover w-12 h-12 md:w-16 md:h-16"
+        width={size}
+        height={size}
+        className={`rounded-md aspect-square object-cover w-${smallSize}px h-${smallSize}px md:w-${size}px md:h-${size}px`}
       />
       <a
         href={uri}

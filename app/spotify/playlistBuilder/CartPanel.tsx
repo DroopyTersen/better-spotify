@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import { Check, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
@@ -58,7 +59,12 @@ export function CartPanel() {
             {artist?.artist_name?.slice(0, 2).toUpperCase() || ""}
           </AvatarFallback>
         </Avatar>
-        <span className="text-sm flex-grow">{artist.artist_name}</span>
+        <Link
+          to={`/artists/${artist.artist_id}`}
+          className="text-sm flex-grow hover:underline"
+        >
+          {artist.artist_name}
+        </Link>
         <Button
           variant="ghost"
           size="sm"
@@ -139,7 +145,12 @@ export function CartPanel() {
                     </Avatar>
                     <div className="text-sm flex-grow">
                       <div>{track.track_name}</div>
-                      <div className="text-gray-500">{track.artist_name}</div>
+                      <Link
+                        to={`/artists/${track.artist_id}`}
+                        className="text-gray-500 hover:underline"
+                      >
+                        {track.artist_name}
+                      </Link>
                     </div>
                     <Button
                       variant="ghost"

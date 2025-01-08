@@ -307,6 +307,44 @@ export class PlaylistBuildingService extends EventEmitter<void> {
     this.triggerChange();
   };
 
+  public addAlbumToSelection = async (albumId: string) => {
+    try {
+      // Get album tracks from Spotify
+      const albumTracks = await this.sdk.albums.tracks(albumId, "US", 50);
+
+      // Get full track details for each track
+      const trackIds = albumTracks.items.map((track) => track.id);
+      const fullTracks = await this.sdk.tracks.get(trackIds);
+
+      // Transform tracks to our format and add them
+      const tracksToAdd = fullTracks.map((track) => ({
+        track_id: track.id,
+        track_name: track.name,
+        artist_id: track.artists[0]?.id,
+        artist_name: track.artists[0]?.name,
+        images: track.album.images,
+      }));
+
+      // Filter out any tracks that are already selected
+      const newTracks = tracksToAdd.filter(
+        (track) =>
+          !this._selectedTracks.some((t) => t.track_id === track.track_id)
+      );
+
+      // Add new tracks to selection
+      this._selectedTracks = [...this._selectedTracks, ...newTracks];
+
+      await this.triggerChange();
+      await syncNewTracks(
+        this.sdk,
+        newTracks.map((t) => t.track_id)
+      );
+    } catch (error) {
+      console.error("Failed to add album tracks:", error);
+      throw error;
+    }
+  };
+
   public updateFormData = <TKey extends keyof BuildPlaylistFormData>(
     key: TKey,
     value: BuildPlaylistFormData[TKey]

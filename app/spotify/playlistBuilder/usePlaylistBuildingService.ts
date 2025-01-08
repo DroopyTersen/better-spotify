@@ -39,6 +39,7 @@ export const usePlaylistBuildingService = () => {
     ...state,
     toggleArtistSelection: playlistBuildingService.toggleArtistSelection,
     toggleTrackSelection: playlistBuildingService.toggleTrackSelection,
+    addAlbumToSelection: playlistBuildingService.addAlbumToSelection,
     removeArtist: playlistBuildingService.toggleArtistSelection,
     removeTrack: playlistBuildingService.toggleTrackSelection,
     clearSelection: playlistBuildingService.clearSelections,

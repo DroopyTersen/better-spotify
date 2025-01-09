@@ -82,7 +82,7 @@ export async function requireAuth(request: Request) {
     if (
       request.method === "GET" &&
       user?.tokens.refreshToken &&
-      dayjs(user.tokens.expiresAt).diff(dayjs(), "minutes") < 20
+      dayjs(user.tokens.expiresAt).diff(dayjs(), "minutes") < 30
     ) {
       let newTokens = await strategy.refreshAccessToken(
         user.tokens.refreshToken

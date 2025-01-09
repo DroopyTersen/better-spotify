@@ -13,6 +13,7 @@ import { createSpotifySdk } from "~/spotify/createSpotifySdk";
 import { usePlaylistBuildingService } from "~/spotify/playlistBuilder/usePlaylistBuildingService";
 import { Route } from "./+types/artists.$artistId.route";
 import { AlbumItem } from "~/spotify/components/AlbumItem";
+
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   let user = await requireAuth(request);
   const { artistId } = params;
@@ -25,7 +26,11 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     sdk.artists.albums(artistId),
   ]);
 
-  return { artist, topTracks: topTracks.tracks, albums: albums.items };
+  return {
+    artist,
+    topTracks: topTracks.tracks,
+    albums: albums.items,
+  };
 };
 
 export default function ArtistRoute({ loaderData }: Route.ComponentProps) {

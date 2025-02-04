@@ -1,8 +1,6 @@
-import { openai } from "@ai-sdk/openai";
-import { anthropic } from "@ai-sdk/anthropic";
-import { google } from "@ai-sdk/google";
+import { google, GoogleGenerativeAIProviderMetadata } from "@ai-sdk/google";
 
-import { generateObject } from "ai";
+import { generateObject, generateText } from "ai";
 import { z } from "zod";
 
 const ArtistRecommendationsResponse = z.object({
@@ -59,22 +57,29 @@ ${
   // Generate random temperature between 0.2 and 1.2
   const temperature = Math.random() * (1.2 - 0.2) + 0.2;
 
-  const result = await generateObject({
-    model: google("gemini-2.0-flash-exp"),
-    temperature,
-    schema: ArtistRecommendationsResponse,
-    messages: [
-      {
-        role: "system",
-        content: ARTIST_RECOMMENDATION_PROMPT,
-      },
-      {
-        role: "user",
-        content: userPrompt,
-      },
-    ],
+  const result = await generateText({
+    model: google("gemini-2.0-flash-thinking-exp", {
+      // useSearchGrounding: true,
+    }),
+    // temperature,
+    prompt: ARTIST_RECOMMENDATION_PROMPT + "\n\n" + userPrompt,
   });
-  let recommendedArtists = result.object.recommended_artists.filter(
+  const metadata = result?.experimental_providerMetadata?.google as
+    | GoogleGenerativeAIProviderMetadata
+    | undefined;
+  console.log("🚀 | metadata:", metadata);
+  const groundingMetadata = metadata?.groundingMetadata;
+  console.log("🚀 | groundingMetadata:", groundingMetadata);
+  console.log("🚀 | result:", result.text);
+
+  let result2 = await generateObject({
+    model: google("gemini-2.0-flash-exp"),
+    schema: ArtistRecommendationsResponse,
+    prompt:
+      "Please convert the following text into a JSON object matching the schema provided: " +
+      result.text,
+  });
+  let recommendedArtists = result2.object.recommended_artists.filter(
     (artist) => !input.artistsToExclude.includes(artist)
   );
   console.log("🚀 | recommendedArtists:", result.usage, recommendedArtists);
@@ -104,5 +109,7 @@ GUIDELINES:
    - Mix established and newer artists
    - Include artists from different eras
    - Balance mainstream and indie artists
+8. Please use Google Search to find the most relevant artists.
+
 
 Your response must be valid JSON matching the schema provided. Focus on quality over quantity in your recommendations.`;

@@ -117,6 +117,7 @@ export default function SearchRoute({ loaderData }: Route.ComponentProps) {
                     track={{
                       track_id: track.id,
                       track_name: track.name,
+                      artist_id: track.artists[0]?.id || null,
                       artist_name: track.artists[0]?.name || null,
                       images: track.album.images,
                     }}

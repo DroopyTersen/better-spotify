@@ -34,7 +34,6 @@ export function ArtistItem({
         src={artist.images?.[0]?.url!}
         alt={artist.artist_name!}
         uri={`spotify:artist:${artist.artist_id}`}
-        canPlay={currentUser?.product === "premium"}
       />
       <div className="flex-grow">
         <Link
@@ -48,7 +47,7 @@ export function ArtistItem({
             {artist.play_count} Recent Plays
           </p>
         ) : null}
-        {artist?.genres?.length && artist?.genres?.length > 0 && (
+        {artist?.genres && artist?.genres?.length > 0 && (
           <div className="mt-1 items-center space-x-2 -mx-1 hidden md:flex">
             {artist?.genres
               ?.filter((g) => g && g !== "NULL")

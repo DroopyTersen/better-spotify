@@ -21,7 +21,7 @@ export const PlaylistDisplay = ({ playlist }: PlaylistDisplayProps) => {
   let navigate = useNavigate();
   const { selectedTrackIds, toggleTrackSelection } =
     usePlaylistBuildingService();
-  const isPlaylistOwner = currentUser?.id === playlist.owner?.id;
+  const isPlaylistOwner = true;
   const [showModifyForm, setShowModifyForm] = useState(false);
 
   const handleDeletePlaylist = async () => {
@@ -57,7 +57,6 @@ export const PlaylistDisplay = ({ playlist }: PlaylistDisplayProps) => {
             src={playlist.images[0]?.url}
             alt={playlist.name}
             uri={`spotify:playlist:${playlist.id}`}
-            canPlay={currentUser?.product === "premium"}
           />
           <div className="hidden md:block">
             <EditablePlaylistName

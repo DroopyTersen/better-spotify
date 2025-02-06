@@ -123,7 +123,7 @@ graph TB
 | Name                                                                         | What is it?                                                                          |
 | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
 | [React](https://www.npmjs.com/package/react)                                 | A JavaScript library for building user interfaces.                                   |
-| [React Router](https://www.npmjs.com/package/react-router)                   | A Full Stack framework for React applications (formerly Remix)                       |
+| [React Router 7](https://www.npmjs.com/package/react-router)                 | A Full Stack framework for React applications (formerly Remix)                       |
 | [Spotify Web API SDK](https://www.npmjs.com/package/@spotify/web-api-ts-sdk) | A TypeScript SDK for interacting with the Spotify Web API.                           |
 | [Drizzle ORM](https://www.npmjs.com/package/drizzle-orm)                     | An ORM for TypeScript and JavaScript applications.                                   |
 | [PGlite](https://www.npmjs.com/package/@electric-sql/pglite)                 | A lightweight PostgreSQL client for browser environments.                            |

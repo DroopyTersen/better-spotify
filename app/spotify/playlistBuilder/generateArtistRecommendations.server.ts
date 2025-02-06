@@ -57,32 +57,16 @@ ${
   // Generate random temperature between 0.2 and 1.2
   const temperature = Math.random() * (1.2 - 0.2) + 0.2;
 
-  const result = await generateText({
-    model: google("gemini-2.0-flash-thinking-exp", {
-      // useSearchGrounding: true,
-    }),
-    // temperature,
-    prompt: ARTIST_RECOMMENDATION_PROMPT + "\n\n" + userPrompt,
-  });
-  const metadata = result?.experimental_providerMetadata?.google as
-    | GoogleGenerativeAIProviderMetadata
-    | undefined;
-  console.log("🚀 | metadata:", metadata);
-  const groundingMetadata = metadata?.groundingMetadata;
-  console.log("🚀 | groundingMetadata:", groundingMetadata);
-  console.log("🚀 | result:", result.text);
-
   let result2 = await generateObject({
-    model: google("gemini-2.0-flash-exp"),
+    model: google("gemini-2.0-flash"),
     schema: ArtistRecommendationsResponse,
-    prompt:
-      "Please convert the following text into a JSON object matching the schema provided: " +
-      result.text,
+    temperature,
+    prompt: ARTIST_RECOMMENDATION_PROMPT + "\n\n" + userPrompt,
   });
   let recommendedArtists = result2.object.recommended_artists.filter(
     (artist) => !input.artistsToExclude.includes(artist)
   );
-  console.log("🚀 | recommendedArtists:", result.usage, recommendedArtists);
+  console.log("🚀 | recommendedArtists:", result2.usage, recommendedArtists);
 
   return recommendedArtists;
 };

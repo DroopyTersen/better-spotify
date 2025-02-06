@@ -37,7 +37,7 @@ export const generatePlaylistModification = async (
   input: PlaylistModificationInput
 ) => {
   const result = await generateObject({
-    model: google("gemini-2.0-flash-exp"),
+    model: google("gemini-2.0-flash"),
     schema: PlaylistModificationSchema,
     messages: [
       {

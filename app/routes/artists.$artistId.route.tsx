@@ -1,4 +1,11 @@
-import { LoaderFunctionArgs, useLoaderData } from "react-router";
+import {
+  LoaderFunctionArgs,
+  useLoaderData,
+  Outlet,
+  Link,
+  useLocation,
+  useNavigate,
+} from "react-router";
 import { requireAuth } from "~/auth/auth.server";
 import { PageHeader } from "~/layout/PageHeader";
 import {
@@ -8,11 +15,11 @@ import {
   TabsTrigger,
 } from "~/shadcn/components/ui/tabs";
 import { ArtistHeader } from "~/spotify/components/ArtistHeader";
-import { TrackItem } from "~/spotify/components/TrackItem";
 import { createSpotifySdk } from "~/spotify/createSpotifySdk";
 import { usePlaylistBuildingService } from "~/spotify/playlistBuilder/usePlaylistBuildingService";
 import { Route } from "./+types/artists.$artistId.route";
-import { AlbumItem } from "~/spotify/components/AlbumItem";
+import { cn } from "~/shadcn/lib/utils";
+import { useEffect } from "react";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   let user = await requireAuth(request);
@@ -33,14 +40,29 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   };
 };
 
-export default function ArtistRoute({ loaderData }: Route.ComponentProps) {
-  const { artist, topTracks, albums } = loaderData;
-  const {
-    selectedTrackIds,
-    toggleTrackSelection,
-    selectedArtistIds,
-    toggleArtistSelection,
-  } = usePlaylistBuildingService();
+// Define an ID for this route loader so child routes can access its data
+export const id = "artist-detail";
+
+export default function ArtistRouteLayout({
+  loaderData,
+}: Route.ComponentProps) {
+  const { artist } = loaderData;
+  const { selectedArtistIds, toggleArtistSelection } =
+    usePlaylistBuildingService();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Determine which tab is active based on the URL path
+  const activeTab = location.pathname.endsWith("/albums")
+    ? "albums"
+    : "popular";
+
+  // Handle tab change to navigate to the correct URL
+  const handleTabChange = (value: string) => {
+    if (artist) {
+      navigate(`/artists/${artist.id}/${value}`);
+    }
+  };
 
   if (!artist) return null;
 
@@ -54,38 +76,25 @@ export default function ArtistRoute({ loaderData }: Route.ComponentProps) {
           onToggleSelection={() => toggleArtistSelection(artist.id)}
         />
 
-        <Tabs defaultValue="popular" className="w-full">
+        {/* Use Tabs but connected to routing */}
+        <Tabs
+          value={activeTab}
+          onValueChange={handleTabChange}
+          className="w-full"
+        >
           <TabsList>
-            <TabsTrigger value="popular">Popular</TabsTrigger>
-            <TabsTrigger value="albums">Albums</TabsTrigger>
+            <TabsTrigger value="popular" asChild>
+              <Link to="popular">Popular</Link>
+            </TabsTrigger>
+            <TabsTrigger value="albums" asChild>
+              <Link to="albums">Albums</Link>
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="popular" className="space-y-4">
-            {topTracks.slice(0, 5).map((track) => (
-              <TrackItem
-                key={track.id}
-                track={{
-                  track_id: track.id,
-                  track_name: track.name,
-                  artist_name: track.artists[0]?.name,
-                  artist_id: track.artists[0]?.id,
-                  images: track.album.images,
-                }}
-                isSelected={selectedTrackIds.includes(track.id)}
-                toggleSelection={toggleTrackSelection}
-                metadata={<p>Popularity: {track.popularity}</p>}
-              />
-            ))}
-          </TabsContent>
-
-          <TabsContent
-            value="albums"
-            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-          >
-            {albums.map((album) => (
-              <AlbumItem key={album.id} album={album} />
-            ))}
-          </TabsContent>
+          {/* Container for the Outlet */}
+          <div className="mt-2">
+            <Outlet context={loaderData} />
+          </div>
         </Tabs>
       </div>
     </div>

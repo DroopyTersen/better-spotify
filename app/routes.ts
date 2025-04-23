@@ -12,7 +12,11 @@ export default [
     index("routes/home.tsx"),
     route("/songs", "routes/songs.route.tsx"),
     route("/artists", "routes/artists.route.tsx"),
-    route("/artists/:artistId", "routes/artists.$artistId.route.tsx"),
+    route("/artists/:artistId", "routes/artists.$artistId.route.tsx", [
+      index("routes/artists.$artistId._index.route.tsx"),
+      route("popular", "routes/artists.$artistId.popular.route.tsx"),
+      route("albums", "routes/artists.$artistId.albums.route.tsx"),
+    ]),
     route("/albums/:albumId", "routes/albums.$albumId.route.tsx"),
     route("/builder", "spotify/playlistBuilder/builder.route.tsx"),
     route("/playlist/:playlistId", "routes/playlist.$playlistId.route.tsx"),

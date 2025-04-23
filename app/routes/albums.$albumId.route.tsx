@@ -1,4 +1,4 @@
-import { LoaderFunctionArgs, useLoaderData } from "react-router";
+import { LoaderFunctionArgs, useLoaderData, Link } from "react-router";
 import { requireAuth } from "~/auth/auth.server";
 import { PageHeader } from "~/layout/PageHeader";
 import { AlbumHeader } from "~/spotify/components/AlbumHeader";
@@ -24,9 +24,20 @@ export default function AlbumRoute() {
 
   if (!album) return null;
 
+  const artist = album.artists[0];
+
   return (
     <div className="">
-      <PageHeader>{album.name}</PageHeader>
+      <PageHeader>
+        {artist ? (
+          <Link to={`/artists/${artist.id}`} className="hover:underline">
+            {artist.name}
+          </Link>
+        ) : (
+          "Unknown Artist"
+        )}{" "}
+        / {album.name}
+      </PageHeader>
       <div className="max-w-5xl mx-auto space-y-6">
         <AlbumHeader
           album={album}

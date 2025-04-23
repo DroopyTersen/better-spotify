@@ -70,17 +70,19 @@ export function SpotifyImage({
       <a
         href={uri}
         onClick={(e) => {
-          if (playItem) {
+          if (playItem && uri?.startsWith("spotify:")) {
             e.preventDefault();
             playItem();
           }
         }}
         className="absolute inset-0 bg-black bg-opacity-20 md:bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-200 rounded-md flex items-center justify-center text-white/80 hover:text-white"
       >
-        <Play
-          className="opacity-80 md:opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-          size={24}
-        />
+        {uri?.startsWith("spotify:") ? (
+          <Play
+            className="opacity-80 md:opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+            size={24}
+          />
+        ) : null}
       </a>
     </div>
   );

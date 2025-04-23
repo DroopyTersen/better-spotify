@@ -39,12 +39,16 @@ export function AlbumItem({ album }: AlbumItemProps) {
       <SpotifyImage
         src={album.images[0]?.url}
         alt={album.name}
-        uri={album.uri}
-        canPlay={currentUser?.product === "premium"}
+        // uri={album.uri}
+        uri={`/albums/${album.id}`}
         size={328}
       />
       <div className="mt-2">
-        <h3 className="font-semibold truncate">{album.name}</h3>
+        <Link to={`/albums/${album.id}`}>
+          <h3 className="font-semibold truncate hover:underline">
+            {album.name}
+          </h3>
+        </Link>
         <Link
           to={`/artists/${album.artists[0]?.id}`}
           className="text-sm text-muted-foreground truncate hover:underline block"

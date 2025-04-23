@@ -57,7 +57,7 @@ export const generatePlaylist = async (input: GeneratePlaylistInput) => {
   console.log("🎵 | Playlist Generation Input:", userMessage);
 
   let stream = streamObject({
-    model: google("gemini-2.0-flash"),
+    model: google("gemini-2.5-flash-preview-04-17"),
     schema: PlaylistCurationResponse,
     messages: [
       {

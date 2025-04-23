@@ -52,13 +52,12 @@ ${
     ? `The user has provided the following additional instructions regarding the playlist and artist recommendations they are striving for: ${input.customInstructions}`
     : ""
 }`;
-  console.log("🚀 | userPrompt:", userPrompt);
 
   // Generate random temperature between 0.2 and 1.2
   const temperature = Math.random() * (1.2 - 0.2) + 0.2;
 
   let result2 = await generateObject({
-    model: google("gemini-2.0-flash"),
+    model: google("gemini-2.5-flash-preview-04-17"),
     schema: ArtistRecommendationsResponse,
     temperature,
     prompt: ARTIST_RECOMMENDATION_PROMPT + "\n\n" + userPrompt,

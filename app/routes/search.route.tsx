@@ -64,7 +64,7 @@ export default function SearchRoute({ loaderData }: Route.ComponentProps) {
   if (!loaderData.results) {
     return (
       <>
-        <PageHeader title="Search" />
+        <PageHeader>Search</PageHeader>
         <div className="text-center text-muted-foreground mt-8">
           Search for artists, songs, or albums to get started
         </div>
@@ -77,7 +77,7 @@ export default function SearchRoute({ loaderData }: Route.ComponentProps) {
 
   return (
     <>
-      <PageHeader title={`Search: "${loaderData.query}"`} />
+      <PageHeader>{`Search: "${loaderData.query}"`}</PageHeader>
       <div className="max-w-3xl mx-auto">
         <SearchInput className="md:hidden mb-2" />
         <Tabs defaultValue="artists" className="w-full">

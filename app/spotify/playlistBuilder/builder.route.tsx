@@ -5,7 +5,7 @@ import { BuilderForm } from "./BuilderForm";
 export default function Builder({ loaderData }: Route.ComponentProps) {
   return (
     <>
-      <PageHeader title="Build Playlist" />
+      <PageHeader>Build Playlist</PageHeader>
       <BuilderForm />
     </>
   );

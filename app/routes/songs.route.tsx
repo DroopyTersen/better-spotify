@@ -31,7 +31,7 @@ export default function SongsRoute({ loaderData }: Route.ComponentProps) {
 
   return (
     <>
-      <PageHeader title="Songs" />
+      <PageHeader>Songs</PageHeader>
       <div className="max-w-4xl mx-auto">
         <Tabs defaultValue="top" className="w-full">
           <TabsList className="grid w-full grid-cols-3">

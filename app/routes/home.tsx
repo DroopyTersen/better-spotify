@@ -10,7 +10,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export default function Home({ loaderData }: Route.ComponentProps) {
   return (
     <>
-      <PageHeader title="Dashboard" />
+      <PageHeader>Dashboard</PageHeader>
     </>
   );
 }

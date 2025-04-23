@@ -46,7 +46,7 @@ export default function ArtistRoute({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className="">
-      <PageHeader title={artist.name} />
+      <PageHeader>{artist.name}</PageHeader>
       <div className="max-w-5xl mx-auto space-y-6">
         <ArtistHeader
           artist={artist}

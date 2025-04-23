@@ -29,7 +29,7 @@ export default function ArtistsRoute({ loaderData }: Route.ComponentProps) {
 
   return (
     <>
-      <PageHeader title="Artists" />
+      <PageHeader>Artists</PageHeader>
       <div className="max-w-4xl mx-auto">
         <Tabs defaultValue="top" className="w-full max-w-5xl mx-auto">
           <TabsList className="grid w-full grid-cols-2">

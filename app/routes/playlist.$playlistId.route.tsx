@@ -32,7 +32,7 @@ export default function PlaylistRoute({ params }: Route.ComponentProps) {
 
   return (
     <>
-      <PageHeader title={"Playlists"} />
+      <PageHeader>Playlists</PageHeader>
       <PlaylistDisplay playlist={playlist} key={playlist.id} />
     </>
   );

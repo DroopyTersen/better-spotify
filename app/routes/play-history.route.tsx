@@ -30,7 +30,7 @@ export default function PlayHistoryRoute({ loaderData }: Route.ComponentProps) {
   });
   return (
     <>
-      <PageHeader title="Play History" />
+      <PageHeader>Play History</PageHeader>
       <div className="flex flex-col max-w-4xl mx-auto">
         {playHistory.length > 0 && (
           <p className="text-muted-foreground text-sm mb-4">

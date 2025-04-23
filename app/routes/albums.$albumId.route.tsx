@@ -26,7 +26,7 @@ export default function AlbumRoute() {
 
   return (
     <div className="">
-      <PageHeader title={album.name} />
+      <PageHeader>{album.name}</PageHeader>
       <div className="max-w-5xl mx-auto space-y-6">
         <AlbumHeader
           album={album}

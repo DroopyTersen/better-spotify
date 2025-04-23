@@ -73,7 +73,6 @@ export default function SearchRoute({ loaderData }: Route.ComponentProps) {
   }
 
   const { artists, tracks } = loaderData.results;
-  console.log("🚀 | SearchRoute | artists:", artists, tracks);
 
   return (
     <>

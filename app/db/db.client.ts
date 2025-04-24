@@ -5,7 +5,7 @@ import { createSingleton } from "~/toolkit/utils/createSingleton";
 import { drizzle, PgliteDatabase } from "drizzle-orm/pglite";
 import * as schema from "./db.schema";
 let _pg: PGlite;
-const VERSION = "0.0.2";
+const VERSION = "0.0.3";
 export type DB = PgliteDatabase<typeof schema>;
 let _db: DB;
 export const initDb = async () => {

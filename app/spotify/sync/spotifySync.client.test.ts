@@ -14,6 +14,7 @@ import {
 } from "./syncContext";
 import { syncSpotifyData } from "./syncSpotifyData";
 import { syncPlayHistory } from "./syncPlayHistory";
+import { SpotifySyncStageError } from "./syncFailure";
 
 const sdk = {} as SpotifySdk;
 
@@ -166,8 +167,7 @@ describe("account-keyed Spotify synchronization", () => {
         .values({ id: "long_term:1", track_id: "complete-track", position: 1 });
     });
     await markFullSyncComplete(context);
-    await expect(
-      syncSpotifyData(sdk, context, [
+    const failedRefresh = await syncSpotifyData(sdk, context, [
         async (_sdk, transactionContext) => {
           expect(
             await isFullSyncComplete(transactionContext.database)
@@ -182,8 +182,11 @@ describe("account-keyed Spotify synchronization", () => {
         async () => {
           throw new Error("provider failed midway");
         },
-      ])
-    ).rejects.toThrow("provider failed midway");
+      ]).catch((error) => error);
+    expect(failedRefresh).toBeInstanceOf(SpotifySyncStageError);
+    expect((failedRefresh as SpotifySyncStageError).cause).toEqual(
+      new Error("provider failed midway")
+    );
     expect(await isFullSyncComplete(database)).toBe(true);
     expect(
       await database.db
@@ -231,8 +234,7 @@ describe("account-keyed Spotify synchronization", () => {
       isCurrent: () => true,
     };
 
-    await expect(
-      syncSpotifyData(sdk, context, [
+    const failedInitialRefresh = await syncSpotifyData(sdk, context, [
         async (_sdk, transactionContext) => {
           await runSyncTransaction(transactionContext, async (transaction) => {
             await transaction
@@ -243,8 +245,11 @@ describe("account-keyed Spotify synchronization", () => {
         async () => {
           throw new Error("provider failed midway");
         },
-      ])
-    ).rejects.toThrow("provider failed midway");
+      ]).catch((error) => error);
+    expect(failedInitialRefresh).toBeInstanceOf(SpotifySyncStageError);
+    expect((failedInitialRefresh as SpotifySyncStageError).cause).toEqual(
+      new Error("provider failed midway")
+    );
 
     expect(await isFullSyncComplete(database)).toBe(false);
     expect(await database.db.$count(schema.tracksTable)).toBe(0);
@@ -282,7 +287,11 @@ describe("account-keyed Spotify synchronization", () => {
       await resolvesWithin(database.db.$count(schema.tracksTable), 1_000)
     ).toBe(1);
     providerGate.resolve();
-    await expect(synchronization).rejects.toThrow("provider unavailable");
+    const failure = await synchronization.catch((error) => error);
+    expect(failure).toBeInstanceOf(SpotifySyncStageError);
+    expect((failure as SpotifySyncStageError).cause).toEqual(
+      new Error("provider unavailable")
+    );
   });
 
   test("publishes and resumes a full-sync play-history continuation", async () => {

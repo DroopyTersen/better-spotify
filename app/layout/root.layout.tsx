@@ -1,5 +1,5 @@
 import { AlertTriangle, LoaderCircle } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Outlet, useRevalidator } from "react-router";
 import { requireAuth } from "~/auth/auth.server";
 import { getAuthRevalidationDelay } from "~/auth/authRevalidation";
@@ -16,6 +16,10 @@ import {
   synchronizeSpotifyLibrary,
 } from "~/spotify/sync/spotifySync.client";
 import { isAbortError } from "~/spotify/sync/syncContext";
+import {
+  describeSpotifySyncFailure,
+  getSpotifySyncFailureMessage,
+} from "~/spotify/sync/syncFailure";
 import type { Route } from "./+types/root.layout";
 
 export function meta() {
@@ -95,6 +99,7 @@ export default function RootLayout({ loaderData }: Route.ComponentProps) {
   // tear down and immediately restart the background Spotify sync.
   const { revalidate } = useRevalidator();
   const [syncWarning, setSyncWarning] = useState<string | null>(null);
+  const lastReportedSyncFailure = useRef<string | null>(null);
   const needsInitialSync = loaderData.needsInitialSync;
   const accountId = currentUser?.id;
   const database =
@@ -129,26 +134,33 @@ export default function RootLayout({ loaderData }: Route.ComponentProps) {
     const accountController = new AbortController();
 
     const synchronize = async (full: boolean) => {
+      const mode = full ? "full" : "incremental";
       try {
         await synchronizeSpotifyLibrary({
           accountId,
           database,
           sdk,
-          mode: full ? "full" : "incremental",
+          mode,
           signal: accountController.signal,
         });
         if (active) {
+          lastReportedSyncFailure.current = null;
           setSyncWarning(null);
           revalidate();
         }
       } catch (error) {
         if (isAbortError(error)) return;
         if (active) {
-          setSyncWarning(
-            "Your saved library is available, but background Spotify sync failed."
-          );
-          // Protected server loaders refresh an expired browser access token.
-          revalidate();
+          const failure = describeSpotifySyncFailure(error);
+          setSyncWarning(getSpotifySyncFailureMessage(failure));
+          const reportKey = `${mode}:${failure.stage}:${failure.kind}:${failure.status ?? "none"}`;
+          if (lastReportedSyncFailure.current !== reportKey) {
+            lastReportedSyncFailure.current = reportKey;
+            void submitSpotifySyncFailure(mode, failure);
+          }
+          // Only an authentication failure can improve after protected server
+          // loaders rotate the browser's short-lived access token.
+          if (failure.kind === "unauthorized") revalidate();
         }
       }
     };
@@ -197,4 +209,23 @@ export default function RootLayout({ loaderData }: Route.ComponentProps) {
       <Outlet />
     </SidebarLayout>
   );
+}
+
+async function submitSpotifySyncFailure(
+  mode: "full" | "incremental",
+  failure: ReturnType<typeof describeSpotifySyncFailure>
+) {
+  try {
+    await fetch("/api/spotify-sync-failure", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        reportId: crypto.randomUUID(),
+        mode,
+        failure,
+      }),
+    });
+  } catch {
+    // Synchronization remains usable even when best-effort telemetry is blocked.
+  }
 }

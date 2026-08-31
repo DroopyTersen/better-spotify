@@ -46,6 +46,8 @@ describe("playlist curation", () => {
     const validPlaylist = {
       playlist: {
         name: "Night Drive",
+        description:
+          "Midnight asphalt, low beams, and just enough trouble to miss the exit on purpose.",
         tracks: [
           { id: "track-1", name: "First", artist_name: "Artist One" },
           { id: "", name: "Second", artist_name: "Artist Two" },
@@ -54,6 +56,18 @@ describe("playlist curation", () => {
     };
 
     expect(schema.safeParse(validPlaylist).success).toBe(true);
+    expect(
+      schema.safeParse({
+        ...validPlaylist,
+        playlist: { ...validPlaylist.playlist, description: "Too short" },
+      }).success
+    ).toBe(false);
+    expect(
+      schema.safeParse({
+        ...validPlaylist,
+        playlist: { ...validPlaylist.playlist, description: "x".repeat(301) },
+      }).success
+    ).toBe(false);
     expect(
       schema.safeParse({
         ...validPlaylist,
@@ -70,6 +84,8 @@ describe("playlist curation", () => {
     const expected: PlaylistCurationResponse = {
       playlist: {
         name: "Road Folk",
+        description:
+          "Sun-cracked roads, warm strings, and choruses built to outrun the last gas station.",
         tracks: [
           { id: "selected-1", name: "Anchor", artist_name: "Anchor Band" },
           { id: "new-1", name: "Fresh", artist_name: "Fresh Band" },
@@ -92,6 +108,10 @@ describe("playlist curation", () => {
     expect(capturedPrompt).toContain("selected-1 | Anchor | Anchor Band");
     expect(capturedPrompt).toContain("new-1 | Fresh | Fresh Band");
     expect(capturedInstructions).toContain("Never invent an ID");
+    expect(capturedInstructions).toContain(
+      "Do not list or parrot artist or track names"
+    );
+    expect(capturedInstructions).toContain("playful, and a little edgy");
     expect(capturedInstructions).not.toContain("chain-of-thought");
   });
 
@@ -101,6 +121,8 @@ describe("playlist curation", () => {
     const expected: PlaylistCurationResponse = {
       playlist: {
         name: "Road Folk",
+        description:
+          "Sun-cracked roads, warm strings, and choruses built to outrun the last gas station.",
         tracks: [
           { id: "selected-1", name: "Anchor", artist_name: "Anchor Band" },
           { id: "new-1", name: "Fresh", artist_name: "Fresh Band" },

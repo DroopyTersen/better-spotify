@@ -24,6 +24,12 @@ export const PlaylistCurationResponse = z.object({
       .min(1)
       .max(500)
       .describe("A concise, creative playlist name"),
+    description: z
+      .string()
+      .trim()
+      .min(20)
+      .max(300)
+      .describe("A vivid, original plain-text playlist description"),
     tracks: z.array(PlaylistTrackResponse).min(1),
   }),
 });
@@ -123,4 +129,10 @@ Selection rules:
 - Order the songs for a natural musical flow while distributing selected and new material throughout.
 - Only return a non-empty Spotify ID when that exact ID appears in a supplied pool or selected track. Never invent an ID; use an empty string for any otherwise suitable track.
 - If the user supplied only custom instructions and no usable song pools, choose fitting tracks from your music knowledge and leave their IDs empty.
-- Give the playlist a concise name.`;
+- Give the playlist a concise name.
+
+Description rules:
+- Write one vivid sentence, ideally 80-180 characters and never more than 300 characters.
+- Make it specific, playful, and a little edgy when the requested mood supports it. Evoke a scene, attitude, or motion instead of writing generic promotional copy.
+- Do not list or parrot artist or track names, do not repeat the playlist name, and do not begin with phrases like "Featuring" or "A mix of".
+- Return plain text without hashtags, emoji, or markup.`;

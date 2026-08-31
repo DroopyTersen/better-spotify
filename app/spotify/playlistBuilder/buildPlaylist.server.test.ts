@@ -205,7 +205,10 @@ describe("verified playlist creation", () => {
     await expect(
       createVerifiedPlaylist(
         {} as SpotifySdk,
-        "Verified playlist",
+        {
+          name: "Verified playlist",
+          description: "A sharp left turn into a beautifully loud night.",
+        },
         [{ id: "nonexistent", name: "Invented" }],
         dependencies
       )
@@ -236,6 +239,31 @@ describe("verified playlist creation", () => {
     ]);
   });
 
+  test("creates the playlist with its curated description", async () => {
+    let createRequest: unknown;
+    const dependencies = creationDependencies({
+      createPlaylist: async (_sdk, request) => {
+        createRequest = request;
+        return { id: "playlist" } as never;
+      },
+    });
+
+    await createVerifiedPlaylist(
+      {} as SpotifySdk,
+      {
+        name: "Verified playlist",
+        description: "Dusty boots, bright hooks, and absolutely no indoor voices.",
+      },
+      [{ id: "track", name: "Track" }],
+      dependencies
+    );
+
+    expect(createRequest).toEqual({
+      name: "Verified playlist",
+      description: "Dusty boots, bright hooks, and absolutely no indoor voices.",
+    });
+  });
+
   test("rejects duplicate canonical IDs before playlist creation", async () => {
     let createCalls = 0;
     const dependencies = creationDependencies({
@@ -248,7 +276,10 @@ describe("verified playlist creation", () => {
     await expect(
       createVerifiedPlaylist(
         {} as SpotifySdk,
-        "Verified playlist",
+        {
+          name: "Verified playlist",
+          description: "A sharp left turn into a beautifully loud night.",
+        },
         [
           { id: "track", name: "Track" },
           { id: "track", name: "Duplicate Track" },
@@ -273,7 +304,10 @@ describe("verified playlist creation", () => {
     await expect(
       createVerifiedPlaylist(
         {} as SpotifySdk,
-        "Verified playlist",
+        {
+          name: "Verified playlist",
+          description: "A sharp left turn into a beautifully loud night.",
+        },
         [{ id: "track", name: "Track" }],
         dependencies
       )
@@ -294,7 +328,10 @@ describe("verified playlist creation", () => {
     await expect(
       createVerifiedPlaylist(
         {} as SpotifySdk,
-        "Verified playlist",
+        {
+          name: "Verified playlist",
+          description: "A sharp left turn into a beautifully loud night.",
+        },
         [{ id: "track", name: "Track" }],
         dependencies
       )

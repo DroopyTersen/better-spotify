@@ -1,5 +1,6 @@
 import { resolve, sep } from "node:path";
 import { createRequestHandler, type ServerBuild } from "react-router";
+import { withExternalOrigin } from "./serverRequest";
 
 const port = parsePort(process.env.PORT);
 const hostname = process.env.HOST?.trim() || "0.0.0.0";
@@ -18,7 +19,7 @@ const server = Bun.serve({
   idleTimeout: 0,
   async fetch(request) {
     const clientFileResponse = await serveClientFile(request);
-    return clientFileResponse ?? handleRequest(request);
+    return clientFileResponse ?? handleRequest(withExternalOrigin(request));
   },
   error() {
     console.error("The application server could not handle a request");

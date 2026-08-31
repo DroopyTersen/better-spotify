@@ -14,6 +14,7 @@ import {
 } from "./syncFullArtistData";
 import { syncPlayHistory } from "./syncPlayHistory";
 import { syncSavedTracks } from "./syncSavedTracks";
+import { syncTopTracks } from "./syncTopTracks";
 import type { SpotifySyncContext } from "./syncContext";
 import { writeTrackGraph } from "./syncDb";
 import {
@@ -436,6 +437,91 @@ describe("PGlite integrity", () => {
         where: (tracks, { eq }) => eq(tracks.id, "replacement-track"),
       })
     ).toBeUndefined();
+  });
+
+  test("keeps usable top tracks when Spotify includes an uncacheable item", async () => {
+    const pg = new PGlite();
+    databases.push(pg);
+    await applyMigrations(pg);
+    const db = drizzle({ client: pg, schema });
+    const context: SpotifySyncContext = {
+      accountId: "account-a",
+      database: { accountId: "account-a", pg, db },
+      signal: new AbortController().signal,
+      isCurrent: () => true,
+    };
+    const usableTrack = (id: string) => ({
+      id,
+      name: id,
+      album: { id: `album-${id}`, name: id, artists: [] },
+      artists: [],
+    });
+    const sdk = {
+      currentUser: {
+        topItems() {
+          return Promise.resolve({
+            items: [
+              usableTrack("track-1"),
+              { id: null, name: "Local track", album: null, artists: [] },
+              usableTrack("track-3"),
+            ],
+            limit: 50,
+            next: null,
+            offset: 0,
+            total: 3,
+          });
+        },
+      },
+    } as unknown as SpotifySdk;
+
+    await expect(syncTopTracks(sdk, context)).resolves.toEqual({
+      synchronized: 2,
+      skipped: 1,
+    });
+    expect(
+      await db
+        .select({
+          id: schema.topTracksTable.id,
+          trackId: schema.topTracksTable.track_id,
+          position: schema.topTracksTable.position,
+        })
+        .from(schema.topTracksTable)
+        .orderBy(schema.topTracksTable.position)
+    ).toEqual([
+      { id: "long_term:1", trackId: "track-1", position: 1 },
+      { id: "long_term:3", trackId: "track-3", position: 3 },
+    ]);
+  });
+
+  test("identifies top-track pagination failures before cache writes", async () => {
+    const pg = new PGlite();
+    databases.push(pg);
+    await applyMigrations(pg);
+    const db = drizzle({ client: pg, schema });
+    const context: SpotifySyncContext = {
+      accountId: "account-a",
+      database: { accountId: "account-a", pg, db },
+      signal: new AbortController().signal,
+      isCurrent: () => true,
+    };
+    const sdk = {
+      currentUser: {
+        topItems() {
+          return Promise.resolve({
+            items: [],
+            limit: 50,
+            next: null,
+            offset: 0,
+            total: 1,
+          });
+        },
+      },
+    } as unknown as SpotifySdk;
+
+    await expect(syncTopTracks(sdk, context)).rejects.toMatchObject({
+      stage: "top_tracks_pagination",
+    });
+    expect(await db.$count(schema.topTracksTable)).toBe(0);
   });
 
   test("invalidates full-sync completeness when the schema version changes", async () => {

@@ -56,4 +56,22 @@ describe("Spotify sync failure diagnostics", () => {
       "Your saved library is available, but background Spotify sync failed while loading play history."
     );
   });
+
+  test("reports a bounded provider-data reason without the raw response", () => {
+    expect(
+      describeSpotifySyncFailure(
+        new SpotifySyncStageError(
+          "top_tracks_pagination",
+          new Error(
+            "Spotify pagination ended before the snapshot was complete"
+          )
+        )
+      )
+    ).toEqual({
+      stage: "top_tracks_pagination",
+      kind: "provider_data",
+      status: null,
+      reason: "pagination_ended_early",
+    });
+  });
 });

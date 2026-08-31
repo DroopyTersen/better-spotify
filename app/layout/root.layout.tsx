@@ -90,7 +90,10 @@ export function HydrateFallback() {
 
 export default function RootLayout({ loaderData }: Route.ComponentProps) {
   const currentUser = useCurrentUser();
-  const revalidator = useRevalidator();
+  // `useRevalidator()` returns a new wrapper whenever its state changes. Keep
+  // only the stable callback in effect dependencies so a revalidation cannot
+  // tear down and immediately restart the background Spotify sync.
+  const { revalidate } = useRevalidator();
   const [syncWarning, setSyncWarning] = useState<string | null>(null);
   const needsInitialSync = loaderData.needsInitialSync;
   const accountId = currentUser?.id;
@@ -114,11 +117,11 @@ export default function RootLayout({ loaderData }: Route.ComponentProps) {
     if (!expiresAt) return;
 
     const timeoutId = window.setTimeout(
-      () => revalidator.revalidate(),
+      () => revalidate(),
       getAuthRevalidationDelay(expiresAt)
     );
     return () => window.clearTimeout(timeoutId);
-  }, [currentUser?.tokens.expiresAt, revalidator]);
+  }, [currentUser?.tokens.expiresAt, revalidate]);
 
   useEffect(() => {
     if (!sdk || !accountId || !database) return;
@@ -136,7 +139,7 @@ export default function RootLayout({ loaderData }: Route.ComponentProps) {
         });
         if (active) {
           setSyncWarning(null);
-          revalidator.revalidate();
+          revalidate();
         }
       } catch (error) {
         if (isAbortError(error)) return;
@@ -145,7 +148,7 @@ export default function RootLayout({ loaderData }: Route.ComponentProps) {
             "Your saved library is available, but background Spotify sync failed."
           );
           // Protected server loaders refresh an expired browser access token.
-          revalidator.revalidate();
+          revalidate();
         }
       }
     };
@@ -162,12 +165,12 @@ export default function RootLayout({ loaderData }: Route.ComponentProps) {
       cancelSpotifySynchronization(accountId);
       window.clearInterval(intervalId);
     };
-  }, [accountId, database, needsInitialSync, revalidator, sdk]);
+  }, [accountId, database, needsInitialSync, revalidate, sdk]);
 
   useEffect(() => {
     if (!accountId) return;
     const refreshAuthOnWake = () => {
-      if (document.visibilityState === "visible") revalidator.revalidate();
+      if (document.visibilityState === "visible") revalidate();
     };
     document.addEventListener("visibilitychange", refreshAuthOnWake);
     window.addEventListener("pageshow", refreshAuthOnWake);
@@ -175,7 +178,7 @@ export default function RootLayout({ loaderData }: Route.ComponentProps) {
       document.removeEventListener("visibilitychange", refreshAuthOnWake);
       window.removeEventListener("pageshow", refreshAuthOnWake);
     };
-  }, [accountId, revalidator]);
+  }, [accountId, revalidate]);
 
   const warning =
     syncWarning || loaderData.localLibraryWarning || loaderData.spotifyWarning;

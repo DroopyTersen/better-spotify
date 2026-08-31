@@ -5,6 +5,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import type { ShouldRevalidateFunctionArgs } from "react-router";
 import { z } from "zod";
 import { requireAuth } from "~/auth/auth.server";
 import { useCurrentUser } from "~/auth/useCurrentUser";
@@ -96,6 +97,25 @@ export const action = async ({ request }: Route.ActionArgs) => {
     { headers: { "Cache-Control": "no-store" } }
   );
 };
+
+export function shouldRevalidate({
+  currentUrl,
+  nextUrl,
+  formMethod,
+  defaultShouldRevalidate,
+}: ShouldRevalidateFunctionArgs) {
+  // These checks are deliberately on-demand. Parent-layout refreshes (for
+  // example after a library sync) must not turn one diagnostic run into
+  // another burst of Spotify API requests.
+  if (
+    !formMethod &&
+    currentUrl.pathname === nextUrl.pathname &&
+    currentUrl.search === nextUrl.search
+  ) {
+    return false;
+  }
+  return defaultShouldRevalidate;
+}
 
 export default function SpotifyDiagnosticsRoute({
   loaderData,

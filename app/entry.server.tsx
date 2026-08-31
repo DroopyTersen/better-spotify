@@ -7,7 +7,9 @@ import { isbot } from "isbot";
 import type { RenderToPipeableStreamOptions } from "react-dom/server";
 import { renderToPipeableStream } from "react-dom/server.node";
 
-export const streamTimeout = 5_000;
+// Artist album/catalog loaders intentionally stream after the route shell.
+// Keep slow Spotify responses alive long enough to resolve on mobile networks.
+export const streamTimeout = 30_000;
 
 export default function handleRequest(
   request: Request,

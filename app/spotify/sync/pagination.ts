@@ -12,6 +12,12 @@ type CollectOffsetPrefixOptions<Item> = {
   pageSize?: number;
 };
 
+type CollectAllOffsetPagesOptions<Item> = {
+  fetchPage: (limit: number, offset: number) => Promise<OffsetPage<Item>>;
+  maxRequests: number;
+  pageSize?: number;
+};
+
 type ProcessOffsetPagesOptions<Item> = {
   fetchPage: (limit: number, offset: number) => Promise<OffsetPage<Item>>;
   maxRequests: number;
@@ -23,6 +29,8 @@ export type ProcessedOffsetPages = Readonly<{
   items: number;
   requests: number;
 }>;
+
+export const MAX_COMPLETE_TOP_ITEM_REQUESTS = 1_000;
 
 /**
  * Validates and processes an offset-paginated snapshot one page at a time.
@@ -90,6 +98,27 @@ export async function processOffsetPages<Item>({
   throw new RangeError(
     `Spotify pagination exceeded the ${maxRequests}-request safety limit`
   );
+}
+
+/**
+ * Loads a provider's complete offset-paginated snapshot. The explicit request
+ * ceiling remains a circuit breaker, not a product-level item cap.
+ */
+export async function collectAllOffsetPages<Item>({
+  fetchPage,
+  maxRequests,
+  pageSize = 50,
+}: CollectAllOffsetPagesOptions<Item>): Promise<Item[]> {
+  const items: Item[] = [];
+  await processOffsetPages({
+    fetchPage,
+    maxRequests,
+    pageSize,
+    processPage: (pageItems) => {
+      items.push(...pageItems);
+    },
+  });
+  return items;
 }
 
 /**

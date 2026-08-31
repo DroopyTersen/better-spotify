@@ -98,6 +98,34 @@ describe("stale playlist modification protection", () => {
     expect(result.snapshotId).toBe("snapshot-after-write");
   });
 
+  test("reports live progress through validation, AI, resolution, and save", async () => {
+    const phases: string[] = [];
+    const dependencies = fakes(
+      [
+        source("snapshot-1", originalTracks),
+        source("snapshot-1", originalTracks),
+      ],
+      () => undefined,
+      () => undefined
+    );
+
+    await modifyPlaylist(
+      input("snapshot-1", originalTracks),
+      sdk,
+      dependencies,
+      { onProgress: (progress) => phases.push(progress.phase) }
+    );
+
+    expect(phases).toEqual([
+      "loading-source",
+      "planning-changes",
+      "resolving-tracks",
+      "checking-source",
+      "saving-changes",
+      "complete",
+    ]);
+  });
+
   test("rejects duplicate resolved tracks without mutating Spotify", async () => {
     let replaceCalls = 0;
     const dependencies = fakes(

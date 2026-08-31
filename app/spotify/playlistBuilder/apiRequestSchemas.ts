@@ -112,6 +112,11 @@ export const PlaylistModificationRequestSchema = z.object({
     .max(100),
 });
 
+export const StartPlaylistModificationRequestSchema = z.object({
+  jobId: z.uuid(),
+  input: PlaylistModificationRequestSchema,
+});
+
 export const ArtistRecommendationRequestSchema = z.object({
   artistsToMatch: z.array(z.string().trim().min(1).max(200)).min(1).max(250),
   artistsToExclude: z.array(z.string().trim().min(1).max(200)).max(500),

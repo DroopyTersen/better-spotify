@@ -1,4 +1,6 @@
+import { Suspense } from "react";
 import {
+  Await,
   Outlet,
   Link,
   useLocation,
@@ -12,10 +14,10 @@ import {
   TabsTrigger,
 } from "~/shadcn/components/ui/tabs";
 import { ArtistHeader } from "~/spotify/components/ArtistHeader";
-import { spotifyWebApi } from "~/spotify/api/spotifyWebApi";
 import { createSpotifySdk } from "~/spotify/createSpotifySdk";
 import { usePlaylistBuildingService } from "~/spotify/playlistBuilder/usePlaylistBuildingService";
 import { requireSpotifyId } from "~/spotify/spotifyId";
+import type { Artist } from "@spotify/web-api-ts-sdk";
 import type { Route } from "./+types/artists.$artistId.route";
 
 export const loader = async ({ request, params }: Route.LoaderArgs) => {
@@ -23,26 +25,32 @@ export const loader = async ({ request, params }: Route.LoaderArgs) => {
   const artistId = requireSpotifyId(params.artistId);
 
   const sdk = createSpotifySdk(user.tokens);
-  const [artist, catalogTracks, albums] = await Promise.all([
-    sdk.artists.get(artistId),
-    spotifyWebApi.getArtistCatalogTracks(sdk, artistId),
-    spotifyWebApi.getArtistAlbums(sdk, artistId),
-  ]);
-
-  return {
-    artist,
-    catalogTracks,
-    albums,
-  };
+  return { artist: sdk.artists.get(artistId) };
 };
-
-// Define an ID for this route loader so child routes can access its data
-export const id = "artist-detail";
 
 export default function ArtistRouteLayout({
   loaderData,
 }: Route.ComponentProps) {
-  const { artist } = loaderData;
+  return (
+    <Suspense fallback={<ArtistRouteSkeleton />}>
+      <Await
+        resolve={loaderData.artist}
+        errorElement={
+          <p
+            role="alert"
+            className="mx-auto max-w-5xl text-sm text-destructive"
+          >
+            This artist could not be loaded. Please try again.
+          </p>
+        }
+      >
+        {(artist) => <ArtistRouteContent artist={artist} />}
+      </Await>
+    </Suspense>
+  );
+}
+
+function ArtistRouteContent({ artist }: { artist: Artist }) {
   const { selectedArtistIds, toggleArtistSelection } =
     usePlaylistBuildingService();
   const location = useLocation();
@@ -59,8 +67,6 @@ export default function ArtistRouteLayout({
       navigate(`/artists/${artist.id}/${value}`);
     }
   };
-
-  if (!artist) return null;
 
   return (
     <div className="">
@@ -89,9 +95,30 @@ export default function ArtistRouteLayout({
 
           {/* Container for the Outlet */}
           <div className="mt-2">
-            <Outlet context={loaderData} />
+            <Outlet />
           </div>
         </Tabs>
+      </div>
+    </div>
+  );
+}
+
+function ArtistRouteSkeleton() {
+  return (
+    <div>
+      <PageHeader>Artist</PageHeader>
+      <div
+        className="mx-auto max-w-5xl space-y-6"
+        role="status"
+        aria-label="Loading artist"
+      >
+        <div className="flex items-center gap-4">
+          <div className="h-24 w-24 animate-pulse rounded-full bg-muted" />
+          <div className="flex-1 space-y-3">
+            <div className="h-7 w-1/2 animate-pulse rounded bg-muted" />
+            <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
+          </div>
+        </div>
       </div>
     </div>
   );

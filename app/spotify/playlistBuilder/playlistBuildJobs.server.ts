@@ -49,6 +49,7 @@ export class PlaylistBuildJobStore {
     accountId,
     run,
     mapError,
+    initialProgress = STARTING_BUILD_PROGRESS,
   }: {
     jobId: string;
     accountId: string;
@@ -58,6 +59,7 @@ export class PlaylistBuildJobStore {
     mapError: (
       error: unknown
     ) => Omit<PlaylistBuildFailureData, "jobId">;
+    initialProgress?: PlaylistBuildProgress;
   }): StartPlaylistBuildJobResult {
     this.prune();
 
@@ -80,7 +82,7 @@ export class PlaylistBuildJobStore {
       snapshot: {
         progress: {
           jobId,
-          progress: STARTING_BUILD_PROGRESS,
+          progress: initialProgress,
         },
         terminal: null,
       },

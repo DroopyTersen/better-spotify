@@ -8,6 +8,11 @@ export type PlaylistBuildPhase =
   | "curating"
   | "verifying"
   | "creating"
+  | "loading-source"
+  | "planning-changes"
+  | "resolving-tracks"
+  | "checking-source"
+  | "saving-changes"
   | "reconnecting"
   | "complete";
 
@@ -99,6 +104,55 @@ export const PLAYLIST_COMPLETE_PROGRESS: PlaylistBuildProgress = {
   percent: 100,
 };
 
+export const STARTING_MODIFICATION_PROGRESS: PlaylistBuildProgress = {
+  phase: "starting",
+  label: "Starting the tweak",
+  detail: "Your playlist tweak is running safely on the server.",
+  percent: 8,
+};
+
+export const LOADING_MODIFICATION_SOURCE_PROGRESS: PlaylistBuildProgress = {
+  phase: "loading-source",
+  label: "Checking the current playlist",
+  detail: "Making sure Spotify still has the version you opened.",
+  percent: 16,
+};
+
+export const PLANNING_MODIFICATION_PROGRESS: PlaylistBuildProgress = {
+  phase: "planning-changes",
+  label: "Planning your changes",
+  detail: "Applying your instructions while preserving the playlist's flow.",
+  percent: 32,
+};
+
+export const RESOLVING_MODIFICATION_TRACKS_PROGRESS: PlaylistBuildProgress = {
+  phase: "resolving-tracks",
+  label: "Matching every track",
+  detail: "Confirming each song against Spotify's catalog.",
+  percent: 68,
+};
+
+export const CHECKING_MODIFICATION_SOURCE_PROGRESS: PlaylistBuildProgress = {
+  phase: "checking-source",
+  label: "Checking for newer edits",
+  detail: "Protecting changes made since this tweak started.",
+  percent: 82,
+};
+
+export const SAVING_MODIFICATION_PROGRESS: PlaylistBuildProgress = {
+  phase: "saving-changes",
+  label: "Saving your tweak",
+  detail: "Replacing the playlist in Spotify with the verified version.",
+  percent: 92,
+};
+
+export const MODIFICATION_COMPLETE_PROGRESS: PlaylistBuildProgress = {
+  phase: "complete",
+  label: "Playlist updated",
+  detail: "Refreshing the playlist with your changes.",
+  percent: 100,
+};
+
 export function getCurationProgress(
   completedSongs: number,
   requestedSongs: number
@@ -128,5 +182,42 @@ export function getReconnectingProgress(
     label: "Reconnecting to your build",
     detail: "The server is still working. Progress will resume when your connection returns.",
     percent: Math.min(lastProgress?.percent ?? STARTING_BUILD_PROGRESS.percent, 99),
+  };
+}
+
+export function getModificationPlanningProgress(
+  draftedTracks: number,
+  originalTrackCount: number
+): PlaylistBuildProgress {
+  const safeOriginalTrackCount = Math.max(1, originalTrackCount);
+  const safeDraftedTracks = Math.max(
+    0,
+    Math.min(draftedTracks, safeOriginalTrackCount)
+  );
+  const percent =
+    PLANNING_MODIFICATION_PROGRESS.percent +
+    Math.round((safeDraftedTracks / safeOriginalTrackCount) * 30);
+
+  return {
+    ...PLANNING_MODIFICATION_PROGRESS,
+    detail:
+      safeDraftedTracks > 0
+        ? `Drafted ${safeDraftedTracks} tracks for the updated playlist.`
+        : PLANNING_MODIFICATION_PROGRESS.detail,
+    percent,
+  };
+}
+
+export function getModificationReconnectingProgress(
+  lastProgress: PlaylistBuildProgress | null
+): PlaylistBuildProgress {
+  return {
+    phase: "reconnecting",
+    label: "Reconnecting to your tweak",
+    detail: "The server is still working. Progress will resume when your connection returns.",
+    percent: Math.min(
+      lastProgress?.percent ?? STARTING_MODIFICATION_PROGRESS.percent,
+      99
+    ),
   };
 }

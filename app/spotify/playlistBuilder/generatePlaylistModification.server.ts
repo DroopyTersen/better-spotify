@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { DeepPartial } from "ai";
 import {
   generateStructuredObject,
   type StructuredGenerationRequest,
@@ -36,12 +37,14 @@ type PlaylistModificationGenerator = (
 /** Generates a modified playlist from natural-language instructions. */
 export const generatePlaylistModification = async (
   input: PlaylistModificationInput,
-  generate: PlaylistModificationGenerator = generateStructuredObject
+  generate: PlaylistModificationGenerator = generateStructuredObject,
+  onPartialOutput?: (partialOutput: DeepPartial<PlaylistModification>) => void
 ) => {
   return generate({
     instructions: PLAYLIST_MODIFICATION_INSTRUCTIONS,
     prompt: buildModificationPrompt(input),
     schema: PlaylistModificationSchema,
+    onPartialOutput,
   });
 };
 

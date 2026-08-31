@@ -9,6 +9,7 @@ import {
   isAbortError,
   type SpotifySyncContext,
 } from "./syncContext";
+import { runSpotifySyncStage } from "./syncFailure";
 
 export type SpotifySyncMode = "full" | "incremental";
 
@@ -42,11 +43,15 @@ type AccountSyncState = {
 const defaultOperations: SpotifySyncOperations = {
   full: syncSpotifyData,
   async incremental(sdk, context) {
-    await syncPlayHistory(sdk, context);
+    await runSpotifySyncStage("play_history", () =>
+      syncPlayHistory(sdk, context)
+    );
     // Artist artwork is useful enrichment, not part of the core library
     // snapshot. Each pass is bounded and tolerates individual provider
     // failures so a large library cannot delay or invalidate a full publish.
-    await syncFullArtistData(sdk, context);
+    await runSpotifySyncStage("artist_enrichment", () =>
+      syncFullArtistData(sdk, context)
+    );
   },
 };
 

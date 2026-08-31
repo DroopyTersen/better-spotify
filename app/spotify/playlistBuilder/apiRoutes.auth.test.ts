@@ -7,12 +7,14 @@ import {
 } from "./api.buildPlaylist.route";
 import { action as modifyPlaylistAction } from "./api.modifyPlaylist.route";
 import { action as recommendArtistsAction } from "./api.new-artist-recommendations.route";
+import { action as syncFailureReportAction } from "../sync/api.syncFailureReport.route";
 
 describe("playlist API authentication boundary", () => {
   test.each([
     ["build playlist", buildPlaylistAction],
     ["modify playlist", modifyPlaylistAction],
     ["recommend artists", recommendArtistsAction],
+    ["sync failure report", syncFailureReportAction],
   ])("%s rejects an unauthenticated request before parsing its body", async (_, action) => {
     const request = new Request("http://local.test/api", {
       method: "POST",
@@ -37,6 +39,7 @@ describe("playlist API authentication boundary", () => {
     ["build playlist", buildPlaylistAction],
     ["modify playlist", modifyPlaylistAction],
     ["recommend artists", recommendArtistsAction],
+    ["sync failure report", syncFailureReportAction],
   ])("%s validates an authenticated body before external work", async (_, action) => {
     const request = new Request("http://local.test/api", {
       method: "POST",

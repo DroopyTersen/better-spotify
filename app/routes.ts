@@ -38,4 +38,8 @@ export default [
     "api/modify-playlist",
     "spotify/playlistBuilder/api.modifyPlaylist.route.ts"
   ),
+  route(
+    "api/spotify-sync-failure",
+    "spotify/sync/api.syncFailureReport.route.ts"
+  ),
 ] satisfies RouteConfig;

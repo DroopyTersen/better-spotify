@@ -153,7 +153,7 @@ export default function RootLayout({ loaderData }: Route.ComponentProps) {
         if (active) {
           const failure = describeSpotifySyncFailure(error);
           setSyncWarning(getSpotifySyncFailureMessage(failure));
-          const reportKey = `${mode}:${failure.stage}:${failure.kind}:${failure.status ?? "none"}`;
+          const reportKey = `${mode}:${failure.stage}:${failure.kind}:${failure.status ?? "none"}:${failure.reason ?? "none"}`;
           if (lastReportedSyncFailure.current !== reportKey) {
             lastReportedSyncFailure.current = reportKey;
             void submitSpotifySyncFailure(mode, failure);

@@ -4,6 +4,7 @@ import type { Route } from "./+types/api.syncFailureReport.route";
 import { apiErrorResponse, parseJsonMutation } from "../playlistBuilder/apiRequest.server";
 import {
   SPOTIFY_SYNC_FAILURE_KINDS,
+  SPOTIFY_SYNC_FAILURE_REASONS,
   SPOTIFY_SYNC_STAGES,
 } from "./syncFailure";
 
@@ -16,6 +17,7 @@ const SyncFailureReportSchema = z.object({
     stage: z.enum(SPOTIFY_SYNC_STAGES),
     kind: z.enum(SPOTIFY_SYNC_FAILURE_KINDS),
     status: z.number().int().min(100).max(599).nullable(),
+    reason: z.enum(SPOTIFY_SYNC_FAILURE_REASONS).optional(),
   }),
 });
 

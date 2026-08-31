@@ -1,4 +1,4 @@
-import { Check, LoaderCircle, X } from "lucide-react";
+import { LoaderCircle, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   Avatar,
@@ -152,14 +152,15 @@ export function BuilderForm() {
       </div>
 
       <div className="space-y-4">
-        <Label>How much new stuff?</Label>
+        <Label id="new-stuff-label">How much new stuff?</Label>
         <RadioGroup
           value={formData.newStuffAmount}
           disabled={isBuilding}
+          aria-labelledby="new-stuff-label"
           onValueChange={(value) => {
             updateFormData("newStuffAmount", value as NewStuffAmount);
           }}
-          className="space-y-1"
+          className="gap-2"
         >
           {[
             {
@@ -178,36 +179,18 @@ export function BuilderForm() {
           ].map((option) => (
             <Label
               key={option.value}
-              htmlFor={option.value}
-              className={`group flex items-center space-x-3 space-y-0 rounded-md border py-4 hover:bg-sidebar-accent cursor-pointer ${
-                formData.newStuffAmount === option.value ? "border-primary" : ""
-              }`}
+              htmlFor={`new-stuff-${option.value}`}
+              className={cn(
+                "flex min-h-20 w-full touch-manipulation cursor-pointer items-center gap-3 rounded-md border px-4 py-4 text-left hover:bg-sidebar-accent",
+                formData.newStuffAmount === option.value && "border-primary"
+              )}
             >
               <RadioGroupItem
-                checked={formData.newStuffAmount === option.value}
                 value={option.value}
-                id={option.value}
-                className="sr-only"
+                id={`new-stuff-${option.value}`}
+                className="size-6 shrink-0 border-muted-foreground/50 text-white data-[state=checked]:border-primary data-[state=checked]:bg-primary"
               />
-              <div className="flex items-center justify-center">
-                <div
-                  className={cn(
-                    "w-6 h-6 rounded-full border flex items-center justify-center group-hover:bg-primary",
-                    formData.newStuffAmount === option.value
-                      ? "bg-primary"
-                      : "bg-transparent"
-                  )}
-                >
-                  <Check
-                    className={`w-5 h-5 text-white ${
-                      formData.newStuffAmount === option.value
-                        ? "block"
-                        : "hidden"
-                    }`}
-                  />
-                </div>
-              </div>
-              <span className="text-sm font-normal leading-5">
+              <span className="min-w-0 flex-1 text-sm font-normal leading-5">
                 {option.label}
               </span>
             </Label>

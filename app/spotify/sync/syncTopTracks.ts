@@ -1,6 +1,6 @@
 import { topTracksTable } from "~/db/db.schema";
 import type { SpotifySdk } from "../createSpotifySdk";
-import { collectOffsetPages } from "./pagination";
+import { collectOffsetPrefix } from "./pagination";
 import {
   assertActiveSync,
   runSyncTransaction,
@@ -19,7 +19,7 @@ export const syncTopTracks = async (
   const providerTracks = await runSpotifySyncStage(
     "top_tracks_pagination",
     () =>
-      collectOffsetPages({
+      collectOffsetPrefix({
         maxItems: MAX_TOP_TRACKS,
         fetchPage: (limit, offset) =>
           sdk.currentUser.topItems(

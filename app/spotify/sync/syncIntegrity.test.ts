@@ -7,7 +7,7 @@ import { librarySnapshotIntegritySql } from "~/db/pglite/migrations/003.libraryS
 import { preserveArtistOrderSql } from "~/db/pglite/migrations/004.preserveArtistOrder";
 import { spotifyDb } from "~/spotify/spotify.db";
 import type { SpotifySdk } from "~/spotify/createSpotifySdk";
-import { collectOffsetPages, processOffsetPages } from "./pagination";
+import { collectOffsetPrefix, processOffsetPages } from "./pagination";
 import {
   MAX_ARTIST_ENRICHMENTS_PER_SYNC,
   syncFullArtistData,
@@ -27,7 +27,7 @@ import {
 describe("offset pagination", () => {
   test("loads every raw page with monotonically increasing offsets", async () => {
     const requestedOffsets: number[] = [];
-    const items = await collectOffsetPages({
+    const items = await collectOffsetPrefix({
       maxItems: 10,
       pageSize: 2,
       async fetchPage(limit, offset) {
@@ -42,9 +42,9 @@ describe("offset pagination", () => {
     expect(requestedOffsets).toEqual([0, 2]);
   });
 
-  test("fails closed on incomplete, stalled, or oversized snapshots", async () => {
+  test("fails closed on incomplete or stalled prefixes", async () => {
     await expect(
-      collectOffsetPages({
+      collectOffsetPrefix({
         maxItems: 10,
         fetchPage: async () => ({
           items: ["one"],
@@ -57,7 +57,7 @@ describe("offset pagination", () => {
     ).rejects.toThrow("ended before");
 
     await expect(
-      collectOffsetPages({
+      collectOffsetPrefix({
         maxItems: 10,
         fetchPage: async () => ({
           items: [],
@@ -68,19 +68,26 @@ describe("offset pagination", () => {
         }),
       })
     ).rejects.toThrow("stalled");
+  });
 
-    await expect(
-      collectOffsetPages({
-        maxItems: 10,
-        fetchPage: async () => ({
-          items: [],
-          limit: 50,
-          offset: 0,
-          total: 11,
-          next: "next",
-        }),
-      })
-    ).rejects.toThrow(RangeError);
+  test("keeps a bounded prefix when Spotify reports more ranked items", async () => {
+    const requested: Array<{ limit: number; offset: number }> = [];
+    const items = await collectOffsetPrefix({
+      maxItems: 3,
+      pageSize: 2,
+      async fetchPage(limit, offset) {
+        requested.push({ limit, offset });
+        return offset === 0
+          ? { items: ["one", "two"], limit, offset, total: 5, next: "next" }
+          : { items: ["three"], limit, offset, total: 5, next: "next" };
+      },
+    });
+
+    expect(items).toEqual(["one", "two", "three"]);
+    expect(requested).toEqual([
+      { limit: 2, offset: 0 },
+      { limit: 1, offset: 2 },
+    ]);
   });
 
   test("fails closed when a provider total changes between pages", async () => {
@@ -90,7 +97,7 @@ describe("offset pagination", () => {
     ];
 
     await expect(
-      collectOffsetPages({
+      collectOffsetPrefix({
         maxItems: 10,
         pageSize: 2,
         fetchPage: async () => pages.shift()!,
@@ -100,7 +107,7 @@ describe("offset pagination", () => {
 
   test("fails closed when a page exceeds its request or reported total", async () => {
     await expect(
-      collectOffsetPages({
+      collectOffsetPrefix({
         maxItems: 10,
         pageSize: 1,
         fetchPage: async () => ({
@@ -114,7 +121,7 @@ describe("offset pagination", () => {
     ).rejects.toThrow("more items than requested");
 
     await expect(
-      collectOffsetPages({
+      collectOffsetPrefix({
         maxItems: 10,
         pageSize: 2,
         fetchPage: async () => ({
@@ -491,6 +498,69 @@ describe("PGlite integrity", () => {
       { id: "long_term:1", trackId: "track-1", position: 1 },
       { id: "long_term:3", trackId: "track-3", position: 3 },
     ]);
+  });
+
+  test("publishes the top 500 when Spotify reports a larger ranking", async () => {
+    const pg = new PGlite();
+    databases.push(pg);
+    await applyMigrations(pg);
+    const db = drizzle({ client: pg, schema });
+    const context: SpotifySyncContext = {
+      accountId: "account-a",
+      database: { accountId: "account-a", pg, db },
+      signal: new AbortController().signal,
+      isCurrent: () => true,
+    };
+    const requestedOffsets: number[] = [];
+    const sdk = {
+      currentUser: {
+        topItems(
+          _type: string,
+          _timeRange: string,
+          limit: number,
+          offset: number
+        ) {
+          requestedOffsets.push(offset);
+          return Promise.resolve({
+            items: Array.from({ length: limit }, (_, index) => {
+              const position = offset + index + 1;
+              return {
+                id: `track-${position}`,
+                name: `Track ${position}`,
+                album: {
+                  id: `album-${position}`,
+                  name: `Album ${position}`,
+                  artists: [],
+                },
+                artists: [],
+              };
+            }),
+            limit,
+            next: "next",
+            offset,
+            total: 650,
+          });
+        },
+      },
+    } as unknown as SpotifySdk;
+
+    await expect(syncTopTracks(sdk, context)).resolves.toEqual({
+      synchronized: 500,
+      skipped: 0,
+    });
+    expect(requestedOffsets).toEqual([
+      0, 50, 100, 150, 200, 250, 300, 350, 400, 450,
+    ]);
+    expect(await db.$count(schema.topTracksTable)).toBe(500);
+    expect(
+      await db.query.topTracksTable.findFirst({
+        where: (rankings, { eq }) => eq(rankings.position, 500),
+      })
+    ).toMatchObject({
+      id: "long_term:500",
+      track_id: "track-500",
+      position: 500,
+    });
   });
 
   test("identifies top-track pagination failures before cache writes", async () => {

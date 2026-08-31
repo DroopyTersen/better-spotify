@@ -19,6 +19,7 @@ FROM base AS runtime
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 COPY package.json ./
+COPY server.ts ./
 COPY --from=production-dependencies /app/node_modules ./node_modules
 COPY --from=build /app/build ./build
 EXPOSE 3000

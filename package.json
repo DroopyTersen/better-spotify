@@ -6,9 +6,9 @@
   "scripts": {
     "build": "react-router build",
     "dev": "react-router dev",
-    "start": "react-router-serve ./build/server/index.js",
+    "start": "bun --bun ./server.ts",
     "test": "bun test --max-concurrency 4 --timeout 60000",
-    "lint": "oxlint app --deny-warnings",
+    "lint": "oxlint app server.ts --deny-warnings",
     "typecheck": "react-router typegen && tsc --noEmit --incremental false",
     "check": "bun run test && bun run lint && bun run typecheck && bun run build",
     "clean": "rm -rf build && rm -rf public/build",

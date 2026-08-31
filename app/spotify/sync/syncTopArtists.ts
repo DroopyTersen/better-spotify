@@ -1,6 +1,6 @@
 import { topArtistsTable } from "~/db/db.schema";
 import type { SpotifySdk } from "../createSpotifySdk";
-import { collectOffsetPages } from "./pagination";
+import { collectOffsetPrefix } from "./pagination";
 import {
   assertActiveSync,
   runSyncTransaction,
@@ -15,7 +15,7 @@ export const syncTopArtists = async (
   sdk: SpotifySdk,
   context: SpotifySyncContext
 ) => {
-  const providerArtists = await collectOffsetPages({
+  const providerArtists = await collectOffsetPrefix({
     maxItems: MAX_TOP_ARTISTS,
     fetchPage: (limit, offset) =>
       sdk.currentUser.topItems("artists", "long_term", limit as 50, offset),

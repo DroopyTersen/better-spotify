@@ -158,7 +158,10 @@ export async function buildPlaylist(
   reportProgress(CREATING_PLAYLIST_PROGRESS);
   const finalPlaylist = await createVerifiedPlaylist(
     sdk,
-    dayjs().format("YYYY-MM-DD") + " " + generatedPlaylist.playlist.name,
+    {
+      name: dayjs().format("YYYY-MM-DD") + " " + generatedPlaylist.playlist.name,
+      description: generatedPlaylist.playlist.description,
+    },
     resolvedPlaylistTracks
   );
 
@@ -188,7 +191,10 @@ export async function resolvePlaylistTracks(
 
 export async function createVerifiedPlaylist(
   sdk: SpotifySdk,
-  name: string,
+  details: {
+    name: string;
+    description: string;
+  },
   candidateTracks: BuildPlaylistTrack[],
   dependencies: PlaylistCreationDependencies = playlistCreationDependencies
 ) {
@@ -197,7 +203,7 @@ export async function createVerifiedPlaylist(
     sdk,
     dependencies.getTracks
   );
-  const playlist = await dependencies.createPlaylist(sdk, { name });
+  const playlist = await dependencies.createPlaylist(sdk, details);
 
   try {
     await dependencies.addPlaylistItems(

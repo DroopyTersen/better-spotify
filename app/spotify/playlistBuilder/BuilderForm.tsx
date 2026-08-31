@@ -98,7 +98,7 @@ export function BuilderForm() {
                 key={artist.artist_id}
                 name={artist.artist_name || ""}
                 imageUrl={artist.images?.[0]?.url}
-                itemLink={`/artists/${artist.artist_id}`}
+                itemLink={`/artists/${artist.artist_id}/popular`}
                 onRemove={() => removeArtist(artist.artist_id)}
               />
             ))

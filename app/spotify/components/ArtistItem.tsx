@@ -45,7 +45,8 @@ export function ArtistItem({
       <div className="flex-grow">
         {artistId ? (
           <Link
-            to={`/artists/${artistId}`}
+            to={`/artists/${artistId}/popular`}
+            prefetch="intent"
             className="font-semibold text-sm md:text-base hover:underline"
           >
             {artistName}

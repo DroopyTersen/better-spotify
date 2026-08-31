@@ -41,7 +41,8 @@ export function AlbumItem({ album }: AlbumItemProps) {
           </h3>
         </Link>
         <Link
-          to={`/artists/${album.artists[0]?.id}`}
+          to={`/artists/${album.artists[0]?.id}/popular`}
+          prefetch="intent"
           className="text-sm text-muted-foreground truncate hover:underline block"
         >
           {album.artists[0]?.name}

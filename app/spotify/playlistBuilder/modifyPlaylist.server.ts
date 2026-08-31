@@ -10,6 +10,16 @@ import {
   resolvePlaylistTracks,
 } from "./buildPlaylist.server";
 import type { PlaylistModificationInput } from "./playlistBuilder.types";
+import {
+  CHECKING_MODIFICATION_SOURCE_PROGRESS,
+  getModificationPlanningProgress,
+  LOADING_MODIFICATION_SOURCE_PROGRESS,
+  MODIFICATION_COMPLETE_PROGRESS,
+  PLANNING_MODIFICATION_PROGRESS,
+  RESOLVING_MODIFICATION_TRACKS_PROGRESS,
+  SAVING_MODIFICATION_PROGRESS,
+  type PlaylistBuildProgress,
+} from "./playlistBuildProgress";
 
 export const PLAYLIST_MODIFICATION_CONFLICT_MESSAGE =
   "This playlist changed after it was loaded. Refresh it and try again.";
@@ -96,19 +106,38 @@ export async function loadPlaylistModificationSource(
 export async function modifyPlaylist(
   input: PlaylistModificationInput,
   sdk: SpotifySdk,
-  dependencies: ModifyPlaylistDependencies = defaultDependencies
+  dependencies: ModifyPlaylistDependencies = defaultDependencies,
+  options: {
+    onProgress?: (progress: PlaylistBuildProgress) => void;
+  } = {}
 ): Promise<PlaylistModification & { snapshotId: string }> {
+  const reportProgress = options.onProgress ?? (() => undefined);
   const requestedSource: PlaylistModificationSource = {
     snapshotId: input.snapshotId,
     tracks: input.currentTracks,
   };
+  reportProgress(LOADING_MODIFICATION_SOURCE_PROGRESS);
   const initialSource = await dependencies.loadSource(sdk, input.playlistId);
   assertPlaylistSourceUnchanged(requestedSource, initialSource);
 
-  const modifications = await dependencies.generateModification({
-    ...input,
-    currentTracks: initialSource.tracks,
-  });
+  reportProgress(PLANNING_MODIFICATION_PROGRESS);
+  const modifications = await dependencies.generateModification(
+    {
+      ...input,
+      currentTracks: initialSource.tracks,
+    },
+    undefined,
+    (partialOutput) => {
+      const draftedTracks =
+        partialOutput.modifiedPlaylist?.tracks?.filter(Boolean).length ?? 0;
+      reportProgress(
+        getModificationPlanningProgress(
+          draftedTracks,
+          initialSource.tracks.length
+        )
+      );
+    }
+  );
   if (modifications.modifiedPlaylist.tracks.length > 100) {
     throw new PlaylistModificationResolutionError(
       "The modified playlist cannot contain more than 100 tracks."
@@ -118,6 +147,7 @@ export async function modifyPlaylist(
   const verifiedTracks = new Map(
     initialSource.tracks.map((track) => [track.id, track])
   );
+  reportProgress(RESOLVING_MODIFICATION_TRACKS_PROGRESS);
   const resolvedTracks = await dependencies.resolveTracks(
     modifications.modifiedPlaylist.tracks,
     verifiedTracks,
@@ -140,14 +170,17 @@ export async function modifyPlaylist(
   // Recheck after all slow AI/search work and immediately before the write.
   // Spotify documents snapshot_id as a precondition for reorder, but replace
   // accepts only uris; therefore a small GET-to-PUT race remains unavoidable.
+  reportProgress(CHECKING_MODIFICATION_SOURCE_PROGRESS);
   const latestSource = await dependencies.loadSource(sdk, input.playlistId);
   assertPlaylistSourceUnchanged(initialSource, latestSource);
 
+  reportProgress(SAVING_MODIFICATION_PROGRESS);
   const result = await dependencies.replaceItems(
     sdk,
     input.playlistId,
     modifiedTracks.map((track) => `spotify:track:${track.id}`)
   );
+  reportProgress(MODIFICATION_COMPLETE_PROGRESS);
 
   return {
     ...modifications,

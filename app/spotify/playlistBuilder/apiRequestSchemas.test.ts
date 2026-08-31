@@ -3,6 +3,7 @@ import {
   ArtistRecommendationRequestSchema,
   BuildPlaylistRequestSchema,
   PlaylistModificationRequestSchema,
+  StartPlaylistModificationRequestSchema,
 } from "./apiRequestSchemas";
 
 describe("playlist API request schemas", () => {
@@ -48,6 +49,25 @@ describe("playlist API request schemas", () => {
     request.currentTracks = request.currentTracks.slice(0, 1);
     request.playlistId = "../not-a-spotify-id";
     expect(PlaylistModificationRequestSchema.safeParse(request).success).toBeFalse();
+  });
+
+  test("requires an idempotency job ID around playlist tweaks", () => {
+    const input = {
+      playlistId: "validPlaylistId123",
+      snapshotId: "snapshot-id==",
+      instructions: "Make it upbeat",
+      currentTracks: [
+        { id: "track1", name: "Track 1", artist_name: "Artist" },
+      ],
+    };
+
+    expect(
+      StartPlaylistModificationRequestSchema.safeParse({
+        jobId: "11111111-1111-4111-8111-111111111111",
+        input,
+      }).success
+    ).toBeTrue();
+    expect(StartPlaylistModificationRequestSchema.safeParse(input).success).toBeFalse();
   });
 
   test("caps artist recommendation fan-out", () => {

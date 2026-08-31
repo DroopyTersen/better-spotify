@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { PlaylistModificationForm } from "./PlaylistModificationForm";
 import { EditablePlaylistName } from "./EditablePlaylistName";
 import { spotifyWebApi } from "../api/spotifyWebApi";
+import { hasPersistedPlaylistModification } from "../playlistBuilder/playlistModification.client";
 
 interface PlaylistDisplayProps {
   playlist: SpotifyApiPlaylist;
@@ -30,6 +31,16 @@ export const PlaylistDisplay = ({
   const [playlistName, setPlaylistName] = useState(playlist.name);
 
   useEffect(() => setPlaylistName(playlist.name), [playlist.name]);
+
+  useEffect(() => {
+    let isCurrent = true;
+    void hasPersistedPlaylistModification(playlist.id).then((hasJob) => {
+      if (isCurrent && hasJob) setShowModifyForm(true);
+    });
+    return () => {
+      isCurrent = false;
+    };
+  }, [playlist.id]);
 
   if (!currentUser) return null;
 

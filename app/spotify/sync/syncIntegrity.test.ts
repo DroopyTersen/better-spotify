@@ -7,7 +7,11 @@ import { librarySnapshotIntegritySql } from "~/db/pglite/migrations/003.libraryS
 import { preserveArtistOrderSql } from "~/db/pglite/migrations/004.preserveArtistOrder";
 import { spotifyDb } from "~/spotify/spotify.db";
 import type { SpotifySdk } from "~/spotify/createSpotifySdk";
-import { collectOffsetPrefix, processOffsetPages } from "./pagination";
+import {
+  collectAllOffsetPages,
+  collectOffsetPrefix,
+  processOffsetPages,
+} from "./pagination";
 import {
   MAX_ARTIST_ENRICHMENTS_PER_SYNC,
   syncFullArtistData,
@@ -40,6 +44,29 @@ describe("offset pagination", () => {
 
     expect(items).toEqual(["one", "two", "three"]);
     expect(requestedOffsets).toEqual([0, 2]);
+  });
+
+  test("collects a complete ranking beyond an arbitrary item prefix", async () => {
+    const requestedOffsets: number[] = [];
+    const items = await collectAllOffsetPages({
+      maxRequests: 10,
+      pageSize: 2,
+      async fetchPage(limit, offset) {
+        requestedOffsets.push(offset);
+        const allItems = ["one", "two", "three", "four", "five"];
+        const pageItems = allItems.slice(offset, offset + limit);
+        return {
+          items: pageItems,
+          limit,
+          offset,
+          total: allItems.length,
+          next: offset + pageItems.length < allItems.length ? "next" : null,
+        };
+      },
+    });
+
+    expect(items).toEqual(["one", "two", "three", "four", "five"]);
+    expect(requestedOffsets).toEqual([0, 2, 4]);
   });
 
   test("fails closed on incomplete or stalled prefixes", async () => {
@@ -500,7 +527,7 @@ describe("PGlite integrity", () => {
     ]);
   });
 
-  test("publishes the top 500 when Spotify reports a larger ranking", async () => {
+  test("publishes every top track when Spotify reports more than 500", async () => {
     const pg = new PGlite();
     databases.push(pg);
     await applyMigrations(pg);
@@ -521,8 +548,9 @@ describe("PGlite integrity", () => {
           offset: number
         ) {
           requestedOffsets.push(offset);
+          const itemCount = Math.min(limit, 650 - offset);
           return Promise.resolve({
-            items: Array.from({ length: limit }, (_, index) => {
+            items: Array.from({ length: itemCount }, (_, index) => {
               const position = offset + index + 1;
               return {
                 id: `track-${position}`,
@@ -536,7 +564,7 @@ describe("PGlite integrity", () => {
               };
             }),
             limit,
-            next: "next",
+            next: offset + itemCount < 650 ? "next" : null,
             offset,
             total: 650,
           });
@@ -545,21 +573,21 @@ describe("PGlite integrity", () => {
     } as unknown as SpotifySdk;
 
     await expect(syncTopTracks(sdk, context)).resolves.toEqual({
-      synchronized: 500,
+      synchronized: 650,
       skipped: 0,
     });
     expect(requestedOffsets).toEqual([
-      0, 50, 100, 150, 200, 250, 300, 350, 400, 450,
+      0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600,
     ]);
-    expect(await db.$count(schema.topTracksTable)).toBe(500);
+    expect(await db.$count(schema.topTracksTable)).toBe(650);
     expect(
       await db.query.topTracksTable.findFirst({
-        where: (rankings, { eq }) => eq(rankings.position, 500),
+        where: (rankings, { eq }) => eq(rankings.position, 650),
       })
     ).toMatchObject({
-      id: "long_term:500",
-      track_id: "track-500",
-      position: 500,
+      id: "long_term:650",
+      track_id: "track-650",
+      position: 650,
     });
   });
 

@@ -336,6 +336,56 @@ describe("Spotify 2026 compatibility", () => {
     ]);
   });
 
+  test("uses embedded album tracks and stops at the display limit", async () => {
+    let albumTrackPageCalls = 0;
+    const embeddedTracks = Array.from({ length: 12 }, (_, index) => ({
+      id: `track-${index + 1}`,
+      name: `Track ${index + 1}`,
+      artists: [{ id: "artist-1", name: "Artist One" }],
+    }));
+    const sdk = {
+      artists: {
+        albums() {
+          return Promise.resolve({
+            items: [{ id: "album-1", total_tracks: embeddedTracks.length }],
+          });
+        },
+      },
+      albums: {
+        get() {
+          return Promise.resolve({
+            id: "album-1",
+            name: "Album One",
+            images: [],
+            tracks: {
+              href: "",
+              items: embeddedTracks,
+              limit: 50,
+              next: "next",
+              offset: 0,
+              previous: null,
+              total: 52,
+            },
+          });
+        },
+        tracks() {
+          albumTrackPageCalls += 1;
+          throw new Error("Catalog previews must not paginate album tracks");
+        },
+      },
+    } as unknown as SpotifySdk;
+
+    const tracks = await spotifyWebApi.getArtistCatalogTracks(
+      sdk,
+      "artist-1"
+    );
+
+    expect(tracks.map(({ id }) => id)).toEqual(
+      embeddedTracks.slice(0, 10).map(({ id }) => id)
+    );
+    expect(albumTrackPageCalls).toBe(0);
+  });
+
   test("loads every album track page", async () => {
     const calls: number[] = [];
     const firstTracks = Array.from({ length: 50 }, (_, index) =>

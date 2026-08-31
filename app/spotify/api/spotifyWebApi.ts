@@ -89,7 +89,6 @@ const PLAYLIST_ITEMS_PAGE_LIMIT = 50;
 const PLAYLIST_MUTATION_ITEM_LIMIT = 100;
 const MAX_PROVIDER_PAGE_REQUESTS = 1_000;
 const SINGLE_ITEM_FETCH_CONCURRENCY = 5;
-const ALBUM_FETCH_CONCURRENCY = 3;
 
 async function fetchIndividually<T>(
   ids: string[],
@@ -316,7 +315,8 @@ export const spotifyWebApi = {
   async getArtistCatalogTracks(
     sdk: SpotifySdk,
     artistId: string,
-    albumLimit = 5
+    albumLimit = 5,
+    trackLimit = 10
   ): Promise<ArtistCatalogTrack[]> {
     const albums = await sdk.artists.albums(
       artistId,
@@ -329,29 +329,44 @@ export const spotifyWebApi = {
       Math.max(Math.trunc(albumLimit), 1),
       10
     );
+    const boundedTrackLimit = Math.min(
+      Math.max(Math.trunc(trackLimit), 1),
+      50
+    );
+    const catalogAlbums: SimplifiedAlbum[] = [];
+    let estimatedTrackCount = 0;
+    for (const album of albums.items.slice(0, boundedAlbumLimit)) {
+      catalogAlbums.push(album);
+      estimatedTrackCount += Math.max(album.total_tracks || 1, 1);
+      if (estimatedTrackCount >= boundedTrackLimit) break;
+    }
+
     const fullAlbums = await fetchIndividually(
-      albums.items.slice(0, boundedAlbumLimit).map(({ id }) => id),
+      catalogAlbums.map(({ id }) => id),
       (albumId) => sdk.albums.get(albumId)
     );
+    const tracks: ArtistCatalogTrack[] = [];
+    const seenTrackIds = new Set<string>();
 
-    const albumTracks = await mapWithConcurrency(
-      fullAlbums,
-      ALBUM_FETCH_CONCURRENCY,
-      (album) => loadCompleteAlbumTracks(sdk, album.id, album.tracks)
-    );
+    for (const album of fullAlbums) {
+      for (const track of album.tracks.items) {
+        if (!track.id || seenTrackIds.has(track.id)) continue;
+        seenTrackIds.add(track.id);
+        tracks.push({
+          id: track.id,
+          name: track.name,
+          artists: track.artists,
+          album: {
+            id: album.id,
+            name: album.name,
+            images: album.images,
+          },
+        });
+        if (tracks.length >= boundedTrackLimit) return tracks;
+      }
+    }
 
-    return fullAlbums.flatMap((album, index) =>
-      (albumTracks[index] ?? []).map((track) => ({
-        id: track.id,
-        name: track.name,
-        artists: track.artists,
-        album: {
-          id: album.id,
-          name: album.name,
-          images: album.images,
-        },
-      }))
-    );
+    return tracks;
   },
 
   async getCurrentUserPlaylists(

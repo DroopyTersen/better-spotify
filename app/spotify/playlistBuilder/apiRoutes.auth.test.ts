@@ -5,7 +5,10 @@ import {
   action as buildPlaylistAction,
   loader as buildPlaylistLoader,
 } from "./api.buildPlaylist.route";
-import { action as modifyPlaylistAction } from "./api.modifyPlaylist.route";
+import {
+  action as modifyPlaylistAction,
+  loader as modifyPlaylistLoader,
+} from "./api.modifyPlaylist.route";
 import { action as recommendArtistsAction } from "./api.new-artist-recommendations.route";
 import { action as syncFailureReportAction } from "../sync/api.syncFailureReport.route";
 
@@ -78,6 +81,32 @@ describe("playlist API authentication boundary", () => {
     );
 
     const response = await buildPlaylistLoader({ request } as never);
+    expect(response.status).toBe(204);
+  });
+
+  test("playlist tweak resumption requires authentication", async () => {
+    const request = new Request(
+      "http://local.test/api/modify-playlist?jobId=4a4de4c4-f5dd-46aa-9f9a-3cd794e78a5a"
+    );
+
+    let thrown: unknown;
+    try {
+      await modifyPlaylistLoader({ request } as never);
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(Response);
+    expect((thrown as Response).status).toBe(302);
+  });
+
+  test("playlist tweak resumption hides unavailable jobs", async () => {
+    const request = new Request(
+      "http://local.test/api/modify-playlist?jobId=4a4de4c4-f5dd-46aa-9f9a-3cd794e78a5a",
+      { headers: { cookie: await authenticatedCookie() } }
+    );
+
+    const response = await modifyPlaylistLoader({ request } as never);
     expect(response.status).toBe(204);
   });
 });

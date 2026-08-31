@@ -1,20 +1,15 @@
-import { CheckIcon, Plus } from "lucide-react";
 import { requireAuth } from "~/auth/auth.server";
-import { useCurrentUser } from "~/auth/useCurrentUser";
 import { PageHeader } from "~/layout/PageHeader";
-import { Badge } from "~/shadcn/components/ui/badge";
-import { Button } from "~/shadcn/components/ui/button";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "~/shadcn/components/ui/tabs";
-import { SpotifyImage } from "~/spotify/components/SpotifyImage";
 import { TrackItem } from "~/spotify/components/TrackItem";
 import { createSpotifySdk } from "~/spotify/createSpotifySdk";
 import { usePlaylistBuildingService } from "~/spotify/playlistBuilder/usePlaylistBuildingService";
-import { Route } from "./+types/search.route";
+import type { Route } from "./+types/search.route";
 import { ArtistItem } from "~/spotify/components/ArtistItem";
 import { SearchInput } from "~/spotify/components/SearchInput";
 
@@ -22,24 +17,22 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   const user = await requireAuth(request);
   const sdk = createSpotifySdk(user.tokens);
   const url = new URL(request.url);
-  const query = url.searchParams.get("query");
+  const query = url.searchParams.get("query")?.trim().slice(0, 250);
 
   if (!query) {
     return { query: "", results: null };
   }
 
   const [artists, tracks] = await Promise.all([
-    sdk.search(query, ["artist"], "US", 30),
-    sdk.search(query, ["track"], "US", 50),
-    // sdk.search(query, ["album"], "US", 20),
+    sdk.search(query, ["artist"], "US", 10),
+    sdk.search(query, ["track"], "US", 10),
   ]);
 
   const transformedArtists = artists.artists.items.map((artist) => ({
     artist_id: artist.id,
     artist_name: artist.name,
     images: artist.images,
-    popularity: artist.popularity,
-    genres: artist.genres,
+    genres: artist.genres ?? [],
   }));
 
   return {
@@ -47,7 +40,6 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
     results: {
       artists: transformedArtists,
       tracks: tracks.tracks.items,
-      // albums: albums.albums.items,
     },
   };
 };
@@ -59,8 +51,6 @@ export default function SearchRoute({ loaderData }: Route.ComponentProps) {
     toggleArtistSelection,
     toggleTrackSelection,
   } = usePlaylistBuildingService();
-  const currentUser = useCurrentUser();
-
   if (!loaderData.results) {
     return (
       <>

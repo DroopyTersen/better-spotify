@@ -1,35 +1,29 @@
-import { z } from "zod";
-export type RequestOptions = Partial<RequestInit>;
-
 /**
  * Smartly merges RequestInit properties.
  * It merges the headers separately so you don't blow away the default headers
- * If you need to delete a header that is coming from a default, set that header to an empty string.
+ * If you need to delete a default header, set its override to an empty string.
  */
 export const mergeRequestOptions = (
-  defaults: RequestOptions,
-  overrides?: RequestOptions
-): RequestOptions => {
-  let options: any = {
+  defaults: Readonly<RequestInit>,
+  overrides: Readonly<RequestInit> = {}
+): RequestInit => {
+  const headers = new Headers(defaults.headers);
+  new Headers(overrides.headers).forEach((value, name) => {
+    if (value === "") {
+      headers.delete(name);
+    } else {
+      headers.set(name, value);
+    }
+  });
+
+  return {
     ...defaults,
     ...overrides,
-    headers: {
-      ...defaults?.headers,
-      ...overrides?.headers,
-    },
+    headers,
   };
-
-  // When posting multipart/form-data, you apparently
-  // can't set a content type header yourself, browser needs
-  // to do it. Allow the override to remove the header by
-  // setting it to blank
-  if (options.headers["content-type"] === "") {
-    delete options.headers["content-type"];
-  }
-  return options;
 };
 
-export const JSON_DEFAULTS: RequestOptions = {
+const JSON_DEFAULTS: RequestInit = {
   method: "GET",
   headers: {
     accept: "application/json",
@@ -37,96 +31,56 @@ export const JSON_DEFAULTS: RequestOptions = {
   },
 };
 
-export async function fetchStream(
+export async function jsonRequest<ResponseBody = unknown>(
   url: string,
-  options?: Partial<RequestInit>
-): Promise<Response> {
-  const defaults = {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-    },
-    signal: options?.signal,
-  };
-
-  let reqOptions = mergeRequestOptions(defaults, options);
+  options?: Readonly<RequestInit>
+): Promise<ResponseBody> {
+  const reqOptions = mergeRequestOptions(JSON_DEFAULTS, options);
+  let resp: Response;
 
   try {
-    const resp = await fetch(url, reqOptions);
-    if (resp.ok) {
-      return resp;
-    } else {
-      throw new Error(
-        await getFetchErrorMessage("Unsuccessful status code", { url }, resp)
-      );
-    }
-  } catch (err: any) {
+    resp = await fetch(url, reqOptions);
+  } catch {
     throw new Error(
-      await getFetchErrorMessage(err?.message, { url, ...reqOptions })
+      getFetchErrorMessage("Network request failed", {
+        url,
+        method: reqOptions.method,
+      })
     );
   }
-}
 
-export async function jsonRequest<T = any>(
-  url: string,
-  options?: Partial<RequestInit>
-): Promise<T> {
-  let reqOptions = mergeRequestOptions(JSON_DEFAULTS, options);
-
-  try {
-    const resp = await fetch(url, reqOptions);
-    if (resp.ok) {
-      return resp.json() as Promise<T>;
-    } else {
-      throw new Error(
-        await getFetchErrorMessage("Unsuccessful status code", { url }, resp)
-      );
-    }
-  } catch (err: any) {
-    console.error("🚀 | jsonRequest | err:", err);
+  if (!resp.ok) {
     throw new Error(
-      await getFetchErrorMessage(err?.message, { url, ...reqOptions })
+      getFetchErrorMessage(
+        "Unsuccessful status code",
+        { url, method: reqOptions.method },
+        resp
+      )
     );
   }
+
+  return resp.json() as Promise<ResponseBody>;
 }
 
-export async function validatedJsonRequest<OutputSchema extends z.ZodTypeAny>(
-  url: string,
-  options: Partial<RequestInit>,
-  outputSchema: OutputSchema
-) {
-  let data = await jsonRequest(url, options);
-  let parsedResult = outputSchema.safeParse(data);
-  if (!parsedResult.success) {
-    console.error(
-      `Server Response did not match expected schema:`,
-      parsedResult.error
-    );
-    throw new Error(
-      `The server returned an unexpected response: ${JSON.stringify(data)}`
-    );
-  }
-  return parsedResult.data as z.infer<OutputSchema>;
-}
-
-export const getFetchErrorMessage = async (
+export const getFetchErrorMessage = (
   message = "",
-  req: { url: string } & Partial<RequestInit>,
+  req: { url: string; method?: string },
   resp?: Response
 ) => {
-  let respBody = resp ? await resp?.text() : "";
-  return `Request Error: ${message}\n\n${JSON.stringify(
-    {
-      req,
-      resp: resp
-        ? {
-            status: resp?.status,
-            statusText: resp?.statusText,
-            body: respBody,
-          }
-        : undefined,
-    },
-    null,
-    2
+  const method = (req.method || "GET").toUpperCase();
+  const status = resp ? ` (${resp.status})` : "";
+  return `Request Error: ${message}${status}\n${method} ${safeRequestTarget(
+    req.url
   )}`;
 };
+
+function safeRequestTarget(value: string) {
+  try {
+    const url = new URL(value, "http://local.invalid");
+    return url.origin === "http://local.invalid"
+      ? url.pathname
+      : `${url.origin}${url.pathname}`;
+  } catch {
+    return "[invalid URL]";
+  }
+}

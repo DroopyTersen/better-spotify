@@ -1,4 +1,4 @@
-import {
+import type {
   SpotifyLikedTrack,
   SpotifyPlayedTrack,
   SpotifyTopTrack,
@@ -11,18 +11,23 @@ import { useRouteData } from "~/toolkit/remix/useRouteData";
 
 export const useSpotifyData = () => {
   let topArtists = useRouteData(
-    (r) => r?.data?.topArtists
+    (r) => r?.loaderData?.topArtists
   ) as SpotifyTopArtist[];
-  let topTracks = useRouteData((r) => r?.data?.topTracks) as SpotifyTopTrack[];
+  let topTracks = useRouteData(
+    (r) => r?.loaderData?.topTracks
+  ) as SpotifyTopTrack[];
   let playHistory = useRouteData(
-    (r) => r?.data?.playHistory
+    (r) => r?.loaderData?.playHistory
   ) as SpotifyPlayedTrack[];
   let likedTracks = useRouteData(
-    (r) => r?.data?.likedTracks
+    (r) => r?.loaderData?.likedTracks
   ) as SpotifyLikedTrack[];
   let recentArtists = useRouteData(
-    (r) => r?.data?.recentArtists
+    (r) => r?.loaderData?.recentArtists
   ) as SpotifyRecentArtist[];
+  const basicLikedTracks = useRouteData(
+    (route) => route?.loaderData?.basicLikedTracks
+  ) as SpotifyData["basicLikedTracks"];
 
   return {
     topArtists,
@@ -30,5 +35,6 @@ export const useSpotifyData = () => {
     playHistory,
     likedTracks,
     recentArtists,
-  } as unknown as SpotifyData;
+    basicLikedTracks,
+  } satisfies SpotifyData;
 };

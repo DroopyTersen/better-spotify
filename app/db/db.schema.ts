@@ -1,4 +1,4 @@
-import { relations, eq } from "drizzle-orm";
+import { relations } from "drizzle-orm";
 import {
   boolean,
   integer,
@@ -6,17 +6,21 @@ import {
   primaryKey,
   text,
   timestamp,
-  bigint,
-  pgView,
   jsonb,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 // Define the image type
 export type SpotifyImage = {
   url: string;
-  height: number;
-  width: number;
+  height: number | null;
+  width: number | null;
 };
+
+export const libraryMetadataTable = pgTable("library_metadata", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+});
 
 export const artistsTable = pgTable("artists", {
   id: text("id").primaryKey(),
@@ -99,9 +103,14 @@ export const artistTracks = pgTable(
   {
     track_id: text("track_id").references(() => tracksTable.id),
     artist_id: text("artist_id").references(() => artistsTable.id),
+    position: integer("position").notNull(),
   },
   (table) => ({
     pk: primaryKey({ columns: [table.track_id, table.artist_id] }),
+    trackPosition: uniqueIndex("artist_tracks_track_position_unique").on(
+      table.track_id,
+      table.position
+    ),
   })
 );
 
@@ -144,31 +153,39 @@ export const playlistsTable = pgTable("playlists", {
     id: string;
     external_urls: {
       spotify: string;
-    };
-    display_name: string;
-    href: string;
-    uri: string;
+    } | null;
+    display_name: string | null;
+    href: string | null;
+    uri: string | null;
   }>(),
 });
 
 export const playlistTracksTable = pgTable(
   "playlist_tracks",
   {
-    playlist_id: text("playlist_id").references(() => playlistsTable.id),
-    track_id: text("track_id").references(() => tracksTable.id),
-    added_at: timestamp("added_at", { withTimezone: true }).notNull(),
+    id: text("id").primaryKey(),
+    playlist_id: text("playlist_id")
+      .notNull()
+      .references(() => playlistsTable.id),
+    track_id: text("track_id")
+      .notNull()
+      .references(() => tracksTable.id),
+    position: integer("position").notNull(),
+    added_at: timestamp("added_at", { withTimezone: true }),
     // Added by user info
     added_by: jsonb("added_by").$type<{
       id: string;
       external_urls: {
         spotify: string;
-      };
-      href: string;
-      uri: string;
+      } | null;
+      href: string | null;
+      uri: string | null;
     }>(),
   },
   (table) => ({
-    pk: primaryKey({ columns: [table.playlist_id, table.track_id] }),
+    playlistPosition: uniqueIndex(
+      "playlist_tracks_playlist_position_unique"
+    ).on(table.playlist_id, table.position),
   })
 );
 

@@ -2,9 +2,9 @@ import { CheckIcon, Plus } from "lucide-react";
 import { Badge } from "~/shadcn/components/ui/badge";
 import { Button } from "~/shadcn/components/ui/button";
 import { SpotifyImage } from "./SpotifyImage";
-import { useCurrentUser } from "~/auth/useCurrentUser";
 import { TooltipWrapper } from "~/toolkit/components/TooltipWrapper";
 import { Link } from "react-router";
+import { useHandledAsyncAction } from "./useHandledAsyncAction";
 
 export function TrackItem({
   track,
@@ -22,31 +22,43 @@ export function TrackItem({
   };
   metadata?: React.ReactNode | React.ReactNode[];
   isSelected?: boolean;
-  toggleSelection?: (trackId: string) => void;
+  toggleSelection?: (trackId: string) => Promise<void>;
 }) {
-  let currentUser = useCurrentUser();
+  const trackId = track.track_id;
+  const trackName = track.track_name ?? "Unknown track";
+  const artistName = track.artist_name ?? "Unknown artist";
+  const action = useHandledAsyncAction(
+    toggleSelection && trackId ? () => toggleSelection(trackId) : undefined,
+    `Could not update ${trackName}. Please try again.`
+  );
+
   return (
     <div
       key={track.track_id}
       className="grid grid-cols-[auto_1fr_auto] items-center gap-3 sm:gap-4 py-3 border-b last:border-b-0 relative group"
     >
       <SpotifyImage
-        src={track.images?.[0]?.url!}
-        alt={track.track_name!}
-        uri={`spotify:track:${track.track_id}`}
-        canPlay={currentUser?.product === "premium"}
+        src={track.images?.[0]?.url ?? "/spotify-logo.svg"}
+        alt={trackName}
+        uri={trackId ? `spotify:track:${trackId}` : "https://open.spotify.com"}
         size={48}
       />
       <div className="flex-grow min-w-0">
         <h3 className="text-sm md:text-base font-semibold truncate">
-          {track.track_name}
+          {trackName}
         </h3>{" "}
-        <Link
-          to={`/artists/${track.artist_id}`}
-          className="text-xs sm:text-sm text-muted-foreground hover:underline block truncate"
-        >
-          {track.artist_name}
-        </Link>
+        {track.artist_id ? (
+          <Link
+            to={`/artists/${track.artist_id}`}
+            className="text-xs sm:text-sm text-muted-foreground hover:underline block truncate"
+          >
+            {artistName}
+          </Link>
+        ) : (
+          <span className="block truncate text-xs text-muted-foreground sm:text-sm">
+            {artistName}
+          </span>
+        )}
         {track?.genres?.length && track?.genres?.length > 0 && (
           <div className="mt-1 items-center space-x-2 -mx-1 hidden md:flex">
             {track?.genres
@@ -72,17 +84,19 @@ export function TrackItem({
             {metadata}
           </div>
         )}
-        {toggleSelection && (
+        {toggleSelection && trackId && (
           <TooltipWrapper
             tooltip={
-              isSelected
-                ? `${track.track_name} has been added to your new playlist.`
-                : `Add ${track.track_name} to your new playlist.`
+              action.error ?? (isSelected
+                ? `${trackName} has been added to your new playlist.`
+                : `Add ${trackName} to your new playlist.`)
             }
           >
             <Button
               size="icon"
-              onClick={() => toggleSelection?.(track.track_id!)}
+              onClick={action.run}
+              disabled={action.isPending}
+              aria-label={action.error ?? `Update ${trackName} selection`}
               className={`rounded-full transition-opacity h-8 w-8 sm:h-10 sm:w-10 ${
                 isSelected
                   ? "opacity-80 bg-primary"

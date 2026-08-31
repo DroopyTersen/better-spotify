@@ -1,32 +1,41 @@
-/*
-let { data, isLoading, error} = useAsyncData<NewsPages[]>([], getNews, [siteUrl, maxItems]);
-*/
-import { useEffect, useReducer, useRef } from "react";
+import {
+  useCallback,
+  useEffect,
+  useReducer,
+  useRef,
+  type DependencyList,
+} from "react";
 
 export interface AsyncDataState<T> {
-  /** Indicates whether the asyncFn is done yet */
   isLoading: boolean;
-  /** Whatever your asncFn returns, assuming it succeeds */
   data: T;
-  /** The error message if the asyncFn errors */
-  error: string;
+  error: unknown | null;
 }
 
-function reducer<T>(state: AsyncDataState<T>, action: any) {
+type AsyncDataAction<T> =
+  | { type: "start" }
+  | { type: "success"; data: T }
+  | { type: "error"; error: unknown }
+  | { type: "replace"; data: T };
+
+type AsyncTask<T> = (...args: never[]) => Promise<T>;
+
+function reducer<T>(
+  state: AsyncDataState<T>,
+  action: AsyncDataAction<T>
+): AsyncDataState<T> {
   switch (action.type) {
     case "start":
       return {
         ...state,
         isLoading: true,
-        data: action.data || state.data || null,
-        error: "",
+        error: null,
       };
     case "success":
       return {
-        ...state,
         isLoading: false,
         data: action.data,
-        error: "",
+        error: null,
       };
     case "error":
       return {
@@ -36,54 +45,56 @@ function reducer<T>(state: AsyncDataState<T>, action: any) {
       };
     case "replace":
       return {
-        ...state,
         isLoading: false,
         data: action.data,
-        error: "",
+        error: null,
       };
-    default:
-      return state;
   }
 }
 
 export function useAsyncData<T>(
-  asyncFn: (...args: any[]) => Promise<T>,
-  args: any[],
+  asyncFn: AsyncTask<T>,
+  args: DependencyList,
   initialValue: T
 ) {
-  const [state, dispatch] = useReducer(reducer, {
+  const [state, dispatch] = useReducer(reducer<T>, {
     isLoading: false,
-    error: "",
+    error: null,
     data: initialValue,
   });
 
   const asyncFnRef = useRef(asyncFn);
+  asyncFnRef.current = asyncFn;
 
   useEffect(() => {
-    asyncFnRef.current = asyncFn;
-  });
-
-  useEffect(() => {
-    let isUnmounted = false;
+    let isActive = true;
     const doAsync = async () => {
+      dispatch({ type: "start" });
       try {
-        dispatch({ type: "start", data: initialValue });
-        const data = await asyncFnRef.current(...args);
-        if (isUnmounted) return;
+        const data = await asyncFnRef.current(
+          ...(args as unknown as never[])
+        );
+        if (!isActive) return;
         dispatch({ type: "success", data });
-      } catch (err) {
-        dispatch({ type: "error", error: err });
+      } catch (error) {
+        if (!isActive) return;
+        dispatch({ type: "error", error });
       }
     };
-    doAsync();
+
+    void doAsync();
     return () => {
-      isUnmounted = true;
+      isActive = false;
     };
-    // eslint-disable-next-line
+    // The argument list is the hook's explicit dependency interface.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, args);
 
   return {
-    ...(state as AsyncDataState<T>),
-    replace: (data: T) => dispatch({ type: "replace", data }),
+    ...state,
+    replace: useCallback(
+      (data: T) => dispatch({ type: "replace", data }),
+      []
+    ),
   };
 }

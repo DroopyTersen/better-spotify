@@ -1,6 +1,5 @@
 import { Separator } from "~/shadcn/components/ui/separator";
 import {
-  Sidebar,
   SidebarProvider,
   SidebarTrigger,
 } from "~/shadcn/components/ui/sidebar";
@@ -44,12 +43,10 @@ export const SidebarLayout = ({
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-full">
-        <Sidebar>
-          <SidebarNav playlists={playlists} devices={devices} />
-        </Sidebar>
-        <div className="grid grid-rows-[auto_1fr] w-full relative">
-          <header className="flex h-16 items-center gap-4 border-b px-6 w-full sticky top-0 bg-background z-10">
+      <div className="flex h-dvh min-h-0 w-full overflow-hidden">
+        <SidebarNav playlists={playlists} devices={devices} />
+        <div className="relative grid min-w-0 flex-1 grid-rows-[auto_minmax(0,1fr)]">
+          <header className="z-10 flex h-16 w-full items-center gap-4 border-b bg-background px-4 sm:px-6">
             <SidebarTrigger />
             <Separator orientation="vertical" className="h-6" />
             <h1 className="text-lg font-bold" id="page-title"></h1>
@@ -69,7 +66,7 @@ export const SidebarLayout = ({
               </Link>
             </TooltipWrapper>
           </header>
-          <main className="flex-1 p-6 w-full h-[calc(100vh-64px)]">
+          <main className="min-h-0 w-full overflow-y-auto p-4 sm:p-6">
             {children}
           </main>
         </div>

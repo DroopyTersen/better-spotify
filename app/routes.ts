@@ -6,6 +6,7 @@ import {
 } from "@react-router/dev/routes";
 
 export default [
+  route("/healthcheck", "routes/healthcheck.route.ts"),
   route("/login", "auth/routes/auth.login.route.tsx"),
   route("/logout", "auth/routes/auth.logout.route.tsx"),
   layout("layout/root.layout.tsx", [
@@ -24,7 +25,6 @@ export default [
     route("/search", "routes/search.route.tsx"),
   ]),
   route("/auth/callback", "auth/routes/auth.callback.route.tsx"),
-  route("/spotify/sync", "spotify/sync/sync.route.tsx"),
   route(
     "api/build-playlist",
     "spotify/playlistBuilder/api.buildPlaylist.route.ts"

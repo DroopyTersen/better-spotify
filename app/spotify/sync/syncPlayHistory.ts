@@ -1,87 +1,88 @@
-import { getDb } from "~/db/db.client";
+import { libraryMetadataTable, playHistoryTable } from "~/db/db.schema";
+import { desc, eq } from "drizzle-orm";
+import { getPlayHistoryWindow } from "../api/getPlayHistory";
+import type { SpotifySdk } from "../createSpotifySdk";
 import {
-  albumsTable,
-  artistsTable,
-  artistTracks,
-  playHistoryTable,
-  tracksTable,
-} from "~/db/db.schema";
-import { getPlayHistory } from "../api/getPlayHistory";
-import { SpotifySdk } from "../createSpotifySdk";
-import { desc } from "drizzle-orm";
+  assertActiveSync,
+  runSyncTransaction,
+  type SpotifySyncContext,
+} from "./syncContext";
+import { writeTrackGraph } from "./syncDb";
+import {
+  normalizePlayHistoryItem,
+  normalizeTrackGraph,
+} from "./syncRecords";
 
-export const syncPlayHistory = async (sdk: SpotifySdk) => {
-  console.log("resyncPlayHistory");
-  const db = getDb();
-  let mostRecentItems = await db
-    .select({
-      played_at: playHistoryTable.played_at,
-    })
-    .from(playHistoryTable)
-    .orderBy(desc(playHistoryTable.played_at))
-    .limit(1);
-  let mostRecentPlayedAt = mostRecentItems[0]?.played_at;
-  // Delete existing play history
-  let after = mostRecentPlayedAt
-    ? mostRecentPlayedAt.getTime().toString()
-    : undefined;
-  // Fetch all tracks from Spotify
-  const playHistory = await getPlayHistory(sdk, {
-    after,
+const PLAY_HISTORY_WINDOW_SIZE = 500;
+const PLAY_HISTORY_CONTINUATION_KEY = "play_history_continuation_before";
+
+export const syncPlayHistory = async (
+  sdk: SpotifySdk,
+  context: SpotifySyncContext
+) => {
+  assertActiveSync(context);
+  const db = context.database.db;
+  const [[mostRecent], continuation] = await Promise.all([
+    db
+      .select({ played_at: playHistoryTable.played_at })
+      .from(playHistoryTable)
+      .orderBy(desc(playHistoryTable.played_at))
+      .limit(1),
+    db.query.libraryMetadataTable.findFirst({
+      columns: { value: true },
+      where: eq(libraryMetadataTable.key, PLAY_HISTORY_CONTINUATION_KEY),
+    }),
+  ]);
+  assertActiveSync(context);
+  const after = mostRecent?.played_at.getTime().toString();
+
+  const window = await getPlayHistoryWindow(sdk, {
+    ...(continuation ? { before: continuation.value } : { after }),
+    maxLimit: PLAY_HISTORY_WINDOW_SIZE,
   });
-  if (playHistory.length < 1) {
-    return {
-      inserted: 0,
-    };
+  assertActiveSync(context);
+  const normalizedItems = window.items.flatMap((item) => {
+    const normalized = normalizePlayHistoryItem(item);
+    return normalized ? [normalized] : [];
+  });
+  if (normalizedItems.length !== window.items.length) {
+    throw new Error("Spotify returned an invalid play-history item");
   }
 
-  const albums = playHistory.map((item) => item.track.album);
-  await db.insert(albumsTable).values(albums).onConflictDoNothing();
-  const albumCount = await db.$count(albumsTable);
-  console.log("🚀 | resyncPlayHistory | albumCount:", albumCount);
-
-  let artists = playHistory.flatMap((item) => item.track.artists);
-  await db.insert(artistsTable).values(artists).onConflictDoNothing();
-  const artistCount = await db.$count(artistsTable);
-  console.log("🚀 | resyncPlayHistory | artistCount:", artistCount);
-
-  await db
-    .insert(tracksTable)
-    .values(playHistory.map((item) => item.track))
-    .onConflictDoNothing();
-
-  const trackCount = await db.$count(tracksTable);
-  console.log("🚀 | resyncPlayHistory | trackCount:", trackCount);
-
-  const trackArtists = playHistory.map((item) =>
-    item.track.artists.map((artist) => ({
-      track_id: item.track.id,
-      artist_id: artist.id,
-    }))
+  const uniqueItems = [
+    ...new Map(normalizedItems.map((item) => [item.row.id, item])).values(),
+  ];
+  const trackGraph = normalizeTrackGraph(
+    uniqueItems.map((item) => item.sourceTrack)
   );
+  const inserted = await runSyncTransaction(context, async (tx) => {
+    let insertedRows: { id: string }[] = [];
+    if (uniqueItems.length) {
+      await writeTrackGraph(tx, trackGraph);
+      insertedRows = await tx
+        .insert(playHistoryTable)
+        .values(uniqueItems.map((item) => item.row))
+        .onConflictDoNothing()
+        .returning({ id: playHistoryTable.id });
+    }
+    if (window.nextBefore) {
+      await tx
+        .insert(libraryMetadataTable)
+        .values({
+          key: PLAY_HISTORY_CONTINUATION_KEY,
+          value: window.nextBefore,
+        })
+        .onConflictDoUpdate({
+          target: libraryMetadataTable.key,
+          set: { value: window.nextBefore },
+        });
+    } else {
+      await tx
+        .delete(libraryMetadataTable)
+        .where(eq(libraryMetadataTable.key, PLAY_HISTORY_CONTINUATION_KEY));
+    }
+    return insertedRows;
+  });
 
-  await db
-    .insert(artistTracks)
-    .values(trackArtists.flat())
-    .onConflictDoNothing();
-
-  // Insert all play history records
-  await db
-    .insert(playHistoryTable)
-    .values(
-      playHistory.map((item) => ({
-        id: new Date().getTime().toString() + item.track.id,
-        track_id: item.track.id,
-        context_href: item?.context?.href,
-        context_type: item?.context?.type,
-        played_at: new Date(item.played_at),
-      }))
-    )
-    .onConflictDoNothing();
-  const count = await db.$count(playHistoryTable);
-  console.log("count", count);
-
-  return {
-    inserted: playHistory.length,
-  };
+  return { inserted: inserted.length, hasMore: Boolean(window.nextBefore) };
 };

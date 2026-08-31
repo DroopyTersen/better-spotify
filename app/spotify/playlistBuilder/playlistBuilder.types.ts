@@ -90,6 +90,7 @@ export type SelectedPlaylistTrack = {
  */
 export type PlaylistModificationInput = {
   playlistId: string;
+  snapshotId: string;
   instructions: string;
   currentTracks: Array<{
     id: string;

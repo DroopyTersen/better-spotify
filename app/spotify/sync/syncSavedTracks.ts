@@ -1,69 +1,57 @@
-import { getDb } from "~/db/db.client";
+import { savedTracksTable } from "~/db/db.schema";
+import type { SpotifySdk } from "../createSpotifySdk";
+import { processOffsetPages } from "./pagination";
 import {
-  albumsTable,
-  artistsTable,
-  artistTracks,
-  savedTracksTable,
-  tracksTable,
-} from "~/db/db.schema";
-import { SpotifySdk } from "../createSpotifySdk";
+  assertActiveSync,
+  runSyncTransaction,
+  type SpotifySyncContext,
+} from "./syncContext";
+import { writeTrackGraph } from "./syncDb";
+import { normalizeTrack, normalizeTrackGraph, validDate } from "./syncRecords";
 
-export const syncSavedTracks = async (sdk: SpotifySdk) => {
-  console.log("syncSavedTracks");
-  const db = getDb();
+// At Spotify's maximum page size this permits a 250,000-track library while
+// still failing explicitly if a malformed or implausibly large response would
+// otherwise keep a full refresh running without an operational ceiling.
+export const MAX_SAVED_TRACK_REQUESTS = 5_000;
 
-  // Clear existing saved tracks
-  // await db.delete(savedTracksTable);
+export const syncSavedTracks = async (
+  sdk: SpotifySdk,
+  context: SpotifySyncContext
+) => {
+  const seenTrackIds = new Set<string>();
+  const result = await runSyncTransaction(context, async (tx) => {
+    await tx.delete(savedTracksTable);
+    return processOffsetPages({
+      maxRequests: MAX_SAVED_TRACK_REQUESTS,
+      fetchPage: (limit, offset) =>
+        sdk.currentUser.tracks.savedTracks(limit as 50, offset),
+      processPage: async (savedItems) => {
+        assertActiveSync(context);
+        const trackGraph = normalizeTrackGraph(
+          savedItems.map((item) => item.track)
+        );
+        const rows = savedItems.flatMap((item) => {
+          const track = normalizeTrack(item.track);
+          const addedAt = validDate(item.added_at);
+          if (!track || !addedAt || seenTrackIds.has(track.id)) return [];
+          seenTrackIds.add(track.id);
+          return [
+            {
+              id: track.id,
+              track_id: track.id,
+              added_at: addedAt,
+            },
+          ];
+        });
+        if (rows.length !== savedItems.length) {
+          throw new Error("Spotify returned an invalid or duplicate saved track");
+        }
 
-  let count = 0;
-  let nextUrl = "first page";
-  const MAX_LIMIT = 1000;
+        await writeTrackGraph(tx, trackGraph);
+        if (rows.length) await tx.insert(savedTracksTable).values(rows);
+      },
+    });
+  });
 
-  while (nextUrl && count < MAX_LIMIT) {
-    // Get next page of saved tracks
-    const nextPage = await sdk.currentUser.tracks.savedTracks(50, count);
-    const savedTracks = nextPage.items;
-
-    // Insert albums
-    const albums = savedTracks.map((item) => item.track.album);
-    await db.insert(albumsTable).values(albums).onConflictDoNothing();
-
-    // Insert artists
-    const artists = savedTracks.flatMap((item) => item.track.artists);
-    await db.insert(artistsTable).values(artists).onConflictDoNothing();
-
-    // Insert tracks
-    await db
-      .insert(tracksTable)
-      .values(savedTracks.map((item) => item.track))
-      .onConflictDoNothing();
-
-    // Insert artist-track relationships
-    const trackArtists = savedTracks.flatMap((item) =>
-      item.track.artists.map((artist) => ({
-        track_id: item.track.id,
-        artist_id: artist.id,
-      }))
-    );
-    await db.insert(artistTracks).values(trackArtists).onConflictDoNothing();
-
-    // Insert saved tracks records
-    await db
-      .insert(savedTracksTable)
-      .values(
-        savedTracks.map((item) => ({
-          id: new Date(item.added_at).getTime().toString() + item.track.id,
-          track_id: item.track.id,
-          added_at: new Date(item.added_at),
-        }))
-      )
-      .onConflictDoNothing();
-
-    count += savedTracks.length;
-    nextUrl = nextPage?.next || "";
-    console.log("🚀 | syncSavedTracks | count:", count);
-  }
-
-  const savedTracksCount = await db.$count(savedTracksTable);
-  console.log("🚀 | syncSavedTracks | total saved tracks:", savedTracksCount);
+  return { synchronized: result.items };
 };

@@ -1,74 +1,48 @@
-import { getDb } from "~/db/db.client";
+import { topArtistsTable } from "~/db/db.schema";
+import type { SpotifySdk } from "../createSpotifySdk";
+import { collectOffsetPages } from "./pagination";
 import {
-  artistGenresTable,
-  artistsTable,
-  genresTable,
-  topArtistsTable,
-} from "~/db/db.schema";
+  assertActiveSync,
+  runSyncTransaction,
+  type SpotifySyncContext,
+} from "./syncContext";
+import { writeArtistGraph } from "./syncDb";
+import { normalizeArtist, normalizeArtistGraph } from "./syncRecords";
 
-import { sql } from "drizzle-orm";
-import { SpotifySdk } from "../createSpotifySdk";
+const MAX_TOP_ARTISTS = 500;
 
-export const syncTopArtists = async (sdk: SpotifySdk) => {
-  const db = getDb();
-  let count = 0;
-  let nextUrl = "first page";
-  let MAX_LIMIT = 400;
-  await db.delete(topArtistsTable);
-
-  while (nextUrl && count < MAX_LIMIT) {
-    console.log("🚀 | resyncTopArtists | nextUrl:", nextUrl);
-
-    const nextPage = await sdk.currentUser.topItems(
-      "artists",
-      "long_term",
-      50,
-      count as any
-    );
-    let artists = nextPage.items;
-    console.log("🚀 | resyncTopArtists | artists:", artists);
-
-    await db
-      .insert(artistsTable)
-      .values(artists)
-      .onConflictDoUpdate({
-        target: artistsTable.id,
-        set: {
-          popularity: sql`excluded.popularity`,
-          images: sql`excluded.images`,
-        },
-      });
-
-    let genres = artists.flatMap((artist) => artist.genres);
-    await db
-      .insert(genresTable)
-      .values(genres.map((genre) => ({ id: genre, name: genre })))
-      .onConflictDoNothing();
-
-    let artistGenres = artists.flatMap((artist) =>
-      artist.genres.map((genre) => ({
-        artist_id: artist.id,
-        genre_id: genre,
-      }))
-    );
-    await db
-      .insert(artistGenresTable)
-      .values(artistGenres)
-      .onConflictDoNothing();
-
-    await db.insert(topArtistsTable).values(
-      artists.map((a, index) => ({
-        id: crypto.randomUUID(),
-        artist_id: a.id,
-        position: count + index + 1,
-      }))
-    );
-
-    const artistCount = await db.$count(artistsTable);
-    console.log("🚀 | artistCount:", artistCount);
-
-    count += artists.length;
-    nextUrl = nextPage?.next && nextPage.next !== nextUrl ? nextPage.next : "";
+export const syncTopArtists = async (
+  sdk: SpotifySdk,
+  context: SpotifySyncContext
+) => {
+  const providerArtists = await collectOffsetPages({
+    maxItems: MAX_TOP_ARTISTS,
+    fetchPage: (limit, offset) =>
+      sdk.currentUser.topItems("artists", "long_term", limit as 50, offset),
+  });
+  assertActiveSync(context);
+  const artistGraph = normalizeArtistGraph(providerArtists);
+  const rankings = providerArtists.flatMap((artist, index) => {
+    const normalized = normalizeArtist(artist);
+    return normalized
+      ? [
+          {
+            id: `long_term:${index + 1}`,
+            artist_id: normalized.id,
+            position: index + 1,
+          },
+        ]
+      : [];
+  });
+  if (rankings.length !== providerArtists.length) {
+    throw new Error("Spotify returned an invalid top artist");
   }
-  console.log("🚀 | resyncTopArtists | artistCount:", count);
+
+  await runSyncTransaction(context, async (tx) => {
+    await writeArtistGraph(tx, artistGraph);
+    await tx.delete(topArtistsTable);
+    if (rankings.length) await tx.insert(topArtistsTable).values(rankings);
+  });
+
+  return { synchronized: rankings.length };
 };

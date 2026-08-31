@@ -1,4 +1,4 @@
-import { DB, getDb } from "~/db/db.client";
+import type { DB } from "~/db/db.client";
 import {
   albumsTable,
   artistGenresTable,
@@ -13,7 +13,7 @@ import {
   playlistTracksTable,
   savedTracksTable,
 } from "~/db/db.schema";
-import { eq, sql, desc, inArray } from "drizzle-orm";
+import { and, eq, sql, desc, inArray } from "drizzle-orm";
 import { Prettify } from "~/toolkit/utils/typescript.utils";
 
 export const spotifyDb = {
@@ -61,6 +61,7 @@ export const spotifyDb = {
   ) => {
     const results = await db
       .select({
+        play_id: playHistoryTable.id,
         played_at: playHistoryTable.played_at,
         track_name: tracksTable.name,
         track_popularity: tracksTable.popularity,
@@ -79,7 +80,13 @@ export const spotifyDb = {
       })
       .from(playHistoryTable)
       .leftJoin(tracksTable, eq(playHistoryTable.track_id, tracksTable.id))
-      .leftJoin(artistTracks, eq(tracksTable.id, artistTracks.track_id))
+      .leftJoin(
+        artistTracks,
+        and(
+          eq(tracksTable.id, artistTracks.track_id),
+          eq(artistTracks.position, 0)
+        )
+      )
       .leftJoin(artistsTable, eq(artistTracks.artist_id, artistsTable.id))
       .leftJoin(
         artistGenresTable,
@@ -88,6 +95,7 @@ export const spotifyDb = {
       .leftJoin(genresTable, eq(artistGenresTable.genre_id, genresTable.id))
       .leftJoin(albumsTable, eq(tracksTable.album_id, albumsTable.id))
       .groupBy(
+        playHistoryTable.id,
         playHistoryTable.played_at,
         tracksTable.id,
         tracksTable.name,
@@ -105,7 +113,7 @@ export const spotifyDb = {
       .limit(limit)
       .offset(offset);
 
-    return [...new Map(results.map((item) => [item.track_id, item])).values()];
+    return [...new Map(results.map((item) => [item.play_id, item])).values()];
   },
   getTopTracks: async (
     db: DB,
@@ -113,6 +121,7 @@ export const spotifyDb = {
   ) => {
     const results = await db
       .select({
+        ranking_id: topTracksTable.id,
         position: topTracksTable.position,
         track_name: tracksTable.name,
         track_popularity: tracksTable.popularity,
@@ -131,7 +140,13 @@ export const spotifyDb = {
       })
       .from(topTracksTable)
       .leftJoin(tracksTable, eq(topTracksTable.track_id, tracksTable.id))
-      .leftJoin(artistTracks, eq(tracksTable.id, artistTracks.track_id))
+      .leftJoin(
+        artistTracks,
+        and(
+          eq(tracksTable.id, artistTracks.track_id),
+          eq(artistTracks.position, 0)
+        )
+      )
       .leftJoin(artistsTable, eq(artistTracks.artist_id, artistsTable.id))
       .leftJoin(
         artistGenresTable,
@@ -140,6 +155,7 @@ export const spotifyDb = {
       .leftJoin(genresTable, eq(artistGenresTable.genre_id, genresTable.id))
       .leftJoin(albumsTable, eq(tracksTable.album_id, albumsTable.id))
       .groupBy(
+        topTracksTable.id,
         topTracksTable.position,
         tracksTable.id,
         tracksTable.name,
@@ -157,7 +173,7 @@ export const spotifyDb = {
       .limit(limit)
       .offset(offset);
 
-    return [...new Map(results.map((item) => [item.track_id, item])).values()];
+    return [...new Map(results.map((item) => [item.ranking_id, item])).values()];
   },
   getTopArtists: async (
     db: DB,
@@ -173,10 +189,9 @@ export const spotifyDb = {
           "genres"
         ),
         images: artistsTable.images,
-        play_count:
-          sql<number>`count(distinct ${playHistoryTable.played_at})`.as(
-            "play_count"
-          ),
+        play_count: sql<number>`count(distinct ${playHistoryTable.id})`.as(
+          "play_count"
+        ),
       })
       .from(topArtistsTable)
       .leftJoin(artistsTable, eq(topArtistsTable.artist_id, artistsTable.id))
@@ -206,6 +221,9 @@ export const spotifyDb = {
     return db
       .select({
         genre: genresTable.name,
+        first_position: sql<number>`min(${topTracksTable.position})`.as(
+          "first_position"
+        ),
       })
       .from(topTracksTable)
       .leftJoin(tracksTable, eq(topTracksTable.track_id, tracksTable.id))
@@ -217,7 +235,7 @@ export const spotifyDb = {
       )
       .leftJoin(genresTable, eq(artistGenresTable.genre_id, genresTable.id))
       .groupBy(genresTable.name)
-      .orderBy(topTracksTable.position)
+      .orderBy(sql`min(${topTracksTable.position})`)
       .limit(limit)
       .offset(offset)
       .then(
@@ -281,7 +299,13 @@ export const spotifyDb = {
       })
       .from(savedTracksTable)
       .leftJoin(tracksTable, eq(savedTracksTable.track_id, tracksTable.id))
-      .leftJoin(artistTracks, eq(tracksTable.id, artistTracks.track_id))
+      .leftJoin(
+        artistTracks,
+        and(
+          eq(tracksTable.id, artistTracks.track_id),
+          eq(artistTracks.position, 0)
+        )
+      )
       .leftJoin(artistsTable, eq(artistTracks.artist_id, artistsTable.id))
       .leftJoin(
         artistGenresTable,
@@ -325,10 +349,9 @@ export const spotifyDb = {
         last_played: sql<Date>`max(${playHistoryTable.played_at})`.as(
           "last_played"
         ),
-        play_count:
-          sql<number>`count(distinct ${playHistoryTable.played_at})`.as(
-            "play_count"
-          ),
+        play_count: sql<number>`count(distinct ${playHistoryTable.id})`.as(
+          "play_count"
+        ),
       })
       .from(playHistoryTable)
       .leftJoin(tracksTable, eq(playHistoryTable.track_id, tracksTable.id))
@@ -406,7 +429,13 @@ export const spotifyDb = {
         images: artistsTable.images,
       })
       .from(tracksTable)
-      .leftJoin(artistTracks, eq(tracksTable.id, artistTracks.track_id))
+      .leftJoin(
+        artistTracks,
+        and(
+          eq(tracksTable.id, artistTracks.track_id),
+          eq(artistTracks.position, 0)
+        )
+      )
       .leftJoin(artistsTable, eq(artistTracks.artist_id, artistsTable.id))
       .leftJoin(
         artistGenresTable,
@@ -435,17 +464,31 @@ export const spotifyDb = {
 export type SpotifyData = Awaited<
   ReturnType<typeof spotifyDb.getAllSpotifyData>
 >;
+
+export function createEmptySpotifyData(): SpotifyData {
+  return {
+    topTracks: [],
+    topArtists: [],
+    playHistory: [],
+    likedTracks: [],
+    recentArtists: [],
+    basicLikedTracks: [],
+  };
+}
+
 export type SpotifyPlaylist = {
   playlist_id: string;
   playlist_name: string;
   description: string | null;
-  images: any[];
-  external_urls: Record<string, string>;
+  images:
+    | Array<{ url: string; height: number | null; width: number | null }>
+    | null;
+  external_urls: { spotify: string } | null;
   track_count: number | null;
 };
 
 export type SpotifyTopTrack = Awaited<
-  ReturnType<typeof spotifyDb.getPlayHistory>
+  ReturnType<typeof spotifyDb.getTopTracks>
 >[number];
 
 export type SpotifyTopArtist = Awaited<

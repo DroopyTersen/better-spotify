@@ -1,22 +1,20 @@
-import { useOutletContext, useRouteLoaderData } from "react-router";
+import { useOutletContext } from "react-router";
 import { TrackItem } from "~/spotify/components/TrackItem";
 import { usePlaylistBuildingService } from "~/spotify/playlistBuilder/usePlaylistBuildingService";
-import type { loader as artistLoader } from "./artists.$artistId.route"; // Import type for parent loader
-import { useRouteData } from "~/toolkit/remix/useRouteData";
+import type { loader as artistLoader } from "./artists.$artistId.route";
 
 export default function ArtistPopularRoute() {
-  // Access data loaded by the parent '$artistId' route using its exported ID
-  const { topTracks } = useOutletContext() as Awaited<
+  const { catalogTracks } = useOutletContext() as Awaited<
     ReturnType<typeof artistLoader>
   >;
   const { selectedTrackIds, toggleTrackSelection } =
     usePlaylistBuildingService();
 
-  if (!topTracks) return <div>Loading popular tracks...</div>; // Or handle loading/error state
+  if (!catalogTracks) return <div>Loading catalog tracks…</div>;
 
   return (
     <div className="space-y-4">
-      {topTracks.slice(0, 5).map((track) => (
+      {catalogTracks.slice(0, 10).map((track) => (
         <TrackItem
           key={track.id}
           track={{
@@ -28,12 +26,12 @@ export default function ArtistPopularRoute() {
           }}
           isSelected={selectedTrackIds.includes(track.id)}
           toggleSelection={toggleTrackSelection}
-          metadata={<p>Popularity: {track.popularity}</p>}
+          metadata={<p>{track.album.name}</p>}
         />
       ))}
-      {topTracks.length === 0 && (
+      {catalogTracks.length === 0 && (
         <p className="text-muted-foreground">
-          No popular tracks found for this artist.
+          No catalog tracks found for this artist.
         </p>
       )}
     </div>

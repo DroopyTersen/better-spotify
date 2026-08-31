@@ -2,6 +2,8 @@ import { Play } from "lucide-react";
 import { useCurrentUser } from "~/auth/useCurrentUser";
 import { createSpotifySdk } from "../createSpotifySdk";
 import { cn } from "~/shadcn/lib/utils";
+import type { CSSProperties } from "react";
+import { playSpotifyItem } from "./playSpotifyItem";
 
 interface SpotifyImage {
   src: string;
@@ -20,62 +22,45 @@ export function SpotifyImage({
   className,
 }: SpotifyImage) {
   let currentUser = useCurrentUser();
-  // Calculate responsive sizes based on the provided size
-  const smallSize = Math.floor(size * 0.75); // 75% of original size for mobile
-  const canPlay = currentUser?.product === "premium";
+  const imageStyle = {
+    "--spotify-image-size": `${size}px`,
+    "--spotify-image-mobile-size": `${Math.floor(size * 0.75)}px`,
+  } as CSSProperties;
 
   const playItem =
-    canPlay && currentUser?.tokens
+    currentUser?.tokens
       ? async () => {
-          console.log("🚀 | uri:", uri);
-          let contextUri = uri.includes("track") ? undefined : uri;
-          let uris = uri.includes("track") ? [uri] : undefined;
-          let sdk = createSpotifySdk(currentUser?.tokens);
-          let devicesResult = await sdk.player.getAvailableDevices();
-          console.log("🚀 | devices:", devicesResult);
-          if (devicesResult.devices.length < 1) {
-            return window.open(uri, "_blank");
-          }
-          let activeDevice =
-            devicesResult.devices.find((d) => d.is_active) ||
-            devicesResult.devices?.[0];
-          console.log("🚀 | ? | activeDevice?.id:", {
-            activeDevice,
-            contextUri,
-            uris,
+          const sdk = createSpotifySdk(currentUser.tokens);
+          return playSpotifyItem({
+            uri,
+            player: sdk.player,
+            openFallback: (fallbackUri) => window.location.assign(fallbackUri),
           });
-          await sdk.player.startResumePlayback(
-            activeDevice?.id || "",
-            contextUri,
-            uris
-          );
-          return window.open(uri, "_blank");
         }
       : undefined;
 
   return (
     <div
-      className={`relative group w-${smallSize}px h-${smallSize}px md:w-${size}px md:h-${size}px `}
+      style={imageStyle}
+      className="group relative size-[var(--spotify-image-mobile-size)] shrink-0 md:size-[var(--spotify-image-size)]"
     >
       <img
         src={src}
         alt={alt}
         width={size}
         height={size}
-        className={cn(
-          `rounded-md aspect-square object-cover w-${smallSize}px h-${smallSize}px md:w-${size}px md:h-${size}px`,
-          className
-        )}
+        className={cn("size-full rounded-md object-cover", className)}
       />
       <a
         href={uri}
         onClick={(e) => {
           if (playItem && uri?.startsWith("spotify:")) {
             e.preventDefault();
-            playItem();
+            void playItem();
           }
         }}
-        className="absolute inset-0 bg-black bg-opacity-20 md:bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-200 rounded-md flex items-center justify-center text-white/80 hover:text-white"
+        aria-label={`Play ${alt}`}
+        className="absolute inset-0 flex items-center justify-center rounded-md bg-black/20 text-white/80 transition-colors duration-200 hover:text-white md:bg-transparent group-hover:bg-black/50"
       >
         {uri?.startsWith("spotify:") ? (
           <Play

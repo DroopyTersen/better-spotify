@@ -1,33 +1,17 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
 export const Portal = ({ children, selector }: PortalProps) => {
-  const [hasMounted, setHasMounted] = useState(false);
-  const domRef = useRef(null);
+  const [target, setTarget] = useState<Element | null>(null);
 
   useEffect(() => {
-    // @ts-ignore
-    domRef.current = document.querySelector(selector);
-  });
-  useEffect(() => {
-    // @ts-ignore
-    domRef.current = document.querySelector(selector);
-    setHasMounted(true);
-  }, []);
+    setTarget(document.querySelector(selector));
+  }, [selector]);
 
-  if (!hasMounted) {
-    return null;
-  }
-
-  if (!domRef.current) {
-    // console.error("Unable to find dom element", selector);
-    return null;
-  }
-
-  return createPortal(children, domRef.current);
+  return target ? createPortal(children, target) : null;
 };
 
 interface PortalProps {
-  children: React.ReactNode;
+  children: ReactNode;
   selector: string;
 }

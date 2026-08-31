@@ -1,4 +1,14 @@
+.git
+.github
+.env
+.env.*
+!.env.example
+.DS_Store
+.vscode
 .react-router
 build
+coverage
+docs
 node_modules
 README.md
+*.tsbuildinfo

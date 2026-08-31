@@ -1,17 +1,44 @@
-// app/services/session.server.ts
 import { createCookieSessionStorage } from "react-router";
+import type { StoredSessionUser } from "./auth.shared";
 
-// export the whole sessionStorage object
-export let authSessionStorage = createCookieSessionStorage({
+export type AuthSessionData = {
+  user: StoredSessionUser;
+  spotifyOAuthState: string;
+};
+
+export const MIN_PRODUCTION_SESSION_SECRET_BYTES = 32;
+
+export function requireValidSessionSecret(
+  value: string | undefined,
+  environment = process.env.NODE_ENV
+) {
+  const secret = value?.trim();
+  if (!secret) {
+    throw new Error("SESSION_SECRET must be set");
+  }
+  if (
+    environment === "production" &&
+    new TextEncoder().encode(secret).byteLength <
+      MIN_PRODUCTION_SESSION_SECRET_BYTES
+  ) {
+    throw new Error(
+      `SESSION_SECRET must be at least ${MIN_PRODUCTION_SESSION_SECRET_BYTES} bytes in production`
+    );
+  }
+  return secret;
+}
+
+const sessionSecret = requireValidSessionSecret(process.env.SESSION_SECRET);
+
+export const authSessionStorage = createCookieSessionStorage<AuthSessionData>({
   cookie: {
-    name: "_session", // use any name you want here
-    sameSite: "lax", // this helps with CSRF
-    path: "/", // remember to add this so the cookie will work in all routes
-    httpOnly: true, // for security reasons, make this cookie http only
-    secrets: [process.env.SESSION_SECRET || "s3cr3t"], // replace this with an actual secret from env
-    secure: process.env.NODE_ENV === "production", // enable this in prod only
+    name: "_session",
+    sameSite: "lax",
+    path: "/",
+    httpOnly: true,
+    secrets: [sessionSecret],
+    secure: process.env.NODE_ENV === "production",
   },
 });
 
-// you can also export the methods individually for your own usage
-export let { getSession, commitSession, destroySession } = authSessionStorage;
+export const { getSession, commitSession, destroySession } = authSessionStorage;

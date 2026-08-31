@@ -1,19 +1,13 @@
-// Get the global object regardless of environment
-const getGlobalThis = (): any =>
-  typeof globalThis !== "undefined"
-    ? globalThis
-    : typeof window !== "undefined"
-    ? window
-    : typeof global !== "undefined"
-    ? global
-    : self;
+type SingletonGlobal = typeof globalThis & {
+  __singletons?: Record<string, unknown>;
+};
 
 export function createSingleton<Value>(
   name: string,
   value: () => Value
 ): Value {
-  const globalObj = getGlobalThis();
-  globalObj.__singletons ??= {};
-  globalObj.__singletons[name] ??= value();
-  return globalObj.__singletons[name];
+  const singletonGlobal = globalThis as SingletonGlobal;
+  const singletons = (singletonGlobal.__singletons ??= {});
+  singletons[name] ??= value();
+  return singletons[name] as Value;
 }

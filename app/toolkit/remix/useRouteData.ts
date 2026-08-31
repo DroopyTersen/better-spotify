@@ -1,15 +1,18 @@
-import { UIMatch, useMatches } from "react-router";
+import { type UIMatch, useMatches } from "react-router";
 
-type RouteSelector = <T>(route?: UIMatch<any>) => T;
+type RouteData = Record<string, unknown>;
+type RouteDataMatch = UIMatch<RouteData>;
+type RouteSelector<Result> = (route?: RouteDataMatch) => Result;
 
-export const useRouteData = (selector: RouteSelector) => {
+export const useRouteData = <Result>(selector: RouteSelector<Result>): Result => {
   return selectRouteData(useMatches(), selector);
 };
 
-export const selectRouteData = (
-  matches: ReturnType<typeof useMatches>,
-  selector: RouteSelector
-) => {
-  let match = matches.reverse()?.find(selector);
+const selectRouteData = <Result>(
+  matches: readonly UIMatch[],
+  selector: RouteSelector<Result>
+): Result => {
+  const typedMatches = matches as readonly RouteDataMatch[];
+  const match = [...typedMatches].reverse().find(selector);
   return selector(match);
 };

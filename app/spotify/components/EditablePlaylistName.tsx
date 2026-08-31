@@ -7,25 +7,28 @@ import { type AuthTokens } from "~/auth/auth.server";
 
 interface EditablePlaylistNameProps {
   playlistId: string;
-  initialName: string;
+  name: string;
   isOwner: boolean;
   userTokens: AuthTokens;
+  onSaved: (name: string) => void;
 }
 
 export const EditablePlaylistName = ({
   playlistId,
-  initialName,
+  name,
   isOwner,
   userTokens,
+  onSaved,
 }: EditablePlaylistNameProps) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [editedTitle, setEditedTitle] = useState(initialName);
+  const [editedTitle, setEditedTitle] = useState(name);
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async (e?: React.FormEvent) => {
     e?.preventDefault();
 
-    if (!editedTitle.trim() || editedTitle === initialName) {
+    const nextName = getChangedPlaylistName(name, editedTitle);
+    if (!nextName) {
       setIsEditing(false);
       return;
     }
@@ -34,11 +37,12 @@ export const EditablePlaylistName = ({
     try {
       const sdk = createSpotifySdk(userTokens);
       await sdk.playlists.changePlaylistDetails(playlistId, {
-        name: editedTitle.trim(),
+        name: nextName,
       });
+      onSaved(nextName);
       setIsEditing(false);
-    } catch (error) {
-      console.error("Failed to update playlist name:", error);
+    } catch {
+      console.error("Failed to update playlist name");
       alert("Failed to update playlist name. Please try again.");
     } finally {
       setIsSaving(false);
@@ -73,7 +77,7 @@ export const EditablePlaylistName = ({
             variant="ghost"
             onClick={() => {
               setIsEditing(false);
-              setEditedTitle(initialName);
+              setEditedTitle(name);
             }}
             disabled={isSaving}
             type="button"
@@ -87,12 +91,15 @@ export const EditablePlaylistName = ({
 
   return (
     <div className="flex items-center gap-2">
-      <h2 className="md:text-2xl font-bold">{editedTitle}</h2>
+      <h2 className="md:text-2xl font-bold">{name}</h2>
       {isOwner && (
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setIsEditing(true)}
+          onClick={() => {
+            setEditedTitle(name);
+            setIsEditing(true);
+          }}
           className="h-8 w-8"
         >
           <Pencil className="h-4 w-4" />
@@ -101,3 +108,13 @@ export const EditablePlaylistName = ({
     </div>
   );
 };
+
+export function getChangedPlaylistName(
+  currentName: string,
+  draftName: string
+): string | null {
+  const normalizedName = draftName.trim();
+  return normalizedName && normalizedName !== currentName
+    ? normalizedName
+    : null;
+}

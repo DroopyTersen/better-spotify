@@ -5,20 +5,24 @@ import { AlbumHeader } from "~/spotify/components/AlbumHeader";
 import { TrackItem } from "~/spotify/components/TrackItem";
 import { createSpotifySdk } from "~/spotify/createSpotifySdk";
 import { usePlaylistBuildingService } from "~/spotify/playlistBuilder/usePlaylistBuildingService";
+import { requireSpotifyId } from "~/spotify/spotifyId";
+import { spotifyWebApi } from "~/spotify/api/spotifyWebApi";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   let user = await requireAuth(request);
-  const { albumId } = params;
-  if (!albumId) throw new Error("Album ID is required");
+  const albumId = requireSpotifyId(params.albumId);
 
   const sdk = createSpotifySdk(user.tokens);
-  const album = await sdk.albums.get(albumId);
+  const [album, tracks] = await Promise.all([
+    sdk.albums.get(albumId),
+    spotifyWebApi.getAlbumTracks(sdk, albumId),
+  ]);
 
-  return { album };
+  return { album, tracks };
 };
 
 export default function AlbumRoute() {
-  const { album } = useLoaderData<typeof loader>();
+  const { album, tracks } = useLoaderData<typeof loader>();
   const { selectedTrackIds, toggleTrackSelection, addAlbumToSelection } =
     usePlaylistBuildingService();
 
@@ -45,7 +49,7 @@ export default function AlbumRoute() {
         />
 
         <div className="space-y-4">
-          {album.tracks.items.map((track) => (
+          {tracks.map((track) => (
             <TrackItem
               key={track.id}
               track={{

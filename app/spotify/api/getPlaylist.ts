@@ -1,58 +1,10 @@
-import { SpotifyApi } from "@spotify/web-api-ts-sdk";
-interface SpotifyImage {
-  url: string;
-  height: number;
-  width: number;
-}
+import type { SpotifySdk } from "../createSpotifySdk";
+import { spotifyWebApi } from "./spotifyWebApi";
 
-interface SpotifyArtist {
-  external_urls: {
-    spotify: string;
-  };
-  href: string;
-  id: string;
-  name: string;
-  type: string;
-  uri: string;
-}
+/** The normalized 2026 playlist shape returned by the compatibility adapter. */
+export type SpotifyApiPlaylist = Awaited<
+  ReturnType<typeof spotifyWebApi.getPlaylist>
+>;
 
-interface SpotifyAlbum {
-  href: string;
-  id: string;
-  images: SpotifyImage[];
-  name: string;
-}
-
-export interface SpotifyPlaylistTrack {
-  added_at: string;
-  track: {
-    album: SpotifyAlbum;
-    artists: SpotifyArtist[];
-    href: string;
-    id: string;
-    name: string;
-  };
-}
-
-export interface SpotifyApiPlaylist {
-  external_urls: {
-    spotify: string;
-  };
-  id: string;
-  images: SpotifyImage[];
-  name: string;
-  owner?: {
-    id: string;
-    display_name?: string;
-  };
-  tracks: {
-    total: number;
-    items: SpotifyPlaylistTrack[];
-  };
-}
-
-export const getPlaylist = async (sdk: SpotifyApi, playlistId: string) => {
-  let fields = `name,id,external_urls,images,owner,tracks.total,tracks.items(added_at,track(id,name,href,artists,album(id,name,href,images)))`;
-  const playlist = await sdk.playlists.getPlaylist(playlistId, "US", fields);
-  return playlist as SpotifyApiPlaylist;
-};
+export const getPlaylist = (sdk: SpotifySdk, playlistId: string) =>
+  spotifyWebApi.getPlaylist(sdk, playlistId);

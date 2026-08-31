@@ -1,4 +1,9 @@
-export const setupTablesSql = `CREATE TABLE IF NOT EXISTS "album_artists" (
+export const setupTablesSql = `CREATE TABLE IF NOT EXISTS "library_metadata" (
+	"key" text PRIMARY KEY NOT NULL,
+	"value" text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "album_artists" (
 	"album_id" text,
 	"artist_id" text,
 	CONSTRAINT "album_artists_album_id_artist_id_pk" PRIMARY KEY("album_id","artist_id")
@@ -28,7 +33,9 @@ CREATE TABLE IF NOT EXISTS "artist_genres" (
 CREATE TABLE IF NOT EXISTS "artist_tracks" (
 	"track_id" text,
 	"artist_id" text,
-	CONSTRAINT "artist_tracks_track_id_artist_id_pk" PRIMARY KEY("track_id","artist_id")
+	"position" integer NOT NULL,
+	CONSTRAINT "artist_tracks_track_id_artist_id_pk" PRIMARY KEY("track_id","artist_id"),
+	CONSTRAINT "artist_tracks_track_position_unique" UNIQUE("track_id","position")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "artists" (
@@ -58,11 +65,13 @@ CREATE TABLE IF NOT EXISTS "play_history" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "playlist_tracks" (
-	"playlist_id" text,
-	"track_id" text,
-	"added_at" timestamp with time zone NOT NULL,
+	"id" text PRIMARY KEY NOT NULL,
+	"playlist_id" text NOT NULL,
+	"track_id" text NOT NULL,
+	"position" integer NOT NULL,
+	"added_at" timestamp with time zone,
 	"added_by" jsonb,
-	CONSTRAINT "playlist_tracks_playlist_id_track_id_pk" PRIMARY KEY("playlist_id","track_id")
+	CONSTRAINT "playlist_tracks_playlist_position_unique" UNIQUE("playlist_id","position")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "playlists" (

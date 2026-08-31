@@ -1,17 +1,33 @@
 import dayjs from "dayjs";
-import { LoaderFunctionArgs } from "react-router";
-import { getDb } from "~/db/db.client";
+import { requireAuth } from "~/auth/auth.server";
+import { initAccountDatabase } from "~/db/db.client";
 import { PageHeader } from "~/layout/PageHeader";
 import { TrackItem } from "~/spotify/components/TrackItem";
 import { usePlaylistBuildingService } from "~/spotify/playlistBuilder/usePlaylistBuildingService";
 import { spotifyDb } from "~/spotify/spotify.db";
-import { Route } from "./+types/play-history.route";
+import type { Route } from "./+types/play-history.route";
+import { withOptionalLibraryDeadline } from "~/spotify/sync/librarySnapshot.client";
 
-export const clientLoader = async ({ request }: LoaderFunctionArgs) => {
-  let db = getDb();
-  let playHistory = await spotifyDb.getPlayHistory(db, { limit: 200 });
-  return { playHistory };
+export const loader = async ({ request }: Route.LoaderArgs) => {
+  const user = await requireAuth(request);
+  return { accountId: user.id };
 };
+
+export const clientLoader = async ({ serverLoader }: Route.ClientLoaderArgs) => {
+  const { accountId } = await serverLoader();
+  try {
+    return await withOptionalLibraryDeadline(async () => {
+      const { db } = await initAccountDatabase(accountId);
+      const playHistory = await spotifyDb.getPlayHistory(db, { limit: 200 });
+      return { playHistory };
+    });
+  } catch {
+    return { playHistory: [] };
+  }
+};
+clientLoader.hydrate = true as const;
+
+export const HydrateFallback = () => null;
 
 export default function PlayHistoryRoute({ loaderData }: Route.ComponentProps) {
   const { playHistory } = loaderData;
@@ -24,8 +40,7 @@ export default function PlayHistoryRoute({ loaderData }: Route.ComponentProps) {
       ? dayjs(playHistory[playHistory.length - 1].played_at).format("M/D/YY")
       : null;
 
-  // Sort play history by played_at in descending order (most recent first)
-  playHistory.sort((a, b) => {
+  const sortedPlayHistory = [...playHistory].sort((a, b) => {
     return dayjs(b.played_at).valueOf() - dayjs(a.played_at).valueOf();
   });
   return (
@@ -37,11 +52,15 @@ export default function PlayHistoryRoute({ loaderData }: Route.ComponentProps) {
             Showing {playHistory.length} tracks since {earliestDate}
           </p>
         )}
-        {playHistory.map((track) => (
+        {sortedPlayHistory.map((track) => (
           <TrackItem
-            key={`${track.track_id ?? ""}-${track.played_at}`}
+            key={track.play_id}
             track={track}
-            isSelected={selectedTrackIds.includes(track.track_id!)}
+            isSelected={
+              track.track_id
+                ? selectedTrackIds.includes(track.track_id)
+                : false
+            }
             toggleSelection={toggleTrackSelection}
             metadata={
               <>

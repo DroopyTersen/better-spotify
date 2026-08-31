@@ -1,8 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type DependencyList } from "react";
 
 // Prev dependencies check has been added to prevent
 // the React 18 "double effect"
-export const useUpdateEffect = (effectFn: () => void, dependencies: any[]) => {
+export const useUpdateEffect = (
+  effectFn: () => void,
+  dependencies: DependencyList
+) => {
   const effectFnRef = useRef(effectFn);
   const hasMountedRef = useRef(false);
   const prevDepsRef = useRef(dependencies);

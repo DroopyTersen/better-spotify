@@ -6,7 +6,13 @@ import {
   Play,
   Settings,
 } from "lucide-react";
-import { Link, useFetcher, useLocation, useNavigation } from "react-router";
+import {
+  Form,
+  Link,
+  useLocation,
+  useNavigation,
+  useRevalidator,
+} from "react-router";
 import {
   Avatar,
   AvatarFallback,
@@ -28,7 +34,7 @@ import {
   useSidebar,
 } from "~/shadcn/components/ui/sidebar";
 
-import { Device } from "@spotify/web-api-ts-sdk";
+import type { Device } from "@spotify/web-api-ts-sdk";
 import { useCurrentUser } from "~/auth/useCurrentUser";
 import { Button } from "~/shadcn/components/ui/button";
 import {
@@ -40,10 +46,16 @@ import {
   DropdownMenuTrigger,
 } from "~/shadcn/components/ui/dropdown-menu";
 import { cn } from "~/shadcn/lib/utils";
-import { SpotifyPlaylist } from "~/spotify/spotify.db";
-import { useEffect } from "react";
+import type { SpotifyPlaylist } from "~/spotify/spotify.db";
+import { useState } from "react";
 import { useUpdateEffect } from "~/toolkit/hooks/useUpdateEffect";
 import { SearchInput } from "~/spotify/components/SearchInput";
+import { createSpotifySdk } from "~/spotify/createSpotifySdk";
+import { getOptionalAccountDatabase } from "~/db/db.client";
+import {
+  cancelSpotifySynchronization,
+  synchronizeSpotifyLibrary,
+} from "~/spotify/sync/spotifySync.client";
 
 export const SidebarNav = ({
   playlists,
@@ -53,18 +65,34 @@ export const SidebarNav = ({
   devices: Device[];
 }) => {
   let currentUser = useCurrentUser();
-  let fetcher = useFetcher();
+  const revalidator = useRevalidator();
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncFailed, setSyncFailed] = useState(false);
   let location = useLocation();
   let navigation = useNavigation();
   let pathname = navigation?.location?.pathname || location.pathname;
-  let syncPlayHistory = () => {
-    console.log("🚀 | syncPlayHistory | user:", currentUser);
+  const syncLibrary = async () => {
     if (!currentUser?.tokens) return;
-    fetcher.submit({ user: currentUser } as any, {
-      method: "POST",
-      action: "/spotify/sync",
-      encType: "application/json",
-    });
+    const database = getOptionalAccountDatabase(currentUser.id);
+    if (!database) {
+      setSyncFailed(true);
+      return;
+    }
+    setIsSyncing(true);
+    setSyncFailed(false);
+    try {
+      await synchronizeSpotifyLibrary({
+        accountId: currentUser.id,
+        database,
+        sdk: createSpotifySdk(currentUser.tokens),
+        mode: "full",
+      });
+      revalidator.revalidate();
+    } catch {
+      setSyncFailed(true);
+    } finally {
+      setIsSyncing(false);
+    }
   };
   let sidebar = useSidebar();
   useUpdateEffect(() => {
@@ -73,7 +101,7 @@ export const SidebarNav = ({
     }
   }, [location.pathname]);
   return (
-    <Sidebar className="bg-white border-r">
+    <Sidebar className="border-r border-sidebar-border bg-sidebar">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -172,7 +200,7 @@ export const SidebarNav = ({
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {playlists.slice(0, 10).map?.((playlist) => (
+              {playlists.map((playlist) => (
                 <SidebarMenuItem key={playlist.playlist_id}>
                   <SidebarMenuButton asChild>
                     <Link to={`/playlist/${playlist.playlist_id}`}>
@@ -188,11 +216,21 @@ export const SidebarNav = ({
       <SidebarFooter className="border-t">
         <Button
           type="button"
-          disabled={fetcher.state !== "idle"}
-          onClick={syncPlayHistory}
+          disabled={isSyncing || !currentUser}
+          onClick={() => void syncLibrary()}
+          aria-describedby={syncFailed ? "spotify-sync-error" : undefined}
         >
-          Sync Spotify Data
+          {isSyncing ? "Syncing Spotify…" : "Sync Spotify Data"}
         </Button>
+        {syncFailed && (
+          <p
+            id="spotify-sync-error"
+            className="px-2 text-xs text-destructive"
+            role="status"
+          >
+            Sync failed. Your existing library is still available.
+          </p>
+        )}
         <SidebarMenu>
           {currentUser && (
             <SidebarMenuItem>
@@ -228,19 +266,28 @@ export const SidebarNav = ({
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuItem asChild>
                     <a
-                      href={`https://open.spotify.com/user/${currentUser.id}`}
+                      href={`https://open.spotify.com/user/${currentUser.spotifyId}`}
                       target="_blank"
+                      rel="noreferrer"
                     >
                       <Settings className="mr-2 h-4 w-4" />
                       <span>Profile</span>
                     </a>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="text-red-600" asChild>
-                    <Link to="/logout">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Log out</span>
-                    </Link>
-                  </DropdownMenuItem>
+                  <Form
+                    method="post"
+                    action="/logout"
+                    onSubmit={() =>
+                      cancelSpotifySynchronization(currentUser.id)
+                    }
+                  >
+                    <DropdownMenuItem className="text-red-600" asChild>
+                      <button type="submit" className="w-full">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Log out</span>
+                      </button>
+                    </DropdownMenuItem>
+                  </Form>
                 </DropdownMenuContent>
               </DropdownMenu>
             </SidebarMenuItem>

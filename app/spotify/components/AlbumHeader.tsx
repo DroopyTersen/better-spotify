@@ -5,13 +5,19 @@ import { TooltipWrapper } from "~/toolkit/components/TooltipWrapper";
 import { SpotifyImage } from "./SpotifyImage";
 import { Link } from "react-router";
 import dayjs from "dayjs";
+import { useHandledAsyncAction } from "./useHandledAsyncAction";
 
 interface AlbumHeaderProps {
   album: Album;
-  onAddAllTracks?: () => void;
+  onAddAllTracks?: () => Promise<void>;
 }
 
 export function AlbumHeader({ album, onAddAllTracks }: AlbumHeaderProps) {
+  const action = useHandledAsyncAction(
+    onAddAllTracks,
+    `Could not add ${album.name}. Please try again.`
+  );
+
   return (
     <div className="flex flex-col md:flex-row gap-6 items-center">
       <div className="shrink-0">
@@ -40,9 +46,16 @@ export function AlbumHeader({ album, onAddAllTracks }: AlbumHeaderProps) {
         </div>
         <div className="flex justify-center md:justify-start gap-4 mt-2">
           <TooltipWrapper
-            tooltip={`Add all ${album.total_tracks} tracks to your playlist`}
+            tooltip={
+              action.error ??
+              `Add all ${album.total_tracks} tracks to your playlist`
+            }
           >
-            <Button onClick={onAddAllTracks} className="gap-2">
+            <Button
+              onClick={action.run}
+              disabled={action.isPending || !onAddAllTracks}
+              className="gap-2"
+            >
               <Plus className="w-4 h-4" />
               Add All to Playlist
             </Button>

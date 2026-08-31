@@ -1,8 +1,38 @@
 import { AsyncReturnType } from "~/toolkit/utils/typescript.utils";
 import { getAllArtistTracks } from "../api/getAllArtistTracks";
 import { SpotifySdk } from "../createSpotifySdk";
-import { FamiliarSongsPool } from "./playlistBuilder.types";
+import {
+  type BuildPlaylistTrack,
+  type FamiliarSongsPool,
+} from "./playlistBuilder.types";
 import { useSpotifyData } from "./useSpotifyData";
+import { spotifyWebApi } from "../api/spotifyWebApi";
+import { mapWithConcurrency } from "../api/mapWithConcurrency";
+
+const MAX_SELECTED_ARTISTS = 25;
+const MAX_SELECTED_TRACKS = 200;
+const ARTIST_CATALOG_CONCURRENCY = 3;
+
+type SpecifiedTrack = {
+  id: string;
+  name: string;
+  popularity: number;
+  artists: Array<{ id: string; name: string }>;
+};
+
+export type FamiliarSongPoolDependencies = {
+  getTracks: (trackIds: string[]) => Promise<SpecifiedTrack[]>;
+  getArtistTracks: (artistId: string) => Promise<BuildPlaylistTrack[]>;
+};
+
+export function createFamiliarSongPoolDependencies(
+  sdk: SpotifySdk
+): FamiliarSongPoolDependencies {
+  return {
+    getTracks: (trackIds) => spotifyWebApi.getTracks(sdk, trackIds),
+    getArtistTracks: (artistId) => getAllArtistTracks(sdk, artistId),
+  };
+}
 
 /**
  * Build pool of familiar songs from specified artists and tracks
@@ -14,15 +44,26 @@ import { useSpotifyData } from "./useSpotifyData";
  */
 export async function buildFamiliarSongsPool(
   input: GetFamiliarSongPoolInput,
-  sdk: SpotifySdk
+  dependencies: FamiliarSongPoolDependencies
 ): Promise<FamiliarSongsPool> {
-  const poolStartTime = performance.now();
   let { artistIds, trackIds } = input.request;
 
+  if (artistIds.length > MAX_SELECTED_ARTISTS) {
+    throw new RangeError(
+      `Select no more than ${MAX_SELECTED_ARTISTS} artists before building a playlist`
+    );
+  }
+  if (trackIds.length > MAX_SELECTED_TRACKS) {
+    throw new RangeError(
+      `Select no more than ${MAX_SELECTED_TRACKS} tracks before building a playlist`
+    );
+  }
+
   // 1. Get specified tracks with correct field selection
-  const tracksStartTime = performance.now();
   const tracks =
-    trackIds.length > 0 ? await sdk.tracks.get(trackIds.slice(0, 20)) : [];
+    trackIds.length > 0
+      ? await dependencies.getTracks(trackIds)
+      : [];
   const specifiedTracks = tracks.map((track) => ({
     id: track.id,
     name: track.name,
@@ -30,68 +71,50 @@ export async function buildFamiliarSongsPool(
     artist_name: track.artists[0]?.name ?? null,
     artist_id: track.artists[0]?.id ?? null,
   }));
-  console.log(
-    `⏱️ Fetching specified tracks took: ${
-      performance.now() - tracksStartTime
-    }ms`
-  );
 
-  if (artistIds.length / input.request.numSongs < 10) {
-    artistIds = Array.from(
-      new Set([
-        ...input.request.artistIds,
-        ...specifiedTracks.map((t) => t.artist_id),
-      ])
-    ).filter(Boolean) as string[];
-  }
+  artistIds = Array.from(
+    new Set([
+      ...input.request.artistIds,
+      ...specifiedTracks.map((track) => track.artist_id),
+    ])
+  )
+    .filter((artistId): artistId is string => Boolean(artistId))
+    .slice(0, MAX_SELECTED_ARTISTS);
 
   // Initialize our pool structure
-  const filteringStartTime = performance.now();
-  let allLikedTracks = input.likedTracks;
-  let allTopTracks = input.topTracks;
-
   const pool: FamiliarSongsPool = {
     specifiedTracks,
     recentlyPlayedTracks: input.playHistory.slice(0, 100),
-    topTracks: allTopTracks.filter(
+    topTracks: input.topTracks.filter(
       (t) => t.artist_id && artistIds.includes(t.artist_id)
     ),
     artistCatalogs: [],
-    likedTracks: allLikedTracks.filter(
+    likedTracks: input.likedTracks.filter(
       (t) => t.artist_id && artistIds.includes(t.artist_id)
     ),
   };
-  console.log(
-    `⏱️ Filtering liked and top tracks took: ${
-      performance.now() - filteringStartTime
-    }ms`
-  );
 
-  // 2. Process each artist concurrently
-  const artistCatalogStartTime = performance.now();
-  const artistPromises = artistIds.map(async (artistId) => {
-    // Get full artist catalog
-    const artistTracks = await getAllArtistTracks(sdk, artistId);
+  // 2. Process artists with bounded provider fan-out while preserving selection order.
+  const artistResults = await mapWithConcurrency(
+    artistIds,
+    ARTIST_CATALOG_CONCURRENCY,
+    async (artistId) => {
+      const artistTracks = await dependencies.getArtistTracks(artistId);
 
-    // Filter out any tracks that are already in liked or top tracks to avoid duplicates
-    const filteredArtistTracks = artistTracks.filter((track) => {
-      const isInLikedTracks = pool.likedTracks.some((t) => t.id === track.id);
-      const isInTopTracks = pool.topTracks.some((t) => t.id === track.id);
-      return !isInLikedTracks && !isInTopTracks;
-    });
+      // Filter out any tracks that are already in liked or top tracks to avoid duplicates
+      const filteredArtistTracks = artistTracks.filter((track) => {
+        const isInLikedTracks = pool.likedTracks.some(
+          (t) => t.id === track.id
+        );
+        const isInTopTracks = pool.topTracks.some((t) => t.id === track.id);
+        return !isInLikedTracks && !isInTopTracks;
+      });
 
-    return {
-      artistId,
-      tracks: filteredArtistTracks,
-    };
-  });
-
-  // Wait for all artist processing to complete
-  const artistResults = await Promise.all(artistPromises);
-  console.log(
-    `⏱️ Processing all artist catalogs took: ${
-      performance.now() - artistCatalogStartTime
-    }ms`
+      return {
+        artistId,
+        tracks: filteredArtistTracks,
+      };
+    }
   );
 
   // Add results to pool (modified to use array structure)
@@ -107,12 +130,6 @@ export async function buildFamiliarSongsPool(
     });
   });
 
-  console.log(
-    `⏱️ Total familiar songs pool building took: ${
-      performance.now() - poolStartTime
-    }ms`
-  );
-
   return pool;
 }
 
@@ -127,39 +144,36 @@ export const getBuildFamiliarSongPoolInput = async (
   }
 ) => {
   let input = {
-    topTracks: spotifyData.topTracks.map((t) => ({
-      id: t.track_id!,
-      name: t.track_name!,
-      artist_id: t.artist_id!,
-      artist_name: t.artist_name!,
-      popularity: t.track_popularity,
-    })),
-    topArtists: spotifyData.topArtists.map((a) => ({
-      id: a.artist_id!,
-      name: a.artist_name!,
-    })),
-    playHistory: spotifyData.playHistory.map((t) => ({
-      id: t.track_id!,
-      name: t.track_name!,
-      artist_id: t.artist_id!,
-      artist_name: t.artist_name!,
-      popularity: t.track_popularity,
-    })),
-    likedTracks: spotifyData.likedTracks.map((t) => ({
-      id: t.track_id!,
-      name: t.track_name!,
-      artist_id: t.artist_id!,
-      artist_name: t.artist_name!,
-      popularity: t.track_popularity,
-    })),
+    topTracks: spotifyData.topTracks.flatMap(toPoolTrack),
+    playHistory: spotifyData.playHistory.flatMap(toPoolTrack),
+    likedTracks: spotifyData.likedTracks.flatMap(toPoolTrack),
     request: {
       artistIds: selectedArtistIds,
       trackIds: selectedTrackIds,
-      numSongs: 32,
     },
   };
   return input;
 };
+
+function toPoolTrack(track: {
+  track_id: string | null;
+  track_name: string | null;
+  artist_id: string | null;
+  artist_name: string | null;
+  track_popularity: number | null;
+}): BuildPlaylistTrack[] {
+  if (!track.track_id || !track.track_name) return [];
+
+  return [
+    {
+      id: track.track_id,
+      name: track.track_name,
+      artist_id: track.artist_id,
+      artist_name: track.artist_name,
+      popularity: track.track_popularity,
+    },
+  ];
+}
 export type GetFamiliarSongPoolInput = AsyncReturnType<
   typeof getBuildFamiliarSongPoolInput
 >;

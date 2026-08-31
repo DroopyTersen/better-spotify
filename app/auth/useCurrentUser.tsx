@@ -1,10 +1,13 @@
-import { useOutletContext } from "react-router";
-import { User } from "./auth.server";
-import { useRouteData } from "~/toolkit/remix/useRouteData";
+import { useMatches } from "react-router";
+import type { User } from "./auth.server";
 
 export const useCurrentUser = () => {
-  let currentUser = useRouteData((route) => route?.data?.currentUser) as
-    | User
-    | undefined;
-  return currentUser || null;
+  const matches = useMatches();
+  for (let index = matches.length - 1; index >= 0; index -= 1) {
+    const data = matches[index]?.loaderData as
+      | { currentUser?: User | null }
+      | undefined;
+    if (data?.currentUser) return data.currentUser;
+  }
+  return null;
 };

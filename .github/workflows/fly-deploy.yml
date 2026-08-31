@@ -1,18 +1,46 @@
-# See https://fly.io/docs/app-guides/continuous-deployment-with-github-actions/
+# Validate every pull request and deploy main only after the same checks pass.
+name: CI and Fly Deploy
 
-name: Fly Deploy
 on:
+  pull_request:
   push:
     branches:
       - main
+
+permissions:
+  contents: read
+
 jobs:
+  check:
+    name: Test and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      APP_URL: http://127.0.0.1:5173
+      OPENAI_API_KEY: test-only-openai-key
+      SESSION_SECRET: test-only-session-secret-with-at-least-32-bytes
+      SPOTIFY_CLIENT_ID: test-only-client-id
+      SPOTIFY_CLIENT_SECRET: test-only-client-secret
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: oven-sh/setup-bun@4bc047ad259df6fc24a6c9b0f9a0cb08cf17fbe5 # v2.0.1
+        with:
+          bun-version: 1.4.0
+      - run: bun install --frozen-lockfile
+      - run: bun run check
+
   deploy:
     name: Deploy app
+    if: github.event_name == 'push'
+    needs: check
     runs-on: ubuntu-latest
-    concurrency: deploy-group    # optional: ensure only one action runs at a time
+    timeout-minutes: 20
+    concurrency:
+      group: fly-production
+      cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v4
-      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1 # node24 master, 2026-08-30
       - run: flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

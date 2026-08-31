@@ -11,10 +11,19 @@ primary_region = 'den'
 [http_service]
   internal_port = 3000
   force_https = true
-  auto_stop_machines = 'stop'
+  # Playlist builds continue after the browser disconnects, so the web Machine
+  # must not be stopped while a background build is still running.
+  auto_stop_machines = 'off'
   auto_start_machines = true
   min_machines_running = 0
   processes = ['app']
+
+  [[http_service.checks]]
+    grace_period = '10s'
+    interval = '30s'
+    method = 'GET'
+    path = '/healthcheck'
+    timeout = '5s'
 
 [[vm]]
   memory = '512mb'

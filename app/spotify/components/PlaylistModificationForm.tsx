@@ -1,24 +1,26 @@
 import { useState } from "react";
 import { Button } from "~/shadcn/components/ui/button";
 import { Textarea } from "~/shadcn/components/ui/textarea";
-import { useNavigate } from "react-router";
 
 export function PlaylistModificationForm({
   playlistId,
+  snapshotId,
   currentTracks,
   onClose,
+  onSuccess,
 }: {
   playlistId: string;
+  snapshotId: string;
   currentTracks: Array<{
     id: string;
     name: string;
     artist_name: string;
   }>;
   onClose: () => void;
+  onSuccess: () => void;
 }) {
   const [instructions, setInstructions] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
 
   const handleSubmit = async () => {
     setIsLoading(true);
@@ -30,21 +32,28 @@ export function PlaylistModificationForm({
         },
         body: JSON.stringify({
           playlistId,
+          snapshotId,
           instructions,
           currentTracks,
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to modify playlist");
+        const result = (await response.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        throw new Error(result?.error || "Failed to modify playlist");
       }
 
-      // Refresh the current route to show updated playlist
-      navigate(".", { replace: true });
+      onSuccess();
       onClose();
     } catch (error) {
-      console.error("Failed to modify playlist:", error);
-      alert("Failed to modify playlist. Please try again.");
+      console.error("Failed to modify playlist");
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to modify playlist. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }

@@ -1,208 +1,104 @@
-# Playlist Builder Algorithm
+# Playlist Builder process
+
+The Playlist Builder turns an account-scoped selection into a bounded curation
+proposal, verifies every proposed track against Spotify, and only then creates
+or replaces a playlist. Spotify remains the system of record; model output is
+never treated as a Spotify identifier authority.
 
 ```mermaid
-flowchart TD
-    ParseRequest[Parse Playlist Request] --> |"{ numSongs, artists, tracks, deepCutsRatio, newArtistsRatio }"|CalcDist[Calculate Distribution]
-
-    %% Familiar Songs Path
-    CalcDist --> ProcessFamiliar[Identify Specified Tracks and Artists]
-
-    subgraph BuildFamiliarPool[Build Familiar Songs Pool]
-        ProcessFamiliar --> |specified tracks|FamiliarPool
-        ProcessFamiliar --> |Specified Artists|CombineArtists[Combine Artists]
-        ProcessFamiliar --> |specified tracks|CombineArtists[Combine Artists]
-        CombineArtists --> |artist|TopTracks[Get Top Tracks by Artist]
-        CombineArtists --> |artist|ArtistCatalog[Get Artist Catalog]
-        CombineArtists --> |artist|LikedTracks[Get Liked Tracks]
-        TopTracks --> |top tracks|FamiliarPool
-        ArtistCatalog --> |catalog|FamiliarPool[Add to Familiar Song Pool]
-        LikedTracks --> |liked tracks|FamiliarPool
-    end
-
-    %% New Songs Path
-    CalcDist -->  StartNew[Identify Specified Artists and Tracks]
-
-    subgraph BuildNewPool[Build New Songs Pool]
-        StartNew --> |Specified Tracks|TrackRecommendations
-        StartNew --> |Specified Artists|ArtistRecommendations
-        StartNew --> |Specified Artists|SimilarArtists
-        ExcludeTopTracks[Exclude Top & Liked & Recently Played Tracks]
-        TrackRecommendations[Get Track Recommendations] --> |recommended tracks|ExcludeTopTracks
-        ArtistRecommendations[Get Artist Recommendations] --> |recommended tracks|ExcludeTopTracks
-        SimilarArtists[Get Similar Artists' Tracks] --> |similar tracks|ExcludeTopTracks
-        ExcludeTopTracks --> |new tracks|NewPool[Add to New Song Pool]
-    end
-
-    %% Final Steps
-    FamiliarPool & NewPool --> LLMCuration[LLM Playlist Curation]
-    LLMCuration --> |"{ thought, playlist }"|FinalPlaylist[Create Final Playlist]
-
+flowchart LR
+    Selection[Account-scoped selection] --> Pool[Build bounded song pools]
+    Pool --> Model[Structured curation]
+    Model --> Verify[Verify or resolve every track]
+    Verify --> Review[User review]
+    Review --> Write[Atomic Spotify materialization]
 ```
 
-### **Algorithm Overview with Updated Parameters**
+## 1. Capture an account-scoped selection
 
-1. **Parse the Playlist Request**:
+The browser service stores selected tracks, artists, preferences, and computed
+results under a cache key namespaced by Spotify account ID. Switching accounts
+replaces the active service and prevents a previous listener's tokens or
+selection from being reused.
 
-   - Extract specified tracks, artists, `numSongs`, `NewArtistsRatio`, `DeepCutsRatio`.
+Inputs are bounded at the authenticated route boundary. The current controls
+include a requested song count, a `none` / `sprinkle` / `half` / `all` new-music
+preference, and optional custom instructions.
 
-2. **Calculate the Distribution of Songs**:
+## 2. Build candidate pools
 
-   - Determine the number of familiar songs and new songs based on `NewArtistsRatio`.
+The familiar pool combines:
 
-3. **Build the Familiar Song Pool**:
+- explicitly selected tracks;
+- liked and top tracks by selected artists;
+- supported Spotify album/single catalog results for selected artists; and
+- recent listening context.
 
-   - Include specified tracks.
-   - Include `liked_tracks` from specified artists and artists of specified tracks
-   - Include `top_tracks` from specified artists and artists of specified tracks
-   - Include full catalogs from specified artists and artists of specified tracks
-     - Use DeepCutsRatio to determine which 100 to choose based on popularity?
+Artist recommendations are generated as names, normalized, deduplicated, and
+filtered against both selected and excluded artists. Each name must then match
+an exact normalized Spotify search result. The app fetches catalog tracks only
+for verified Spotify artists.
 
-4. **Build the New Song Pool**:
+## 3. Generate a structured proposal
 
-   - Fetch songs from new artists not in `top_artists`.
-   - Use recommendations based on specified tracks and artists.
-   - Include popular songs by similar artists.
-   - Exclude any tracks already in `top_tracks` or `liked_tracks`, or recent `play_history`
+`aiGeneration.server.ts` is the sole model configuration seam. It calls
+`gpt-5.6-luna` through OpenAI's Responses API with storage disabled. Each use
+case supplies separate instructions, a bounded prompt, and a strict Zod output
+schema.
 
-5. **LLM Playlist Curation**:
+The playlist schema requires exactly the requested number of tracks. A model
+may retain a non-empty Spotify ID only when that exact ID was supplied in a
+candidate pool. It must leave the ID empty for a music-knowledge suggestion.
+No hidden chain of thought is requested or stored.
 
-   - Pass both song pools and playlist parameters to LLM
-   - LLM returns structured response with thought process and final playlist
-   - Use the NewArtistsRatio to determine how many familair songs vs new songs to use
-   - Automatically include specified tracks.
-   - Select from pool of Familiar Songs by distributing songs between `top_tracks`, `liked_tracks` and popular
-     songs vs deep cuts based on `DeepCutsRatio`.
-   - Tell the LLM to heavily favor `liked_tracks` for any songs it selects that aren't deep cuts. but we also want
-     to leave room for variety.
-   - Tell the LLM to select a diverse set of new songs that pair well with the chosen familiar songs.
+## 4. Resolve before writing
 
-6. **Create Final Playlist**:
+Every returned track is checked before Spotify is mutated:
 
-   - Use the LLM-generated track list and name to create the playlist
+1. A supplied ID is replaced with the canonical metadata from the verified
+   input pool.
+2. A missing or untrusted ID is searched by track and artist.
+3. Only an exact normalized name and artist match is accepted.
+4. If any track cannot be resolved, the whole operation aborts.
 
----
+This all-or-nothing resolution prevents partial or silently truncated
+playlists.
 
-### **Applying the Algorithm to Your Example Request**
+## 5. Materialize atomically
 
-**User Request**:
+A new playlist is created only after all proposed tracks resolve. Existing
+playlist modifications validate and resolve the complete target list before a
+single Spotify replace-items request. The app never clears a playlist first,
+and it never replaces from a partially paginated source playlist.
 
-"Create me a playlist with Thinking 'Bout Love by Wild Rivers, some Lake Street Dive, and Red Clay Strays, minimal deep cuts, and 30% new stuff."
+## 6. Stream progress and reconnect safely
 
-**Interpretation**:
+The authenticated build route starts one idempotent, account-scoped server job
+and returns an AI SDK UI-message stream. Typed `data-progress` parts report the
+candidate, curation, verification, and Spotify-write phases. During structured
+generation, partial output reports the number of drafted songs; a heartbeat
+keeps quiet portions of the stream alive without exposing model reasoning.
 
-- **Specified Tracka**: "Thinking 'Bout Love" by Wild Rivers
-- **Specified Artists**: Lake Street Dive, Red Clay Strays
-- **DeepCutsRatio**: Minimal deep cuts ⇒ `DeepCutsRatio` ≈ 0.1
-- **NewArtistsRatio**: 30% ⇒ `NewArtistsRatio` = 0.3
-- **Number of Songs**: Not specified; let's assume a default of 30 songs
+The browser persists the active job ID under the Spotify account and reconnects
+with an authenticated GET after a network interruption, page reload, or phone
+wake. Completion and failure remain replayable for one hour, so losing the
+original response does not cause an automatic duplicate playlist creation.
+The server job never uses the browser request's abort signal.
 
----
+Fly autostop is disabled because Fly Proxy does not count background work after
+the browser connection closes. This keeps the single web process alive during a
+mobile disconnect, with the tradeoff that the Machine incurs continuous runtime
+cost.
 
-### **Detailed Steps**
+The current job registry is still process-local. It protects normal mobile
+sleep and reload behavior while the Fly process remains alive, but a deploy or
+process crash removes in-flight state. Surviving those events requires a shared
+durable job and stream store before running more than one application process.
 
-#### **Step 1: Parse the Playlist Request**
+## Verification
 
-- **Specified Track**:
-
-  - "Thinking 'Bout Love" by Wild Rivers
-
-- **Specified Artists**:
-
-  - Lake Street Dive
-  - Red Clay Strays
-
-- **Parameters**:
-  - `numSongs`: 30 (default)
-  - `NewArtistsRatio`: 0.3
-  - `DeepCutsRatio`: 0.1 (minimal deep cuts)
-
-#### **Step 2: Calculate the Distribution of Songs**
-
-```
-numNewSongs = numSongs × NewArtistsRatio
-            = 30 × 0.3
-            = 9
-
-numFamiliarSongs = numSongs - numNewSongs
-                 = 30 - 9
-                 = 21
-```
-
-#### **Step 3: Build the Familiar Song Pool**
-
-**a. Process Specified Content**
-
-- Include specified tracks directly
-- Identify all specified artists
-- Include artists from specified tracks
-
-**b. Gather Familiar Songs**
-For each artist:
-
-- Fetch top tracks
-- Fetch full artist catalog
-- Fetch user's liked tracks by the artist
-
-**c. Combine into Familiar Songs Pool**
-
-```ts
-const familiarSongsPool = {
-  specifiedTracks: [trackA],
-  topTracks: {
-    artistA: [tracks...],
-    artistB: [tracks...],
-  },
-  artistCatalog: {
-    artistA: [tracks...],
-    artistB: [tracks...],
-  },
-  likedTracks: {
-    artistA: [tracks...],
-    artistB: [tracks...],
-  }
-};
-```
-
-#### **Step 4: Build the New Song Pool**
-
-**a. Process Input for Recommendations**
-
-- Use specified tracks and artists as seeds
-
-**b. Gather New Songs From Multiple Sources**
-
-- Get recommendations based on specified tracks excluding specified artists
-- Get recommendations based on specified artists excluding specified artists
-- Get similar artists' tracks excluding `top_artists`
-
-**c. Filter New Songs**
-
-- Exclude tracks that appear in:
-  - User's top tracks
-  - User's liked tracks
-  - User's recent play history
-  - Songs by specified artists
-
-#### **Step 5: LLM Playlist Curation**
-
-Pass to LLM:
-
-- Familiar songs pool
-- New songs pool
-- Original request parameters (`DeepCutsRatio`, `NewArtistsRatio`, etc.)
-- Request structured response:
-
-```typescript
-interface LLMResponse {
-  thought: string; // Summary of request and curation strategy
-  playlist: {
-    name: string; // 2-3 word generated name
-    track_ids: string[]; // Final ordered track list
-  };
-}
-```
-
-#### **Step 6: Create Final Playlist**
-
-- Use the LLM-generated track list and name to create the playlist in Spotify
-- Playlist name format: "YYYY-MM-DD - {LLM generated name}"
+Contract tests cover model configuration, schema bounds, prompt normalization,
+exact Spotify matching, canonical metadata, unresolved-track failure, complete
+playlist pagination, account isolation, authentication, atomic replacement,
+typed progress streaming, idempotent jobs, and completion replay.
+Run the complete suite with `bun run check`.

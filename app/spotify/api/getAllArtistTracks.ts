@@ -1,6 +1,10 @@
 import { shuffleArray } from "~/toolkit/utils/shuffleArray";
 import { SpotifySdk } from "../createSpotifySdk";
 import { BuildPlaylistTrack } from "../playlistBuilder/playlistBuilder.types";
+import { mapWithConcurrency } from "./mapWithConcurrency";
+import { spotifyWebApi } from "./spotifyWebApi";
+
+const ALBUM_TRACK_FETCH_CONCURRENCY = 3;
 
 /**
  * Helper function to get tracks from an artist's albums
@@ -8,9 +12,12 @@ import { BuildPlaylistTrack } from "../playlistBuilder/playlistBuilder.types";
  */
 export async function getAllArtistTracks(
   sdk: SpotifySdk,
-  artistId: string
+  artistId: string,
+  trackLimit = 20
 ): Promise<BuildPlaylistTrack[]> {
-  const startTime = performance.now();
+  if (!Number.isInteger(trackLimit) || trackLimit < 1 || trackLimit > 100) {
+    throw new RangeError("Artist track limit must be between 1 and 100");
+  }
   const tracks: BuildPlaylistTrack[] = [];
   const limit = 50; // Number of albums to fetch
 
@@ -18,21 +25,20 @@ export async function getAllArtistTracks(
   const response = await sdk.artists.albums(artistId, "album", "US", limit, 0);
 
   // Randomly select up to 5 albums
-  // Randomly select up to 5 albums
   const albumCount = Math.min(5, response.items.length);
   const selectedAlbums = shuffleArray(response.items).slice(0, albumCount);
 
-  // Get tracks from selected albums in parallel
-  const albumTrackPromises = selectedAlbums.map(async (album) =>
-    sdk.albums.tracks(album.id)
+  // Load complete albums while keeping Spotify request fan-out bounded.
+  const albumTracksResults = await mapWithConcurrency(
+    selectedAlbums,
+    ALBUM_TRACK_FETCH_CONCURRENCY,
+    (album) => spotifyWebApi.getAlbumTracks(sdk, album.id)
   );
-
-  const albumTracksResults = await Promise.all(albumTrackPromises);
 
   // Process tracks from selected albums
   albumTracksResults.forEach((albumTracks) => {
     tracks.push(
-      ...albumTracks.items.map(
+      ...albumTracks.map(
         (track): BuildPlaylistTrack => ({
           id: track.id,
           name: track.name,
@@ -44,5 +50,10 @@ export async function getAllArtistTracks(
     );
   });
 
-  return tracks;
+  const seenTrackIds = new Set<string>();
+  return tracks.filter(({ id }) => {
+    if (seenTrackIds.has(id) || seenTrackIds.size >= trackLimit) return false;
+    seenTrackIds.add(id);
+    return true;
+  });
 }

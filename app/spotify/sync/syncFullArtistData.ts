@@ -1,62 +1,52 @@
-import { getDb } from "~/db/db.client";
-import { artistGenresTable, artistsTable, genresTable } from "~/db/db.schema";
+import { artistsTable } from "~/db/db.schema";
+import { asc, isNull } from "drizzle-orm";
+import { spotifyWebApi } from "../api/spotifyWebApi";
+import type { SpotifySdk } from "../createSpotifySdk";
+import {
+  assertActiveSync,
+  runSyncTransaction,
+  type SpotifySyncContext,
+} from "./syncContext";
+import { writeArtistGraph } from "./syncDb";
+import { normalizeArtistGraph } from "./syncRecords";
 
-import { isNull, sql } from "drizzle-orm";
-import { SpotifySdk } from "../createSpotifySdk";
+const ARTIST_REQUEST_BATCH_SIZE = 5;
+export const MAX_ARTIST_ENRICHMENTS_PER_SYNC = 25;
 
-export const syncFullArtistData = async (sdk: SpotifySdk) => {
-  const db = getDb();
-  let artistsWithNoImages = await db.query.artistsTable.findMany({
+export const syncFullArtistData = async (
+  sdk: SpotifySdk,
+  context: SpotifySyncContext
+) => {
+  assertActiveSync(context);
+  const db = context.database.db;
+  const artistsWithoutImages = await db.query.artistsTable.findMany({
+    columns: { id: true },
     where: isNull(artistsTable.images),
+    orderBy: asc(artistsTable.id),
+    limit: MAX_ARTIST_ENRICHMENTS_PER_SYNC,
   });
-  let artistIds = artistsWithNoImages.map((artist) => artist.id);
-  console.log(
-    "🚀 | syncFullArtistData | artists with no images:",
-    artistIds.length
-  );
+  assertActiveSync(context);
+  const artistIds = [...new Set(artistsWithoutImages.map(({ id }) => id))];
+  let synchronized = 0;
+  let failed = 0;
 
-  // Process artists in batches of 25
-  const BATCH_SIZE = 25;
-  for (let i = 0; i < artistIds.length; i += BATCH_SIZE) {
-    const batchIds = artistIds.slice(i, i + BATCH_SIZE);
-
-    // Get full artist data for current batch
-    let fullArtists = await sdk.artists.get(batchIds);
-    if (fullArtists.length > 0) {
-      // Update artists table with images
-      await db
-        .insert(artistsTable)
-        .values(fullArtists)
-        .onConflictDoUpdate({
-          target: artistsTable.id,
-          set: { images: sql`excluded.images` },
-        });
-    }
-
-    // Insert genres for current batch
-    let genres = fullArtists.flatMap((artist) => artist.genres);
-    if (genres.length > 0) {
-      await db
-        .insert(genresTable)
-        .values(genres.map((genre) => ({ id: genre, name: genre })))
-        .onConflictDoNothing();
-    }
-
-    // Link artists to genres for current batch
-    let artistGenres = fullArtists.flatMap((artist) =>
-      artist.genres.map((genre) => ({
-        artist_id: artist.id,
-        genre_id: genre,
-      }))
+  for (let index = 0; index < artistIds.length; index += ARTIST_REQUEST_BATCH_SIZE) {
+    const batchIds = artistIds.slice(index, index + ARTIST_REQUEST_BATCH_SIZE);
+    const results = await Promise.allSettled(
+      batchIds.map((id) => spotifyWebApi.getArtists(sdk, [id]))
     );
-    if (artistGenres.length > 0) {
-      await db
-        .insert(artistGenresTable)
-        .values(artistGenres)
-        .onConflictDoNothing();
-    }
-
-    // Log progress
-    console.log(`Processed ${i + BATCH_SIZE} of ${artistIds.length} artists`);
+    assertActiveSync(context);
+    const providerArtists = results.flatMap((result) =>
+      result.status === "fulfilled" && result.value.length === 1
+        ? result.value
+        : []
+    );
+    failed += batchIds.length - providerArtists.length;
+    if (!providerArtists.length) continue;
+    const graph = normalizeArtistGraph(providerArtists);
+    await runSyncTransaction(context, (tx) => writeArtistGraph(tx, graph));
+    synchronized += graph.artists.length;
   }
+
+  return { attempted: artistIds.length, synchronized, failed };
 };

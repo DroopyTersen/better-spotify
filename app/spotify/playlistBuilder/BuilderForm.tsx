@@ -1,4 +1,4 @@
-import { Check, X } from "lucide-react";
+import { Check, LoaderCircle, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   Avatar,
@@ -14,6 +14,8 @@ import { NewStuffAmount } from "./playlistBuilder.types";
 import { usePlaylistBuildingService } from "./usePlaylistBuildingService";
 import { cn } from "~/shadcn/lib/utils";
 import { Link, useNavigate } from "react-router";
+import { PlaylistBuildResidualClientError } from "./PlaylistBuildingService.client";
+import { useHandledAsyncAction } from "../components/useHandledAsyncAction";
 
 export function BuilderForm() {
   const {
@@ -22,32 +24,47 @@ export function BuilderForm() {
     removeArtist,
     removeTrack,
     totalSelectedCount,
-    warmup,
     clearSelection,
     buildPlaylist,
+    resumePlaylistBuild,
     formData,
     updateFormData,
+    isBuilding,
+    buildProgress,
   } = usePlaylistBuildingService();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const clearAction = useHandledAsyncAction(
+    clearSelection,
+    "The selection could not be cleared. Please try again."
+  );
   const navigate = useNavigate();
-  const handleBuildPlaylist = async () => {
-    setIsSubmitting(true);
-    let result = await buildPlaylist()
-      .then((playlist) => {
-        navigate(`/playlist/${playlist.playlist.id}`);
-      })
-      .finally(() => {
-        setIsSubmitting(false);
-      });
-    console.log("🚀 | handleBuildPlaylist= | result:", result);
-  };
 
   useEffect(() => {
-    warmup();
+    let isCurrent = true;
+    void resumePlaylistBuild()
+      .then((playlist) => {
+        if (isCurrent && playlist) {
+          navigate(`/playlist/${playlist.playlist.id}`);
+        }
+      })
+      .catch((error) => {
+        if (isCurrent) setSubmitError(getPlaylistBuildError(error));
+      });
+
     return () => {
-      console.log("Closing builder form");
+      isCurrent = false;
     };
-  }, []);
+  }, [navigate, resumePlaylistBuild]);
+
+  const handleBuildPlaylist = async () => {
+    setSubmitError(null);
+    try {
+      const playlist = await buildPlaylist();
+      navigate(`/playlist/${playlist.playlist.id}`);
+    } catch (error) {
+      setSubmitError(getPlaylistBuildError(error));
+    }
+  };
 
   return (
     <div className="@container space-y-8 md:space-y-16 max-w-2xl mx-auto pb-12">
@@ -59,7 +76,9 @@ export function BuilderForm() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={clearSelection}
+            onClick={clearAction.run}
+            disabled={clearAction.isPending || isBuilding}
+            aria-label={clearAction.error ?? "Clear playlist selection"}
             className="hover:text-destructive-foreground hover:bg-destructive"
           >
             Clear All
@@ -111,6 +130,7 @@ export function BuilderForm() {
           placeholder="Add any special instructions for your playlist..."
           className="min-h-[100px] md:text-base bg-secondary"
           value={formData.customInstructions}
+          disabled={isBuilding}
           onChange={(e) => updateFormData("customInstructions", e.target.value)}
         />
       </div>
@@ -126,6 +146,7 @@ export function BuilderForm() {
           min={12}
           step={1}
           className="w-full"
+          disabled={isBuilding}
           onValueChange={([value]) => updateFormData("songCount", value)}
         />
       </div>
@@ -134,6 +155,7 @@ export function BuilderForm() {
         <Label>How much new stuff?</Label>
         <RadioGroup
           value={formData.newStuffAmount}
+          disabled={isBuilding}
           onValueChange={(value) => {
             updateFormData("newStuffAmount", value as NewStuffAmount);
           }}
@@ -194,17 +216,64 @@ export function BuilderForm() {
       </div>
 
       <Button
+        type="button"
         className="w-full"
         disabled={
           (totalSelectedCount === 0 && !formData.customInstructions) ||
-          isSubmitting
+          isBuilding
         }
         onClick={handleBuildPlaylist}
       >
-        {isSubmitting ? "Building..." : "Build Playlist"}
+        {isBuilding && <LoaderCircle className="h-4 w-4 animate-spin" />}
+        {isBuilding ? buildProgress?.label ?? "Building..." : "Build Playlist"}
       </Button>
+      {isBuilding && buildProgress && (
+        <div
+          className="space-y-3 rounded-xl border bg-card p-4 shadow-sm"
+          role="status"
+          aria-live="polite"
+        >
+          <div className="flex items-center justify-between gap-4">
+            <p className="font-medium">{buildProgress.label}</p>
+            <p className="text-sm tabular-nums text-muted-foreground">
+              {buildProgress.percent}%
+            </p>
+          </div>
+          <div
+            className="h-2 overflow-hidden rounded-full bg-secondary"
+            role="progressbar"
+            aria-label="Playlist build progress"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={buildProgress.percent}
+          >
+            <div
+              className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out"
+              style={{ width: `${buildProgress.percent}%` }}
+            />
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {buildProgress.detail}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            You can lock your phone or leave this screen. We&apos;ll reconnect to
+            this build when you return.
+          </p>
+        </div>
+      )}
+      {(submitError || clearAction.error) && (
+        <p className="text-sm text-destructive" role="alert">
+          {submitError || clearAction.error}
+        </p>
+      )}
     </div>
   );
+}
+
+function getPlaylistBuildError(error: unknown) {
+  return error instanceof PlaylistBuildResidualClientError
+    ? error.message
+    : "The playlist could not be built. Your selection is unchanged—please try again.";
 }
 
 function SelectionItem({
@@ -218,15 +287,17 @@ function SelectionItem({
   subText?: string;
   imageUrl?: string;
   itemLink?: string;
-  onRemove: () => void;
+  onRemove: () => Promise<void>;
 }) {
+  const action = useHandledAsyncAction(
+    onRemove,
+    `Could not remove ${name}. Please try again.`
+  );
+
   return (
     <div className="group flex items-center space-x-2 py-2 px-2 rounded-md hover:bg-gray-50 dark:hover:bg-sidebar">
       <Avatar className="w-8 h-8">
-        <AvatarImage
-          src={imageUrl || "/placeholder.svg?height=32&width=32"}
-          alt={name}
-        />
+        <AvatarImage src={imageUrl || "/spotify-logo.svg"} alt={name} />
         <AvatarFallback>{name?.slice(0, 2).toUpperCase() || ""}</AvatarFallback>
       </Avatar>
       <div className="text-sm flex-grow">
@@ -242,7 +313,9 @@ function SelectionItem({
       <Button
         variant="ghost"
         size="sm"
-        onClick={onRemove}
+        onClick={action.run}
+        disabled={action.isPending}
+        aria-label={action.error ?? `Remove ${name} from selection`}
         className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/50 hover:text-destructive-foreground rounded-full"
       >
         <X className="h-4 w-4" />

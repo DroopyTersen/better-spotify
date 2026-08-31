@@ -4,11 +4,12 @@ import { Badge } from "~/shadcn/components/ui/badge";
 import { Plus, Check } from "lucide-react";
 import { TooltipWrapper } from "~/toolkit/components/TooltipWrapper";
 import { SpotifyImage } from "./SpotifyImage";
+import { useHandledAsyncAction } from "./useHandledAsyncAction";
 
 interface ArtistHeaderProps {
   artist: Artist;
   isSelected: boolean;
-  onToggleSelection: () => void;
+  onToggleSelection: () => Promise<void>;
 }
 
 export function ArtistHeader({
@@ -16,15 +17,17 @@ export function ArtistHeader({
   isSelected,
   onToggleSelection,
 }: ArtistHeaderProps) {
+  const followerCount = artist.followers?.total;
+  const popularity = artist.popularity;
+  const action = useHandledAsyncAction(
+    onToggleSelection,
+    `Could not update ${artist.name}. Please try again.`
+  );
+
   return (
     <div className="flex flex-col md:flex-row gap-6 items-center">
-      {/* <img
-        src={artist.images[0]?.url}
-        alt={artist.name}
-        className="w-48 h-48 rounded-full object-cover"
-      /> */}
       <SpotifyImage
-        src={artist.images[0]?.url}
+        src={artist.images?.[0]?.url ?? "/spotify-logo.svg"}
         alt={artist.name}
         uri={`spotify:artist:${artist.id}`}
         size={256}
@@ -35,10 +38,15 @@ export function ArtistHeader({
         <div className="flex items-center justify-between flex-col md:flex-row gap-4">
           <h1 className="text-3xl font-bold">{artist.name}</h1>
           <TooltipWrapper
-            tooltip={isSelected ? "Remove from playlist" : "Add to playlist"}
+            tooltip={
+              action.error ??
+              (isSelected ? "Remove from playlist" : "Add to playlist")
+            }
           >
             <Button
-              onClick={onToggleSelection}
+              onClick={action.run}
+              disabled={action.isPending}
+              aria-label={action.error ?? `Update ${artist.name} selection`}
               variant={isSelected ? "default" : "secondary"}
               size="lg"
               className="mt-4"
@@ -53,14 +61,22 @@ export function ArtistHeader({
           </TooltipWrapper>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-muted-foreground justify-center md:justify-start">
-          <span>{artist.followers.total.toLocaleString()} followers</span>
-          <span>•</span>
-          <span>{artist.popularity}% popularity</span>
-        </div>
+        {(typeof followerCount === "number" ||
+          typeof popularity === "number") && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground justify-center md:justify-start">
+            {typeof followerCount === "number" && (
+              <span>{followerCount.toLocaleString()} followers</span>
+            )}
+            {typeof followerCount === "number" &&
+              typeof popularity === "number" && <span>•</span>}
+            {typeof popularity === "number" && (
+              <span>{popularity}% popularity</span>
+            )}
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-2 md:-ml-2">
-          {artist.genres.map((genre) => (
+          {artist.genres?.map((genre) => (
             <Badge key={genre} variant="secondary">
               {genre}
             </Badge>

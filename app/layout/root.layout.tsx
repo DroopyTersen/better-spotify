@@ -1,116 +1,196 @@
-import { useEffect } from "react";
+import { AlertTriangle, LoaderCircle } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Outlet, useRevalidator } from "react-router";
-import { requireAuth, User } from "~/auth/auth.server";
+import { requireAuth } from "~/auth/auth.server";
+import { getAuthRevalidationDelay } from "~/auth/authRevalidation";
 import { useCurrentUser } from "~/auth/useCurrentUser";
-import { getDb } from "~/db/db.client";
+import { getOptionalAccountDatabase } from "~/db/db.client";
 import { SidebarLayout } from "~/layout/SidebarLayout";
+import { loadOptionalSpotifyBootData } from "~/layout/optionalSpotifyBoot.server";
+import { spotifyWebApi } from "~/spotify/api/spotifyWebApi";
 import { createSpotifySdk } from "~/spotify/createSpotifySdk";
-import { spotifyDb } from "~/spotify/spotify.db";
-import { syncFullArtistData } from "~/spotify/sync/syncFullArtistData";
-import { syncPlayHistory } from "~/spotify/sync/syncPlayHistory";
+import type { SpotifyPlaylist } from "~/spotify/spotify.db";
+import { loadAccountLibrarySnapshot } from "~/spotify/sync/librarySnapshot.client";
+import {
+  cancelSpotifySynchronization,
+  synchronizeSpotifyLibrary,
+} from "~/spotify/sync/spotifySync.client";
+import { isAbortError } from "~/spotify/sync/syncContext";
 import type { Route } from "./+types/root.layout";
-import { tracksTable } from "~/db/db.schema";
-import { syncSpotifyData } from "~/spotify/sync/syncSpotifyData";
-import { wait } from "~/toolkit/utils/wait";
 
-export function meta({}: Route.MetaArgs) {
+export function meta() {
   return [
     { title: "Better Spotify" },
     { name: "description", content: "A Spotify client for the modern age" },
   ];
 }
+
 export const loader = async ({ request }: Route.LoaderArgs) => {
-  let user = await requireAuth(request);
-  let sdk = createSpotifySdk(user.tokens!);
-  let [playlists, devicesResults] = await Promise.all([
-    sdk.currentUser.playlists.playlists(50).then((result) => {
-      return result.items
-        .filter((r) => r?.id)
-        .map((r) => ({
-          playlist_id: r.id,
-          playlist_name: r.name,
-          description: r.description,
-          images: r.images,
-          external_urls: r.external_urls,
-          track_count: r.tracks?.total,
-        }));
-    }),
-    sdk.player.getAvailableDevices(),
-  ]);
-  return { user, playlists, devices: devicesResults.devices };
+  const user = await requireAuth(request);
+  const optionalData = await loadOptionalSpotifyBootData({
+    createTasks(signal) {
+      const sdk = createSpotifySdk(user.tokens, { signal });
+      return {
+        playlists: spotifyWebApi.getCurrentUserPlaylists(sdk),
+        devices: sdk.player.getAvailableDevices(),
+      };
+    },
+  });
+
+  const playlists: SpotifyPlaylist[] =
+    optionalData.playlists
+      ? optionalData.playlists.items
+          .filter((playlist) => Boolean(playlist?.id))
+          .map((playlist) => ({
+            playlist_id: playlist.id,
+            playlist_name: playlist.name,
+            description: playlist.description,
+            images: playlist.images,
+            external_urls: playlist.external_urls,
+            track_count: playlist.tracks?.total ?? null,
+          }))
+      : [];
+
+  const devices = optionalData.devices?.devices ?? [];
+  const spotifyWarning = optionalData.unavailable
+    ? "Spotify signed you in, but some live library data is temporarily unavailable."
+    : null;
+
+  return { user, playlists, devices, spotifyWarning };
 };
 
-declare global {
-  interface Window {
-    __currentUser: User;
-  }
-}
 export const clientLoader = async ({
-  request,
   serverLoader,
 }: Route.ClientLoaderArgs) => {
-  console.time("data-loading");
-  let db = getDb();
-  let { user, playlists, devices } = await serverLoader();
-  window.__currentUser = user as User;
-  let sdk = createSpotifySdk(user.tokens!);
-  let trackCount = await db.$count(tracksTable);
-  if (trackCount === 0) {
-    syncSpotifyData(sdk);
-    await wait(3000);
-  }
-  let dbResults = await spotifyDb.getAllSpotifyData(db);
+  const serverData = await serverLoader();
+  const localLibrary = await loadAccountLibrarySnapshot(serverData.user.id);
 
-  console.timeEnd("data-loading");
   return {
-    ...dbResults,
-    user,
-    playlists,
-    devices,
+    ...serverData,
+    ...localLibrary,
   };
 };
+clientLoader.hydrate = true as const;
+
+export function HydrateFallback() {
+  return (
+    <main className="grid min-h-dvh place-items-center bg-background px-6 text-foreground">
+      <div className="flex items-center gap-3 rounded-xl border bg-card px-5 py-4 shadow-sm">
+        <LoaderCircle className="size-5 animate-spin text-primary" />
+        <div>
+          <p className="font-medium">Opening your music library</p>
+          <p className="text-sm text-muted-foreground">
+            Preparing your local listening history…
+          </p>
+        </div>
+      </div>
+    </main>
+  );
+}
 
 export default function RootLayout({ loaderData }: Route.ComponentProps) {
-  let currentUser = useCurrentUser();
-  let sdk = currentUser?.tokens?.accessToken
-    ? createSpotifySdk(currentUser?.tokens!)
-    : null;
-  let revalidator = useRevalidator();
-  useEffect(() => {
-    revalidator.revalidate();
-  }, []);
-  useEffect(() => {
-    if (sdk) {
-      syncPlayHistory(sdk).then((data) => {
-        console.log("🚀 | syncPlayHistory | data:", data);
-        if (data.inserted > 1) {
-          syncFullArtistData(sdk).then(() => {
-            revalidator.revalidate();
-          });
-        }
-      });
-      // Set up interval to sync every 60 seconds
-      const intervalId = setInterval(async () => {
-        let data = await syncPlayHistory(sdk);
-        if (data.inserted > 1) {
-          syncFullArtistData(sdk).then(() => {
-            revalidator.revalidate();
-          });
-        }
-      }, 60 * 1000);
+  const currentUser = useCurrentUser();
+  const revalidator = useRevalidator();
+  const [syncWarning, setSyncWarning] = useState<string | null>(null);
+  const needsInitialSync = loaderData.needsInitialSync;
+  const accountId = currentUser?.id;
+  const database =
+    accountId && loaderData.libraryAvailable
+      ? getOptionalAccountDatabase(accountId)
+      : null;
 
-      // Cleanup interval on component unmount
-      return () => clearInterval(intervalId);
-    }
-  }, []);
+  const sdk = useMemo(
+    () => (currentUser?.tokens ? createSpotifySdk(currentUser.tokens) : null),
+    [
+      currentUser?.tokens.accessToken,
+      currentUser?.tokens.clientId,
+      currentUser?.tokens.expiresAt,
+      currentUser?.tokens.tokenType,
+    ]
+  );
 
-  if (!("topTracks" in loaderData)) return null;
+  useEffect(() => {
+    const expiresAt = currentUser?.tokens.expiresAt;
+    if (!expiresAt) return;
+
+    const timeoutId = window.setTimeout(
+      () => revalidator.revalidate(),
+      getAuthRevalidationDelay(expiresAt)
+    );
+    return () => window.clearTimeout(timeoutId);
+  }, [currentUser?.tokens.expiresAt, revalidator]);
+
+  useEffect(() => {
+    if (!sdk || !accountId || !database) return;
+    let active = true;
+    const accountController = new AbortController();
+
+    const synchronize = async (full: boolean) => {
+      try {
+        await synchronizeSpotifyLibrary({
+          accountId,
+          database,
+          sdk,
+          mode: full ? "full" : "incremental",
+          signal: accountController.signal,
+        });
+        if (active) {
+          setSyncWarning(null);
+          revalidator.revalidate();
+        }
+      } catch (error) {
+        if (isAbortError(error)) return;
+        if (active) {
+          setSyncWarning(
+            "Your saved library is available, but background Spotify sync failed."
+          );
+          // Protected server loaders refresh an expired browser access token.
+          revalidator.revalidate();
+        }
+      }
+    };
+
+    void synchronize(needsInitialSync);
+    const intervalId = window.setInterval(
+      () => void synchronize(needsInitialSync),
+      60 * 1000
+    );
+
+    return () => {
+      active = false;
+      accountController.abort();
+      cancelSpotifySynchronization(accountId);
+      window.clearInterval(intervalId);
+    };
+  }, [accountId, database, needsInitialSync, revalidator, sdk]);
+
+  useEffect(() => {
+    if (!accountId) return;
+    const refreshAuthOnWake = () => {
+      if (document.visibilityState === "visible") revalidator.revalidate();
+    };
+    document.addEventListener("visibilitychange", refreshAuthOnWake);
+    window.addEventListener("pageshow", refreshAuthOnWake);
+    return () => {
+      document.removeEventListener("visibilitychange", refreshAuthOnWake);
+      window.removeEventListener("pageshow", refreshAuthOnWake);
+    };
+  }, [accountId, revalidator]);
+
+  const warning =
+    syncWarning || loaderData.localLibraryWarning || loaderData.spotifyWarning;
 
   return (
-    <SidebarLayout
-      playlists={(loaderData?.playlists || []) as any}
-      devices={loaderData.devices}
-    >
+    <SidebarLayout playlists={loaderData.playlists} devices={loaderData.devices}>
+      {warning && (
+        <div
+          className="mb-4 flex items-start gap-2 rounded-lg border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-sm text-amber-100"
+          role="status"
+        >
+          <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+          <span>{warning}</span>
+        </div>
+      )}
       <Outlet />
     </SidebarLayout>
   );

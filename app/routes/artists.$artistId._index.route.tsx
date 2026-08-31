@@ -1,8 +1,10 @@
 import { redirect, type LoaderFunctionArgs } from "react-router";
+import { requireSpotifyId } from "~/spotify/spotifyId";
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   // Redirect /artists/:artistId to /artists/:artistId/popular
-  return redirect(`/artists/${params.artistId}/popular`);
+  const artistId = requireSpotifyId(params.artistId);
+  return redirect(`/artists/${artistId}/popular`);
 };
 
 // Optional: Add a minimal component if the router requires one,

@@ -5,33 +5,106 @@ import { useSpotifyData } from "./useSpotifyData";
 import { createSpotifySdk } from "../createSpotifySdk";
 import type { SpotifyData } from "../spotify.db";
 import type { User } from "~/auth/auth.server";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
+import { getOptionalAccountDatabase } from "~/db/db.client";
 
-let _playlistBuildingService: PlaylistBuildingService | null = null;
-let getPlaylistBuildingService = (
+type PlaylistBuildingServiceFactory = (
   currentUser: User,
   spotifyData: SpotifyData
+) => PlaylistBuildingService;
+
+type ActivePlaylistBuildingService = {
+  accountId: string;
+  sdkContextKey: string;
+  service: PlaylistBuildingService;
+};
+
+let activePlaylistBuildingService: ActivePlaylistBuildingService | null = null;
+
+const getSdkContextKey = (currentUser: User) =>
+  [
+    currentUser.tokens.accessToken,
+    currentUser.tokens.clientId,
+    currentUser.tokens.expiresAt,
+    currentUser.tokens.tokenType,
+  ].join("\u0000");
+
+const createPlaylistBuildingService: PlaylistBuildingServiceFactory = (
+  currentUser,
+  spotifyData
+) =>
+  new PlaylistBuildingService(
+    createSpotifySdk(currentUser.tokens),
+    spotifyData,
+    currentUser.id,
+    getOptionalAccountDatabase(currentUser.id)
+  );
+
+export const getPlaylistBuildingService = (
+  currentUser: User,
+  spotifyData: SpotifyData,
+  createService: PlaylistBuildingServiceFactory = createPlaylistBuildingService
 ) => {
-  if (!_playlistBuildingService) {
-    _playlistBuildingService = new PlaylistBuildingService(
-      createSpotifySdk(currentUser?.tokens!),
-      spotifyData
-    );
+  if (
+    !activePlaylistBuildingService ||
+    activePlaylistBuildingService.accountId !== currentUser.id
+  ) {
+    activePlaylistBuildingService?.service.dispose?.();
+    const service = createService(currentUser, spotifyData);
+    activePlaylistBuildingService = {
+      accountId: currentUser.id,
+      sdkContextKey: getSdkContextKey(currentUser),
+      service,
+    };
+    return service;
   }
-  return _playlistBuildingService;
+
+  const active = activePlaylistBuildingService;
+  const sdkContextKey = getSdkContextKey(currentUser);
+  if (active.sdkContextKey !== sdkContextKey) {
+    active.service.updateSdk(createSpotifySdk(currentUser.tokens));
+    active.sdkContextKey = sdkContextKey;
+  }
+  active.service.updateSpotifyData(spotifyData);
+  active.service.updateDatabase?.(getOptionalAccountDatabase(currentUser.id));
+  return active.service;
+};
+
+export const resetPlaylistBuildingService = () => {
+  activePlaylistBuildingService?.service.dispose?.();
+  activePlaylistBuildingService = null;
 };
 
 export const usePlaylistBuildingService = () => {
-  let currentUser = useCurrentUser();
-  let spotifyData = useSpotifyData();
-  let playlistBuildingService = getPlaylistBuildingService(
-    currentUser!,
+  const currentUser = useCurrentUser();
+  const spotifyData = useSpotifyData();
+  if (!currentUser) {
+    resetPlaylistBuildingService();
+    throw new Error("Playlist builder requires an authenticated Spotify user");
+  }
+  const playlistBuildingService = getPlaylistBuildingService(
+    currentUser,
     spotifyData
   );
-  let [state, setState] = useState(() => playlistBuildingService.getState());
+  const [subscribedState, setSubscribedState] = useState(() => ({
+    service: playlistBuildingService,
+    state: playlistBuildingService.getState(),
+  }));
+  const state =
+    subscribedState.service === playlistBuildingService
+      ? subscribedState.state
+      : playlistBuildingService.getState();
+
   useEffect(() => {
-    let unsubscribe = playlistBuildingService.subscribe(() => {
-      setState(playlistBuildingService.getState());
+    setSubscribedState({
+      service: playlistBuildingService,
+      state: playlistBuildingService.getState(),
+    });
+    const unsubscribe = playlistBuildingService.subscribe(() => {
+      setSubscribedState({
+        service: playlistBuildingService,
+        state: playlistBuildingService.getState(),
+      });
     });
     return unsubscribe;
   }, [playlistBuildingService]);
@@ -43,8 +116,8 @@ export const usePlaylistBuildingService = () => {
     removeArtist: playlistBuildingService.toggleArtistSelection,
     removeTrack: playlistBuildingService.toggleTrackSelection,
     clearSelection: playlistBuildingService.clearSelections,
-    warmup: playlistBuildingService.warmUpPlaylist,
     buildPlaylist: playlistBuildingService.buildPlaylist,
+    resumePlaylistBuild: playlistBuildingService.resumePlaylistBuild,
     updateFormData: playlistBuildingService.updateFormData,
   };
 };

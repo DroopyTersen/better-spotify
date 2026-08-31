@@ -4,10 +4,14 @@ export interface CacheManager {
   removeItem(key: string): Promise<void>;
 }
 
+type CacheStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;
+
 export class LocalStorageCache implements CacheManager {
+  constructor(private readonly storage: CacheStorage = localStorage) {}
+
   async getItem<T>(key: string): Promise<T | null> {
     try {
-      const item = localStorage.getItem(key);
+      const item = this.storage.getItem(key);
       if (!item) return null;
 
       try {
@@ -17,21 +21,16 @@ export class LocalStorageCache implements CacheManager {
           return parsed.value as T;
         }
 
-        console.warn(
-          `Cache value for ${key} is missing expected structure, clearing invalid cache`
-        );
+        console.warn("Invalid browser cache entry was cleared");
         this.removeItem(key);
         return null;
-      } catch (parseError) {
-        console.warn(
-          `Failed to parse cached value for ${key}, clearing invalid cache`,
-          parseError
-        );
+      } catch {
+        console.warn("Invalid browser cache entry was cleared");
         this.removeItem(key);
         return null;
       }
-    } catch (err) {
-      console.error(`Failed to access localStorage for key: ${key}`, err);
+    } catch {
+      console.error("Browser cache could not be read");
       return null;
     }
   }
@@ -39,20 +38,20 @@ export class LocalStorageCache implements CacheManager {
   async setItem<T>(key: string, value: T): Promise<void> {
     try {
       const wrapped = { value };
-      localStorage.setItem(key, JSON.stringify(wrapped));
-    } catch (err) {
-      console.error(`Failed to set item in cache: ${key}`, err);
+      this.storage.setItem(key, JSON.stringify(wrapped));
+    } catch {
+      console.error("Browser cache could not be written");
       try {
-        localStorage.removeItem(key);
+        this.storage.removeItem(key);
       } catch {} // Ignore cleanup errors
     }
   }
 
   async removeItem(key: string): Promise<void> {
     try {
-      localStorage.removeItem(key);
-    } catch (err) {
-      console.error(`Failed to remove item from cache: ${key}`, err);
+      this.storage.removeItem(key);
+    } catch {
+      console.error("Browser cache entry could not be removed");
     }
   }
 }

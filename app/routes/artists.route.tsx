@@ -1,5 +1,5 @@
-import { LoaderFunctionArgs } from "react-router";
-import { getDb } from "~/db/db.client";
+import { requireAuth } from "~/auth/auth.server";
+import { initAccountDatabase } from "~/db/db.client";
 import { PageHeader } from "~/layout/PageHeader";
 import {
   Tabs,
@@ -10,17 +10,33 @@ import {
 import { ArtistItem } from "~/spotify/components/ArtistItem";
 import { usePlaylistBuildingService } from "~/spotify/playlistBuilder/usePlaylistBuildingService";
 import { spotifyDb } from "~/spotify/spotify.db";
-import { Route } from "./+types/artists.route";
+import type { Route } from "./+types/artists.route";
 import dayjs from "dayjs";
+import { withOptionalLibraryDeadline } from "~/spotify/sync/librarySnapshot.client";
 
-export const clientLoader = async ({ request }: LoaderFunctionArgs) => {
-  let db = getDb();
-  let [topArtists, recentArtists] = await Promise.all([
-    spotifyDb.getTopArtists(db, { limit: 50 }),
-    spotifyDb.getRecentArtists(db, { limit: 50 }),
-  ]);
-  return { topArtists, recentArtists };
+export const loader = async ({ request }: Route.LoaderArgs) => {
+  const user = await requireAuth(request);
+  return { accountId: user.id };
 };
+
+export const clientLoader = async ({ serverLoader }: Route.ClientLoaderArgs) => {
+  const { accountId } = await serverLoader();
+  try {
+    return await withOptionalLibraryDeadline(async () => {
+      const { db } = await initAccountDatabase(accountId);
+      const [topArtists, recentArtists] = await Promise.all([
+        spotifyDb.getTopArtists(db, { limit: 50 }),
+        spotifyDb.getRecentArtists(db, { limit: 50 }),
+      ]);
+      return { topArtists, recentArtists };
+    });
+  } catch {
+    return { topArtists: [], recentArtists: [] };
+  }
+};
+clientLoader.hydrate = true as const;
+
+export const HydrateFallback = () => null;
 
 export default function ArtistsRoute({ loaderData }: Route.ComponentProps) {
   const { topArtists, recentArtists } = loaderData;
@@ -42,7 +58,11 @@ export default function ArtistsRoute({ loaderData }: Route.ComponentProps) {
                 <ArtistItem
                   key={artist.artist_id}
                   artist={artist}
-                  isSelected={selectedArtistIds.includes(artist.artist_id!)}
+                  isSelected={
+                    artist.artist_id
+                      ? selectedArtistIds.includes(artist.artist_id)
+                      : false
+                  }
                   toggleSelection={toggleArtistSelection}
                 />
               ))}
@@ -54,7 +74,11 @@ export default function ArtistsRoute({ loaderData }: Route.ComponentProps) {
                 <ArtistItem
                   key={artist.artist_id}
                   artist={artist}
-                  isSelected={selectedArtistIds.includes(artist.artist_id!)}
+                  isSelected={
+                    artist.artist_id
+                      ? selectedArtistIds.includes(artist.artist_id)
+                      : false
+                  }
                   toggleSelection={toggleArtistSelection}
                   metadata={
                     <>

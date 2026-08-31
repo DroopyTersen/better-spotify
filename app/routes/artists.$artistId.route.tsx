@@ -1,6 +1,4 @@
 import {
-  LoaderFunctionArgs,
-  useLoaderData,
   Outlet,
   Link,
   useLocation,
@@ -10,33 +8,31 @@ import { requireAuth } from "~/auth/auth.server";
 import { PageHeader } from "~/layout/PageHeader";
 import {
   Tabs,
-  TabsContent,
   TabsList,
   TabsTrigger,
 } from "~/shadcn/components/ui/tabs";
 import { ArtistHeader } from "~/spotify/components/ArtistHeader";
+import { spotifyWebApi } from "~/spotify/api/spotifyWebApi";
 import { createSpotifySdk } from "~/spotify/createSpotifySdk";
 import { usePlaylistBuildingService } from "~/spotify/playlistBuilder/usePlaylistBuildingService";
-import { Route } from "./+types/artists.$artistId.route";
-import { cn } from "~/shadcn/lib/utils";
-import { useEffect } from "react";
+import { requireSpotifyId } from "~/spotify/spotifyId";
+import type { Route } from "./+types/artists.$artistId.route";
 
-export const loader = async ({ request, params }: LoaderFunctionArgs) => {
+export const loader = async ({ request, params }: Route.LoaderArgs) => {
   let user = await requireAuth(request);
-  const { artistId } = params;
-  if (!artistId) throw new Error("Artist ID is required");
+  const artistId = requireSpotifyId(params.artistId);
 
   const sdk = createSpotifySdk(user.tokens);
-  const [artist, topTracks, albums] = await Promise.all([
+  const [artist, catalogTracks, albums] = await Promise.all([
     sdk.artists.get(artistId),
-    sdk.artists.topTracks(artistId, "US"),
-    sdk.artists.albums(artistId),
+    spotifyWebApi.getArtistCatalogTracks(sdk, artistId),
+    spotifyWebApi.getArtistAlbums(sdk, artistId),
   ]);
 
   return {
     artist,
-    topTracks: topTracks.tracks,
-    albums: albums.items,
+    catalogTracks,
+    albums,
   };
 };
 
@@ -84,7 +80,7 @@ export default function ArtistRouteLayout({
         >
           <TabsList>
             <TabsTrigger value="popular" asChild>
-              <Link to="popular">Popular</Link>
+              <Link to="popular">Catalog</Link>
             </TabsTrigger>
             <TabsTrigger value="albums" asChild>
               <Link to="albums">Albums</Link>

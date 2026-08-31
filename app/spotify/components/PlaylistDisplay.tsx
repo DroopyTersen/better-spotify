@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router";
 import dayjs from "dayjs";
-import { ExternalLink, Plus, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { useCurrentUser } from "~/auth/useCurrentUser";
 import { Button } from "~/shadcn/components/ui/button";
 import { SpotifyApiPlaylist } from "../api/getPlaylist";
@@ -8,36 +8,52 @@ import { usePlaylistBuildingService } from "../playlistBuilder/usePlaylistBuildi
 import { SpotifyImage } from "./SpotifyImage";
 import { TrackItem } from "./TrackItem";
 import { createSpotifySdk } from "../createSpotifySdk";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PlaylistModificationForm } from "./PlaylistModificationForm";
 import { EditablePlaylistName } from "./EditablePlaylistName";
+import { spotifyWebApi } from "../api/spotifyWebApi";
 
 interface PlaylistDisplayProps {
   playlist: SpotifyApiPlaylist;
+  onPlaylistModified: () => void;
 }
 
-export const PlaylistDisplay = ({ playlist }: PlaylistDisplayProps) => {
+export const PlaylistDisplay = ({
+  playlist,
+  onPlaylistModified,
+}: PlaylistDisplayProps) => {
   let currentUser = useCurrentUser();
   let navigate = useNavigate();
   const { selectedTrackIds, toggleTrackSelection } =
     usePlaylistBuildingService();
-  const isPlaylistOwner = true;
   const [showModifyForm, setShowModifyForm] = useState(false);
+  const [playlistName, setPlaylistName] = useState(playlist.name);
+
+  useEffect(() => setPlaylistName(playlist.name), [playlist.name]);
+
+  if (!currentUser) return null;
+
+  const isPlaylistOwner = playlist.owner?.id === currentUser.spotifyId;
+  const hasModificationAccess =
+    playlist.itemsAvailability === "available" &&
+    (isPlaylistOwner || playlist.collaborative);
+  const canModifyPlaylist =
+    hasModificationAccess && playlist.tracks.total <= 100;
 
   const handleDeletePlaylist = async () => {
-    if (!confirm(`Are you sure you want to delete "${playlist.name}"?`)) {
+    if (!confirm(`Remove "${playlistName}" from your Spotify library?`)) {
       return;
     }
     try {
-      const sdk = createSpotifySdk(currentUser?.tokens!);
-      await sdk.currentUser.playlists.unfollow(playlist.id);
+      const sdk = createSpotifySdk(currentUser.tokens);
+      await spotifyWebApi.removePlaylistFromLibrary(sdk, playlist.id);
       alert(
-        "Success! Playlist deleted. Sending you back to your play history..."
+        "Playlist removed from your library. Sending you back to play history…"
       );
       navigate("/play-history");
-    } catch (error) {
-      console.error("Failed to delete playlist:", error);
-      alert("Failed to delete playlist. Please try again.");
+    } catch {
+      console.error("Failed to remove a playlist from the Spotify library");
+      alert("Failed to remove the playlist. Please try again.");
     }
   };
 
@@ -47,26 +63,30 @@ export const PlaylistDisplay = ({ playlist }: PlaylistDisplayProps) => {
         <div className="md:hidden">
           <EditablePlaylistName
             playlistId={playlist.id}
-            initialName={playlist.name}
+            name={playlistName}
             isOwner={isPlaylistOwner}
-            userTokens={currentUser?.tokens!}
+            userTokens={currentUser.tokens}
+            onSaved={setPlaylistName}
           />
         </div>
         <div className="grid grid-cols-[auto_1fr_auto] gap-4 w-full">
           <SpotifyImage
             src={playlist.images[0]?.url}
-            alt={playlist.name}
+            alt={playlistName}
             uri={`spotify:playlist:${playlist.id}`}
           />
           <div className="hidden md:block">
             <EditablePlaylistName
               playlistId={playlist.id}
-              initialName={playlist.name}
+              name={playlistName}
               isOwner={isPlaylistOwner}
-              userTokens={currentUser?.tokens!}
+              userTokens={currentUser.tokens}
+              onSaved={setPlaylistName}
             />
             <div className="text-muted-foreground font-normal text-sm md:text-base md:block hidden">
-              {playlist.tracks.total} tracks
+              {playlist.itemsAvailability === "available"
+                ? `${playlist.tracks.total} tracks`
+                : "Tracks unavailable"}
             </div>
           </div>
           <div className="md:hidden"></div>
@@ -79,38 +99,57 @@ export const PlaylistDisplay = ({ playlist }: PlaylistDisplayProps) => {
                 onClick={handleDeletePlaylist}
               >
                 <Trash2 className="w-4 h-4" />
-                <span className="hidden md:block">Delete Playlist</span>
+                <span className="hidden md:block">Remove Playlist</span>
               </Button>
             </div>
           )}
         </div>
       </div>
       <div className="text-muted-foreground font-normal text-sm md:text-base md:hidden">
-        {playlist.tracks.total} tracks
+        {playlist.itemsAvailability === "available"
+          ? `${playlist.tracks.total} tracks`
+          : "Tracks unavailable"}
       </div>
 
-      {showModifyForm ? (
+      {playlist.itemsAvailability === "unavailable" && (
+        <p className="rounded-md border border-border bg-muted p-4 text-sm text-muted-foreground">
+          Spotify does not make this playlist&apos;s tracks available to this
+          app. Only playlists you own or collaborate on can be viewed and
+          modified here.
+        </p>
+      )}
+
+      {hasModificationAccess && playlist.tracks.total > 100 && (
+        <p className="rounded-md border border-border bg-muted p-4 text-sm text-muted-foreground">
+          AI tweaking is limited to playlists with 100 tracks or fewer because
+          Spotify&apos;s full-replace operation accepts at most 100 items.
+        </p>
+      )}
+
+      {canModifyPlaylist && showModifyForm ? (
         <div className="my-8">
           <PlaylistModificationForm
             playlistId={playlist.id}
+            snapshotId={playlist.snapshot_id}
             currentTracks={playlist.tracks.items.map((item) => ({
               id: item.track.id,
               name: item.track.name,
               artist_name: item.track.artists.map((a) => a.name).join(", "),
             }))}
             onClose={() => setShowModifyForm(false)}
+            onSuccess={onPlaylistModified}
           />
         </div>
-      ) : (
+      ) : canModifyPlaylist ? (
         <Button
           variant="secondary"
           size="lg"
           onClick={() => setShowModifyForm(!showModifyForm)}
           className="w-full"
         >
-          {showModifyForm ? "Cancel Modification" : "Tweak Playlist"}
+          Tweak Playlist
         </Button>
-      )}
+      ) : null}
 
       <div className="divide-y">
         {playlist.tracks.items.map((item, index) => {

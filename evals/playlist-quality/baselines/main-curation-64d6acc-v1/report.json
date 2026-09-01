@@ -1,0 +1,54 @@
+{
+  "subjective": {
+    "vibeFit": {
+      "mean": 4.291666666666667,
+      "minimum": 3,
+      "maximum": 5
+    },
+    "anchorFidelity": {
+      "mean": 5,
+      "minimum": 5,
+      "maximum": 5
+    },
+    "coherence": {
+      "mean": 4.416666666666667,
+      "minimum": 3,
+      "maximum": 5
+    },
+    "orderedFlow": {
+      "mean": 3.625,
+      "minimum": 2,
+      "maximum": 5
+    },
+    "noveltyQuality": {
+      "mean": 4.625,
+      "minimum": 3,
+      "maximum": 5
+    },
+    "verdictCounts": {
+      "green": 19,
+      "yellow": 3,
+      "orange": 2
+    },
+    "failureModeCounts": {
+      "none": 19,
+      "energy-arc": 5
+    }
+  },
+  "deterministic": {
+    "sampleCount": 24,
+    "generationSuccessRate": 1,
+    "exactTrackCountRate": 1,
+    "duplicateFreeRate": 1,
+    "fixtureResolutionRate": 0.875,
+    "requestedMixMeanAbsoluteError": 1
+  },
+  "run": {
+    "runId": "main-curation-64d6acc-20260901T230417456Z",
+    "label": "main-curation-64d6acc",
+    "sourceRevision": "edf74ff701b268e53d54c0de1d1577b68ebb0b9c",
+    "benchmarkVersion": "1.0.0",
+    "rubricVersion": "1.0.0",
+    "complete": true
+  }
+}

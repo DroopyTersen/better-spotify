@@ -1,0 +1,120 @@
+{
+  "caseId": "mixed-indie-dance",
+  "sample": 1,
+  "startedAt": "2026-09-01T23:04:50.492Z",
+  "durationMs": 4348,
+  "output": {
+    "playlist": {
+      "name": "1:00 A.M. Pressure",
+      "description": "Sweat, strobes, and shoulder-to-shoulder momentum—an urgent midnight circuit that keeps the room locked in and refuses the quiet way home.",
+      "tracks": [
+        {
+          "id": "dance-n1",
+          "name": "NY Excuse",
+          "artist_name": "Soulwax"
+        },
+        {
+          "id": "dance-f3",
+          "name": "Heads Will Roll",
+          "artist_name": "Yeah Yeah Yeahs"
+        },
+        {
+          "id": "dance-n2",
+          "name": "Over and Over",
+          "artist_name": "Hot Chip"
+        },
+        {
+          "id": "dance-f5",
+          "name": "Tribulations",
+          "artist_name": "LCD Soundsystem"
+        },
+        {
+          "id": "dance-n3",
+          "name": "House of Jealous Lovers",
+          "artist_name": "The Rapture"
+        },
+        {
+          "id": "dance-f1",
+          "name": "All My Friends",
+          "artist_name": "LCD Soundsystem"
+        },
+        {
+          "id": "dance-n6",
+          "name": "Tournament",
+          "artist_name": "Nation of Language"
+        },
+        {
+          "id": "dance-f4",
+          "name": "Zero",
+          "artist_name": "Yeah Yeah Yeahs"
+        }
+      ]
+    }
+  },
+  "metrics": {
+    "exactTrackCount": true,
+    "trackCount": 8,
+    "uniqueTrackCount": 8,
+    "duplicateCount": 0,
+    "duplicateKeys": [],
+    "inventedIds": [],
+    "unresolvedCount": 0,
+    "fixtureResolvableCount": 8,
+    "fixtureResolvableRate": 1,
+    "selectedTrackCoverage": {
+      "required": 1,
+      "included": 1,
+      "missingIds": []
+    },
+    "selectedArtistCoverage": {
+      "required": 1,
+      "represented": 1,
+      "missingIds": []
+    },
+    "novelty": {
+      "requestedCount": 4,
+      "newCount": 4,
+      "familiarCount": 4,
+      "unresolvedCount": 0,
+      "newRatio": 0.5,
+      "absoluteCountDelta": 0
+    },
+    "trackFixtureClassifications": [
+      {
+        "position": 1,
+        "classification": "new"
+      },
+      {
+        "position": 2,
+        "classification": "familiar"
+      },
+      {
+        "position": 3,
+        "classification": "new"
+      },
+      {
+        "position": 4,
+        "classification": "familiar"
+      },
+      {
+        "position": 5,
+        "classification": "new"
+      },
+      {
+        "position": 6,
+        "classification": "familiar"
+      },
+      {
+        "position": 7,
+        "classification": "new"
+      },
+      {
+        "position": 8,
+        "classification": "familiar"
+      }
+    ],
+    "adjacentSameArtistCount": 0,
+    "maxNewTracksByArtist": 1,
+    "constraintViolations": []
+  }
+}

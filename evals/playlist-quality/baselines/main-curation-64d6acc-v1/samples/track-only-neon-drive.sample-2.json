@@ -1,0 +1,120 @@
+{
+  "caseId": "track-only-neon-drive",
+  "sample": 2,
+  "startedAt": "2026-09-01T23:04:40.684Z",
+  "durationMs": 6028,
+  "output": {
+    "playlist": {
+      "name": "Neon Afterimage",
+      "description": "Cruise through a midnight boulevard where velvet synths, fluorescent heartbreak, and slow-burning desire glow beneath the city lights.",
+      "tracks": [
+        {
+          "id": "track-f1",
+          "name": "Midnight City",
+          "artist_name": "M83"
+        },
+        {
+          "id": "track-n1",
+          "name": "Sunset",
+          "artist_name": "The Midnight"
+        },
+        {
+          "id": "track-f2",
+          "name": "Under Your Spell",
+          "artist_name": "Desire"
+        },
+        {
+          "id": "track-n6",
+          "name": "Shadow",
+          "artist_name": "Chromatics"
+        },
+        {
+          "id": "track-f4",
+          "name": "Wait",
+          "artist_name": "M83"
+        },
+        {
+          "id": "track-n2",
+          "name": "A Real Hero",
+          "artist_name": "College"
+        },
+        {
+          "id": "track-f6",
+          "name": "Mirroir mirroir",
+          "artist_name": "Desire"
+        },
+        {
+          "id": "track-n4",
+          "name": "Fire for You",
+          "artist_name": "Cannons"
+        }
+      ]
+    }
+  },
+  "metrics": {
+    "exactTrackCount": true,
+    "trackCount": 8,
+    "uniqueTrackCount": 8,
+    "duplicateCount": 0,
+    "duplicateKeys": [],
+    "inventedIds": [],
+    "unresolvedCount": 0,
+    "fixtureResolvableCount": 8,
+    "fixtureResolvableRate": 1,
+    "selectedTrackCoverage": {
+      "required": 2,
+      "included": 2,
+      "missingIds": []
+    },
+    "selectedArtistCoverage": {
+      "required": 0,
+      "represented": 0,
+      "missingIds": []
+    },
+    "novelty": {
+      "requestedCount": 4,
+      "newCount": 4,
+      "familiarCount": 4,
+      "unresolvedCount": 0,
+      "newRatio": 0.5,
+      "absoluteCountDelta": 0
+    },
+    "trackFixtureClassifications": [
+      {
+        "position": 1,
+        "classification": "familiar"
+      },
+      {
+        "position": 2,
+        "classification": "new"
+      },
+      {
+        "position": 3,
+        "classification": "familiar"
+      },
+      {
+        "position": 4,
+        "classification": "new"
+      },
+      {
+        "position": 5,
+        "classification": "familiar"
+      },
+      {
+        "position": 6,
+        "classification": "new"
+      },
+      {
+        "position": 7,
+        "classification": "familiar"
+      },
+      {
+        "position": 8,
+        "classification": "new"
+      }
+    ],
+    "adjacentSameArtistCount": 0,
+    "maxNewTracksByArtist": 1,
+    "constraintViolations": []
+  }
+}

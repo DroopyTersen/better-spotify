@@ -1,0 +1,120 @@
+{
+  "caseId": "mixed-indie-dance",
+  "sample": 2,
+  "startedAt": "2026-09-01T23:04:54.842Z",
+  "durationMs": 6616,
+  "output": {
+    "playlist": {
+      "name": "1:00 A.M. Pressure",
+      "description": "Sweaty bodies, flashing strobes, and a bassline that refuses to let anyone leave—the room locks in and surges until the final communal release.",
+      "tracks": [
+        {
+          "id": "dance-f5",
+          "name": "Tribulations",
+          "artist_name": "LCD Soundsystem"
+        },
+        {
+          "id": "dance-n3",
+          "name": "House of Jealous Lovers",
+          "artist_name": "The Rapture"
+        },
+        {
+          "id": "dance-f3",
+          "name": "Heads Will Roll",
+          "artist_name": "Yeah Yeah Yeahs"
+        },
+        {
+          "id": "dance-n2",
+          "name": "Over and Over",
+          "artist_name": "Hot Chip"
+        },
+        {
+          "id": "dance-n1",
+          "name": "NY Excuse",
+          "artist_name": "Soulwax"
+        },
+        {
+          "id": "dance-f4",
+          "name": "Zero",
+          "artist_name": "Yeah Yeah Yeahs"
+        },
+        {
+          "id": "dance-n4",
+          "name": "Holiday",
+          "artist_name": "Confidence Man"
+        },
+        {
+          "id": "dance-f1",
+          "name": "All My Friends",
+          "artist_name": "LCD Soundsystem"
+        }
+      ]
+    }
+  },
+  "metrics": {
+    "exactTrackCount": true,
+    "trackCount": 8,
+    "uniqueTrackCount": 8,
+    "duplicateCount": 0,
+    "duplicateKeys": [],
+    "inventedIds": [],
+    "unresolvedCount": 0,
+    "fixtureResolvableCount": 8,
+    "fixtureResolvableRate": 1,
+    "selectedTrackCoverage": {
+      "required": 1,
+      "included": 1,
+      "missingIds": []
+    },
+    "selectedArtistCoverage": {
+      "required": 1,
+      "represented": 1,
+      "missingIds": []
+    },
+    "novelty": {
+      "requestedCount": 4,
+      "newCount": 4,
+      "familiarCount": 4,
+      "unresolvedCount": 0,
+      "newRatio": 0.5,
+      "absoluteCountDelta": 0
+    },
+    "trackFixtureClassifications": [
+      {
+        "position": 1,
+        "classification": "familiar"
+      },
+      {
+        "position": 2,
+        "classification": "new"
+      },
+      {
+        "position": 3,
+        "classification": "familiar"
+      },
+      {
+        "position": 4,
+        "classification": "new"
+      },
+      {
+        "position": 5,
+        "classification": "new"
+      },
+      {
+        "position": 6,
+        "classification": "familiar"
+      },
+      {
+        "position": 7,
+        "classification": "new"
+      },
+      {
+        "position": 8,
+        "classification": "familiar"
+      }
+    ],
+    "adjacentSameArtistCount": 0,
+    "maxNewTracksByArtist": 1,
+    "constraintViolations": []
+  }
+}

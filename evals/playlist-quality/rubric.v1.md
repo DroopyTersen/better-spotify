@@ -26,6 +26,9 @@ instead of merely copied. Explicit instructions take precedence when they narrow
 or deliberately redirect an anchor. For an `all` request, familiar anchors are
 references and are not required inclusions.
 
+When the request has no selected artist or track, give anchor fidelity a 5; there
+is no anchor to misuse. Judge adherence to instructions under vibe fit instead.
+
 ### 3. Coherence
 
 Score whether the playlist feels like one intentional listening experience rather
@@ -43,6 +46,10 @@ transitions rather than a random order.
 Consider only tracks classified as new by the fixture. Score whether they are
 credible discoveries for this exact vibe rather than novelty for novelty's sake.
 Do not claim that fixture-new means the listener has never heard the music.
+
+For `none`, give novelty quality a 5 when no fixture-new track appears. If every
+track is unresolved, give a neutral 3 and state that fixture evidence is
+insufficient to assess discovery quality.
 
 ## Verdict
 

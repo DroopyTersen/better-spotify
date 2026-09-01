@@ -1,0 +1,120 @@
+{
+  "caseId": "instructions-only-predawn-jazz",
+  "sample": 1,
+  "startedAt": "2026-09-01T23:05:07.654Z",
+  "durationMs": 10106,
+  "output": {
+    "playlist": {
+      "name": "Before the First Light",
+      "description": "A hushed pilgrimage through piano, breath, and brushed rhythm—music for empty streets, cooling darkness, and the first pale seam of dawn.",
+      "tracks": [
+        {
+          "id": "",
+          "name": "Gefion",
+          "artist_name": "Jakob Bro"
+        },
+        {
+          "id": "",
+          "name": "The Other Side",
+          "artist_name": "Tord Gustavsen Trio"
+        },
+        {
+          "id": "",
+          "name": "Night Train to You",
+          "artist_name": "Marcin Wasilewski Trio"
+        },
+        {
+          "id": "",
+          "name": "Desolation Sound",
+          "artist_name": "Charles Lloyd"
+        },
+        {
+          "id": "",
+          "name": "Opening Image",
+          "artist_name": "Arve Henriksen"
+        },
+        {
+          "id": "",
+          "name": "Quiet Fire",
+          "artist_name": "Mammal Hands"
+        },
+        {
+          "id": "",
+          "name": "Modul 36",
+          "artist_name": "Nik Bärtsch's Ronin"
+        },
+        {
+          "id": "",
+          "name": "Hopopono",
+          "artist_name": "GoGo Penguin"
+        }
+      ]
+    }
+  },
+  "metrics": {
+    "exactTrackCount": true,
+    "trackCount": 8,
+    "uniqueTrackCount": 8,
+    "duplicateCount": 0,
+    "duplicateKeys": [],
+    "inventedIds": [],
+    "unresolvedCount": 8,
+    "fixtureResolvableCount": 0,
+    "fixtureResolvableRate": 0,
+    "selectedTrackCoverage": {
+      "required": 0,
+      "included": 0,
+      "missingIds": []
+    },
+    "selectedArtistCoverage": {
+      "required": 0,
+      "represented": 0,
+      "missingIds": []
+    },
+    "novelty": {
+      "requestedCount": 8,
+      "newCount": 0,
+      "familiarCount": 0,
+      "unresolvedCount": 8,
+      "newRatio": 0,
+      "absoluteCountDelta": 8
+    },
+    "trackFixtureClassifications": [
+      {
+        "position": 1,
+        "classification": "unresolved"
+      },
+      {
+        "position": 2,
+        "classification": "unresolved"
+      },
+      {
+        "position": 3,
+        "classification": "unresolved"
+      },
+      {
+        "position": 4,
+        "classification": "unresolved"
+      },
+      {
+        "position": 5,
+        "classification": "unresolved"
+      },
+      {
+        "position": 6,
+        "classification": "unresolved"
+      },
+      {
+        "position": 7,
+        "classification": "unresolved"
+      },
+      {
+        "position": 8,
+        "classification": "unresolved"
+      }
+    ],
+    "adjacentSameArtistCount": 0,
+    "maxNewTracksByArtist": 0,
+    "constraintViolations": []
+  }
+}

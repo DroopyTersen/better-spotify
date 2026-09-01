@@ -1,0 +1,55 @@
+{
+  "runId": "main-curation-64d6acc-20260901T230417456Z",
+  "label": "main-curation-64d6acc",
+  "complete": true,
+  "attemptedSamples": 24,
+  "successfulSamples": 24,
+  "generationSuccessRate": 1,
+  "exactTrackCountRate": 1,
+  "duplicateFreeRate": 1,
+  "fixtureResolutionRate": 0.875,
+  "requestedMixMeanAbsoluteError": 1,
+  "meanCrossSampleTrackOverlap": 0.7883597883597884,
+  "caseOverlap": [
+    {
+      "caseId": "artist-only-indie-folk",
+      "successfulSamples": 3,
+      "meanPairwiseTrackOverlap": 0.8518518518518517
+    },
+    {
+      "caseId": "track-only-neon-drive",
+      "successfulSamples": 3,
+      "meanPairwiseTrackOverlap": 0.7333333333333334
+    },
+    {
+      "caseId": "mixed-indie-dance",
+      "successfulSamples": 3,
+      "meanPairwiseTrackOverlap": 0.7777777777777778
+    },
+    {
+      "caseId": "instructions-only-predawn-jazz",
+      "successfulSamples": 3,
+      "meanPairwiseTrackOverlap": 0.09206349206349206
+    },
+    {
+      "caseId": "conflicting-dark-electronic",
+      "successfulSamples": 3,
+      "meanPairwiseTrackOverlap": 1
+    },
+    {
+      "caseId": "instrumental-energy-arc",
+      "successfulSamples": 3,
+      "meanPairwiseTrackOverlap": 0.8518518518518517
+    },
+    {
+      "caseId": "familiar-only-slow-groove",
+      "successfulSamples": 3,
+      "meanPairwiseTrackOverlap": 1
+    },
+    {
+      "caseId": "all-new-intimate-songwriters",
+      "successfulSamples": 3,
+      "meanPairwiseTrackOverlap": 1
+    }
+  ]
+}

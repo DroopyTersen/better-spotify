@@ -1,0 +1,122 @@
+{
+  "caseId": "instrumental-energy-arc",
+  "sample": 1,
+  "startedAt": "2026-09-01T23:05:44.276Z",
+  "durationMs": 10804,
+  "output": {
+    "playlist": {
+      "name": "Signal to Stillness",
+      "description": "A measured pulse rises from dusk-lit restraint through intricate motion and a full-spectrum summit, then drifts into an almost weightless afterglow.",
+      "tracks": [
+        {
+          "id": "arc-f1",
+          "name": "A Walk",
+          "artist_name": "Tycho"
+        },
+        {
+          "id": "arc-n1",
+          "name": "Recovery",
+          "artist_name": "Rival Consoles"
+        },
+        {
+          "id": "arc-f5",
+          "name": "Hours",
+          "artist_name": "Tycho"
+        },
+        {
+          "id": "arc-n3",
+          "name": "Looped",
+          "artist_name": "Kiasmos"
+        },
+        {
+          "id": "arc-n2",
+          "name": "Order from Chaos",
+          "artist_name": "Max Cooper"
+        },
+        {
+          "id": "arc-f2",
+          "name": "Open Eye Signal",
+          "artist_name": "Jon Hopkins"
+        },
+        {
+          "id": "arc-f3",
+          "name": "Abandon Window",
+          "artist_name": "Jon Hopkins"
+        },
+        {
+          "id": "arc-n5",
+          "name": "Says",
+          "artist_name": "Nils Frahm"
+        }
+      ]
+    }
+  },
+  "metrics": {
+    "exactTrackCount": true,
+    "trackCount": 8,
+    "uniqueTrackCount": 8,
+    "duplicateCount": 0,
+    "duplicateKeys": [],
+    "inventedIds": [],
+    "unresolvedCount": 0,
+    "fixtureResolvableCount": 8,
+    "fixtureResolvableRate": 1,
+    "selectedTrackCoverage": {
+      "required": 1,
+      "included": 1,
+      "missingIds": []
+    },
+    "selectedArtistCoverage": {
+      "required": 1,
+      "represented": 1,
+      "missingIds": []
+    },
+    "novelty": {
+      "requestedCount": 4,
+      "newCount": 4,
+      "familiarCount": 4,
+      "unresolvedCount": 0,
+      "newRatio": 0.5,
+      "absoluteCountDelta": 0
+    },
+    "trackFixtureClassifications": [
+      {
+        "position": 1,
+        "classification": "familiar"
+      },
+      {
+        "position": 2,
+        "classification": "new"
+      },
+      {
+        "position": 3,
+        "classification": "familiar"
+      },
+      {
+        "position": 4,
+        "classification": "new"
+      },
+      {
+        "position": 5,
+        "classification": "new"
+      },
+      {
+        "position": 6,
+        "classification": "familiar"
+      },
+      {
+        "position": 7,
+        "classification": "familiar"
+      },
+      {
+        "position": 8,
+        "classification": "new"
+      }
+    ],
+    "adjacentSameArtistCount": 1,
+    "maxNewTracksByArtist": 1,
+    "constraintViolations": [
+      "adjacent-artist"
+    ]
+  }
+}

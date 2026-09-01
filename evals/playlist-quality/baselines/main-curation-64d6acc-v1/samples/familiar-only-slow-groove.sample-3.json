@@ -1,0 +1,120 @@
+{
+  "caseId": "familiar-only-slow-groove",
+  "sample": 3,
+  "startedAt": "2026-09-01T23:06:18.744Z",
+  "durationMs": 5213,
+  "output": {
+    "playlist": {
+      "name": "Velvet Miles",
+      "description": "A slow, sunlit drift through warm guitar, brushed rhythms, and midnight soul—roomy enough for the road to disappear beneath you.",
+      "tracks": [
+        {
+          "id": "none-f1",
+          "name": "Friday Morning",
+          "artist_name": "Khruangbin"
+        },
+        {
+          "id": "none-f6",
+          "name": "Kiss of Life",
+          "artist_name": "Sade"
+        },
+        {
+          "id": "none-f3",
+          "name": "White Gloves",
+          "artist_name": "Khruangbin"
+        },
+        {
+          "id": "none-f8",
+          "name": "Like a Tattoo",
+          "artist_name": "Sade"
+        },
+        {
+          "id": "none-f2",
+          "name": "August 10",
+          "artist_name": "Khruangbin"
+        },
+        {
+          "id": "none-f5",
+          "name": "No Ordinary Love",
+          "artist_name": "Sade"
+        },
+        {
+          "id": "none-f4",
+          "name": "Time (You and I)",
+          "artist_name": "Khruangbin"
+        },
+        {
+          "id": "none-f7",
+          "name": "Cherish the Day",
+          "artist_name": "Sade"
+        }
+      ]
+    }
+  },
+  "metrics": {
+    "exactTrackCount": true,
+    "trackCount": 8,
+    "uniqueTrackCount": 8,
+    "duplicateCount": 0,
+    "duplicateKeys": [],
+    "inventedIds": [],
+    "unresolvedCount": 0,
+    "fixtureResolvableCount": 8,
+    "fixtureResolvableRate": 1,
+    "selectedTrackCoverage": {
+      "required": 0,
+      "included": 0,
+      "missingIds": []
+    },
+    "selectedArtistCoverage": {
+      "required": 2,
+      "represented": 2,
+      "missingIds": []
+    },
+    "novelty": {
+      "requestedCount": 0,
+      "newCount": 0,
+      "familiarCount": 8,
+      "unresolvedCount": 0,
+      "newRatio": 0,
+      "absoluteCountDelta": 0
+    },
+    "trackFixtureClassifications": [
+      {
+        "position": 1,
+        "classification": "familiar"
+      },
+      {
+        "position": 2,
+        "classification": "familiar"
+      },
+      {
+        "position": 3,
+        "classification": "familiar"
+      },
+      {
+        "position": 4,
+        "classification": "familiar"
+      },
+      {
+        "position": 5,
+        "classification": "familiar"
+      },
+      {
+        "position": 6,
+        "classification": "familiar"
+      },
+      {
+        "position": 7,
+        "classification": "familiar"
+      },
+      {
+        "position": 8,
+        "classification": "familiar"
+      }
+    ],
+    "adjacentSameArtistCount": 0,
+    "maxNewTracksByArtist": 0,
+    "constraintViolations": []
+  }
+}

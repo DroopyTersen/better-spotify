@@ -25,6 +25,13 @@ album sampling, live Spotify resolution, or lifetime listening history. Until
 the application has a complete novelty index, results use the term
 `fixture-classified novelty`, not `never heard`.
 
+## Current baseline
+
+The reviewed [current-curation baseline](./baselines/main-curation-64d6acc-v1/README.md)
+contains three samples for each of the eight cases, the independent judgments,
+and both subjective and deterministic reports. It represents the production
+curation behavior on `main` at `64d6acc` before recommendation changes.
+
 ## Design
 
 ```text

@@ -96,4 +96,3 @@ return `A`, `B`, or `tie` as the winner plus confidence `low`, `medium`, or `hig
 Choose a winner on vibe fit first. Use novelty quality only after vibe and flow
 are at least acceptable. The comparison packet, never the reviewer, owns the
 hidden mapping back to baseline and candidate.
-

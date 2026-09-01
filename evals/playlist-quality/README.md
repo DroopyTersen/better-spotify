@@ -46,7 +46,7 @@ validate fixtures ---> run generatePlaylist() N times per case
                       versioned summary
 ```
 
-The planned command surface is:
+The command surface is:
 
 ```bash
 # Billable and nondeterministic; requires OPENAI_API_KEY.
@@ -121,4 +121,3 @@ mapping is written to a separate key that is not provided to the reviewer.
 
 Rubric or benchmark changes require their own version and baseline. Product,
 harness, rubric, fixture, and data changes are reported separately.
-

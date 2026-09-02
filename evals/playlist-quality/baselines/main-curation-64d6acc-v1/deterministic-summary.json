@@ -8,7 +8,8 @@
   "exactTrackCountRate": 1,
   "duplicateFreeRate": 1,
   "fixtureResolutionRate": 0.875,
-  "requestedMixMeanAbsoluteError": 1,
+  "requestedMixEvaluableSampleCount": 21,
+  "requestedMixMeanAbsoluteError": 0,
   "meanCrossSampleTrackOverlap": 0.7883597883597884,
   "caseOverlap": [
     {

@@ -1,4 +1,4 @@
-# Playlist quality rubric v1
+# Playlist quality rubric v1.0.1
 
 Judge only from the supplied case and playlist artifact. Do not infer hidden
 product intent, implementation identity, or prior scores. Deterministic metrics

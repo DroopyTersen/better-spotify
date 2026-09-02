@@ -1,11 +1,12 @@
 import { z } from "zod";
 import { PlaylistCurationResponse } from "../../app/spotify/playlistBuilder/generatePlaylist.server";
 import { BuildPlaylistTrack } from "../../app/spotify/playlistBuilder/playlistBuilder.types";
-import type { GeneratePlaylistInput } from "../../app/spotify/playlistBuilder/playlistBuilder.types";
 
 export const PLAYLIST_EVAL_SCHEMA_VERSION = 1 as const;
 export const PLAYLIST_BENCHMARK_VERSION = "1.0.0" as const;
-export const PLAYLIST_RUBRIC_VERSION = "1.0.0" as const;
+export const PLAYLIST_RUBRIC_VERSION = "1.0.1" as const;
+
+const ArtifactVersionSchema = z.string().trim().min(1).max(100);
 
 const NewStuffAmountSchema = z.enum(["none", "sprinkle", "half", "all"]);
 
@@ -20,13 +21,11 @@ const SelectedTrackSchema = z.object({
   track_name: z.string().optional(),
   artist_id: z.string().nullable().optional(),
   artist_name: z.string().nullable().optional(),
-  images: z.array(z.unknown()).nullable().optional(),
 });
 
 const SelectedArtistSchema = z.object({
   artist_id: z.string().min(1),
   artist_name: z.string().optional(),
-  images: z.array(z.unknown()).nullable().optional(),
 });
 
 const FamiliarSongsPoolSchema = z.object({
@@ -43,26 +42,21 @@ const FamiliarSongsPoolSchema = z.object({
   recentlyPlayedTracks: z.array(BuildPlaylistTrack),
 });
 
-export type PlaylistEvalInput = Omit<GeneratePlaylistInput, "data"> & {
-  data: Omit<GeneratePlaylistInput["data"], "familiarSongsPool"> & {
-    familiarSongsPool: NonNullable<
-      GeneratePlaylistInput["data"]["familiarSongsPool"]
-    >;
-  };
-};
-
-export const GeneratePlaylistEvalInputSchema: z.ZodType<PlaylistEvalInput> =
-  z.object({
+export const GeneratePlaylistEvalInputSchema = z.object({
+  formData: FormDataSchema,
+  data: z.object({
+    selectedTracks: z.array(SelectedTrackSchema),
+    selectedArtists: z.array(SelectedArtistSchema),
+    familiarSongsPool: FamiliarSongsPoolSchema,
+    recommendedArtists: z.array(SelectedArtistSchema),
     formData: FormDataSchema,
-    data: z.object({
-      selectedTracks: z.array(SelectedTrackSchema),
-      selectedArtists: z.array(SelectedArtistSchema),
-      familiarSongsPool: FamiliarSongsPoolSchema,
-      recommendedArtists: z.array(SelectedArtistSchema),
-      formData: FormDataSchema,
-    }),
-    newSongs: z.array(BuildPlaylistTrack),
-  }) as z.ZodType<PlaylistEvalInput>;
+  }),
+  newSongs: z.array(BuildPlaylistTrack),
+});
+
+export type PlaylistEvalInput = z.infer<
+  typeof GeneratePlaylistEvalInputSchema
+>;
 
 export const PlaylistEvalCaseSchema = z.object({
   id: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
@@ -107,8 +101,8 @@ export const PlaylistSampleMetricsSchema = z.object({
     newCount: z.number().int().nonnegative(),
     familiarCount: z.number().int().nonnegative(),
     unresolvedCount: z.number().int().nonnegative(),
-    newRatio: z.number().min(0).max(1),
-    absoluteCountDelta: z.number().int().nonnegative(),
+    newRatio: z.number().min(0).max(1).nullable(),
+    absoluteCountDelta: z.number().int().nonnegative().nullable(),
   }),
   trackFixtureClassifications: z.array(
     z.object({
@@ -130,26 +124,30 @@ const SanitizedErrorSchema = z.object({
   message: z.string(),
 });
 
-export const PlaylistEvalSampleSchema = z
-  .object({
-    caseId: z.string(),
-    sample: z.number().int().min(1),
-    startedAt: z.string().datetime(),
-    durationMs: z.number().int().nonnegative(),
-    output: PlaylistCurationResponse.optional(),
-    metrics: PlaylistSampleMetricsSchema.optional(),
-    error: SanitizedErrorSchema.optional(),
-  })
-  .refine(({ error, output }) => Boolean(error) !== Boolean(output), {
-    message: "A sample must contain exactly one output or error",
-  });
+const PlaylistEvalSampleBaseSchema = z.object({
+  caseId: z.string(),
+  sample: z.number().int().min(1),
+  startedAt: z.string().datetime(),
+  durationMs: z.number().int().nonnegative(),
+});
+
+export const PlaylistEvalSampleSchema = z.discriminatedUnion("status", [
+  PlaylistEvalSampleBaseSchema.extend({
+    status: z.literal("success"),
+    output: PlaylistCurationResponse,
+    metrics: PlaylistSampleMetricsSchema,
+  }).strict(),
+  PlaylistEvalSampleBaseSchema.extend({
+    status: z.literal("failure"),
+    error: SanitizedErrorSchema,
+  }).strict(),
+]);
 
 export type PlaylistEvalSample = z.infer<typeof PlaylistEvalSampleSchema>;
 
-export const PlaylistEvalRunSchema = z.object({
+const PlaylistEvalRunBaseSchema = z.object({
   schemaVersion: z.literal(PLAYLIST_EVAL_SCHEMA_VERSION),
-  benchmarkVersion: z.literal(PLAYLIST_BENCHMARK_VERSION),
-  rubricVersion: z.literal(PLAYLIST_RUBRIC_VERSION),
+  benchmarkVersion: ArtifactVersionSchema,
   runId: z.string().min(1),
   label: z.string().min(1),
   sourceRevision: z.string().min(1),
@@ -165,8 +163,33 @@ export const PlaylistEvalRunSchema = z.object({
       case: PlaylistEvalCaseSchema,
       samples: z.array(PlaylistEvalSampleSchema),
     })
-  ),
+  ).min(1),
 });
+
+export const PlaylistEvalRunSchema = PlaylistEvalRunBaseSchema.refine(
+  ({ cases }) => new Set(cases.map(({ case: evalCase }) => evalCase.id)).size === cases.length,
+  { message: "Run case IDs must be unique", path: ["cases"] }
+)
+  .refine(
+    ({ cases, samplesPerCase }) =>
+      cases.every(
+        ({ case: evalCase, samples }) =>
+          samples.length === samplesPerCase &&
+          samples.every(
+            (sample, index) =>
+              sample.caseId === evalCase.id && sample.sample === index + 1
+          )
+      ),
+    { message: "Run samples must match their case and sequence", path: ["cases"] }
+  )
+  .refine(
+    ({ cases, complete }) =>
+      complete ===
+      cases.every(({ samples }) =>
+        samples.every(({ status }) => status === "success")
+      ),
+    { message: "Run completeness must match its samples", path: ["complete"] }
+  );
 
 export type PlaylistEvalRun = z.infer<typeof PlaylistEvalRunSchema>;
 
@@ -197,7 +220,7 @@ export const PlaylistEvalJudgmentSchema = z.object({
 
 export const PlaylistEvalJudgmentsSchema = z.object({
   schemaVersion: z.literal(PLAYLIST_EVAL_SCHEMA_VERSION),
-  rubricVersion: z.literal(PLAYLIST_RUBRIC_VERSION),
+  rubricVersion: ArtifactVersionSchema,
   runId: z.string().min(1),
   judgments: z.array(PlaylistEvalJudgmentSchema),
 });
@@ -228,14 +251,15 @@ export const PlaylistEvalReportSchema = z.object({
     exactTrackCountRate: z.number().min(0).max(1),
     duplicateFreeRate: z.number().min(0).max(1),
     fixtureResolutionRate: z.number().min(0).max(1),
-    requestedMixMeanAbsoluteError: z.number().nonnegative(),
+    requestedMixEvaluableSampleCount: z.number().int().nonnegative(),
+    requestedMixMeanAbsoluteError: z.number().nonnegative().nullable(),
   }),
   run: z.object({
     runId: z.string(),
     label: z.string(),
     sourceRevision: z.string(),
-    benchmarkVersion: z.string(),
-    rubricVersion: z.string(),
+    benchmarkVersion: ArtifactVersionSchema,
+    rubricVersion: ArtifactVersionSchema,
     complete: z.boolean(),
   }),
 });
@@ -274,8 +298,8 @@ const BlindEvaluatedPlaylistSchema = BlindPlaylistSchema.extend({
 
 export const PlaylistJudgePacketSchema = z.object({
   schemaVersion: z.literal(PLAYLIST_EVAL_SCHEMA_VERSION),
-  benchmarkVersion: z.literal(PLAYLIST_BENCHMARK_VERSION),
-  rubricVersion: z.literal(PLAYLIST_RUBRIC_VERSION),
+  benchmarkVersion: ArtifactVersionSchema,
+  rubricVersion: ArtifactVersionSchema,
   samples: z.array(
     z.object({
       caseId: z.string(),
@@ -294,8 +318,8 @@ export type PlaylistJudgePacket = z.infer<typeof PlaylistJudgePacketSchema>;
 
 export const BlindComparisonPacketSchema = z.object({
   schemaVersion: z.literal(PLAYLIST_EVAL_SCHEMA_VERSION),
-  benchmarkVersion: z.literal(PLAYLIST_BENCHMARK_VERSION),
-  rubricVersion: z.literal(PLAYLIST_RUBRIC_VERSION),
+  benchmarkVersion: ArtifactVersionSchema,
+  rubricVersion: ArtifactVersionSchema,
   comparisonId: z.string(),
   pairs: z.array(
     z.object({

@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { dirname, join, resolve } from "node:path";
+import { PLAYLIST_GENERATION_MODEL_ID } from "../../app/spotify/playlistBuilder/aiGeneration.server";
 import { generatePlaylist } from "../../app/spotify/playlistBuilder/generatePlaylist.server";
 import { createArtifactDirectory, readJsonFile, writeJsonExclusive } from "./artifactStore";
 import { playlistQualityCases } from "./benchmark.v1";
@@ -82,7 +83,10 @@ async function runCommand(args: string[]): Promise<void> {
     samplesPerCase,
     sourceRevision,
     sourceDirty,
-    generate: (input) => generatePlaylist(input),
+    generator: {
+      modelId: PLAYLIST_GENERATION_MODEL_ID,
+      generate: (input) => generatePlaylist(input),
+    },
     onSample: async (sample) => {
       await writeJsonExclusive(
         join(
@@ -93,7 +97,7 @@ async function runCommand(args: string[]): Promise<void> {
         sample
       );
       console.log(
-        `${sample.caseId} sample ${sample.sample}: ${sample.error ? "failed" : "complete"}`
+        `${sample.caseId} sample ${sample.sample}: ${sample.status}`
       );
     },
   });

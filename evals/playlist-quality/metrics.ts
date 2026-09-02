@@ -12,6 +12,7 @@ import {
   type PlaylistEvalJudgments,
   type PlaylistEvalReport,
   type PlaylistEvalRun,
+  type PlaylistEvalSample,
   type PlaylistSampleMetrics,
 } from "./schemas";
 
@@ -232,8 +233,14 @@ export function analyzePlaylistSample(
       newCount: newTracks.length,
       familiarCount,
       unresolvedCount,
-      newRatio: trackCount === 0 ? 0 : newTracks.length / trackCount,
-      absoluteCountDelta: Math.abs(newTracks.length - requestedCount),
+      newRatio:
+        trackCount === 0 || unresolvedCount > 0
+          ? null
+          : newTracks.length / trackCount,
+      absoluteCountDelta:
+        unresolvedCount > 0
+          ? null
+          : Math.abs(newTracks.length - requestedCount),
     },
     trackFixtureClassifications: resolved.map(({ source }, index) => ({
       position: index + 1,
@@ -256,9 +263,8 @@ export function summarizePlaylistRun(
   }
 
   const successfulSamples = run.cases.flatMap(({ samples }) =>
-    samples.filter((sample) => sample.output && sample.metrics)
+    samples.filter(isSuccessfulSample)
   );
-  const allSamples = run.cases.flatMap(({ samples }) => samples);
   const judgmentBySample = new Map<string, (typeof judgments.judgments)[number]>();
   for (const judgment of judgments.judgments) {
     const key = sampleKey(judgment.caseId, judgment.sample);
@@ -277,11 +283,7 @@ export function summarizePlaylistRun(
     throw new Error("Judgments contain samples that are not successful run outputs");
   }
 
-  const metrics = successfulSamples.flatMap((sample) =>
-    sample.metrics ? [sample.metrics] : []
-  );
-  const successDenominator = Math.max(1, allSamples.length);
-  const metricDenominator = Math.max(1, metrics.length);
+  const deterministic = summarizeDeterministicRun(run);
 
   return PlaylistEvalReportSchema.parse({
     subjective: {
@@ -302,29 +304,22 @@ export function summarizePlaylistRun(
       ),
     },
     deterministic: {
-      sampleCount: allSamples.length,
-      generationSuccessRate: successfulSamples.length / successDenominator,
-      exactTrackCountRate:
-        metrics.filter(({ exactTrackCount }) => exactTrackCount).length /
-        metricDenominator,
-      duplicateFreeRate:
-        metrics.filter(({ duplicateCount }) => duplicateCount === 0).length /
-        metricDenominator,
-      fixtureResolutionRate:
-        metrics.reduce((sum, metric) => sum + metric.fixtureResolvableRate, 0) /
-        metricDenominator,
+      sampleCount: deterministic.attemptedSamples,
+      generationSuccessRate: deterministic.generationSuccessRate,
+      exactTrackCountRate: deterministic.exactTrackCountRate,
+      duplicateFreeRate: deterministic.duplicateFreeRate,
+      fixtureResolutionRate: deterministic.fixtureResolutionRate,
+      requestedMixEvaluableSampleCount:
+        deterministic.requestedMixEvaluableSampleCount,
       requestedMixMeanAbsoluteError:
-        metrics.reduce(
-          (sum, metric) => sum + metric.novelty.absoluteCountDelta,
-          0
-        ) / metricDenominator,
+        deterministic.requestedMixMeanAbsoluteError,
     },
     run: {
       runId: run.runId,
       label: run.label,
       sourceRevision: run.sourceRevision,
       benchmarkVersion: run.benchmarkVersion,
-      rubricVersion: run.rubricVersion,
+      rubricVersion: judgments.rubricVersion,
       complete: run.complete,
     },
   });
@@ -333,19 +328,18 @@ export function summarizePlaylistRun(
 export function summarizeDeterministicRun(rawRun: PlaylistEvalRun) {
   const run = PlaylistEvalRunSchema.parse(rawRun);
   const allSamples = run.cases.flatMap(({ samples }) => samples);
-  const successfulSamples = allSamples.filter(
-    (sample) => sample.output && sample.metrics
-  );
-  const metrics = successfulSamples.flatMap((sample) =>
-    sample.metrics ? [sample.metrics] : []
+  const successfulSamples = allSamples.filter(isSuccessfulSample);
+  const metrics = successfulSamples.map(({ metrics }) => metrics);
+  const mixDeltas = metrics.flatMap(({ novelty }) =>
+    novelty.absoluteCountDelta === null ? [] : [novelty.absoluteCountDelta]
   );
   const metricDenominator = Math.max(1, metrics.length);
   const caseOverlap = run.cases.map(({ case: evalCase, samples }) => {
-    const trackSets = samples.flatMap(({ output }) =>
-      output
+    const trackSets = samples.flatMap((sample) =>
+      sample.status === "success"
         ? [
             new Set(
-              output.playlist.tracks.map(({ name, artist_name }) =>
+              sample.output.playlist.tracks.map(({ name, artist_name }) =>
                 trackKey(name, artist_name)
               )
             ),
@@ -355,7 +349,9 @@ export function summarizeDeterministicRun(rawRun: PlaylistEvalRun) {
     const overlaps: number[] = [];
     for (let left = 0; left < trackSets.length; left += 1) {
       for (let right = left + 1; right < trackSets.length; right += 1) {
-        overlaps.push(jaccard(trackSets[left] ?? new Set(), trackSets[right] ?? new Set()));
+        overlaps.push(
+          jaccard(trackSets[left] ?? new Set(), trackSets[right] ?? new Set())
+        );
       }
     }
     return {
@@ -388,11 +384,12 @@ export function summarizeDeterministicRun(rawRun: PlaylistEvalRun) {
     fixtureResolutionRate:
       metrics.reduce((sum, metric) => sum + metric.fixtureResolvableRate, 0) /
       metricDenominator,
+    requestedMixEvaluableSampleCount: mixDeltas.length,
     requestedMixMeanAbsoluteError:
-      metrics.reduce(
-        (sum, metric) => sum + metric.novelty.absoluteCountDelta,
-        0
-      ) / metricDenominator,
+      mixDeltas.length === 0
+        ? null
+        : mixDeltas.reduce((sum, delta) => sum + delta, 0) /
+          mixDeltas.length,
     meanCrossSampleTrackOverlap:
       measuredOverlaps.length === 0
         ? null
@@ -400,6 +397,17 @@ export function summarizeDeterministicRun(rawRun: PlaylistEvalRun) {
           measuredOverlaps.length,
     caseOverlap,
   };
+}
+
+type SuccessfulPlaylistEvalSample = Extract<
+  PlaylistEvalSample,
+  { status: "success" }
+>;
+
+function isSuccessfulSample(
+  sample: PlaylistEvalSample
+): sample is SuccessfulPlaylistEvalSample {
+  return sample.status === "success";
 }
 
 export function requestedNewCount(

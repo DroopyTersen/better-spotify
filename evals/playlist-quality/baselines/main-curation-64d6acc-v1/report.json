@@ -41,14 +41,15 @@
     "exactTrackCountRate": 1,
     "duplicateFreeRate": 1,
     "fixtureResolutionRate": 0.875,
-    "requestedMixMeanAbsoluteError": 1
+    "requestedMixEvaluableSampleCount": 21,
+    "requestedMixMeanAbsoluteError": 0
   },
   "run": {
     "runId": "main-curation-64d6acc-20260901T230417456Z",
     "label": "main-curation-64d6acc",
     "sourceRevision": "edf74ff701b268e53d54c0de1d1577b68ebb0b9c",
     "benchmarkVersion": "1.0.0",
-    "rubricVersion": "1.0.0",
+    "rubricVersion": "1.0.1",
     "complete": true
   }
 }

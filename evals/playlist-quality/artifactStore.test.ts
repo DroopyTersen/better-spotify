@@ -11,9 +11,12 @@ const temporaryRoots: string[] = [];
 
 afterEach(async () => {
   await Promise.all(
-    temporaryRoots.splice(0).map((path) => rm(path, { recursive: true, force: true }))
+    temporaryRoots
+      .splice(0)
+      .map((path) => rm(path, { recursive: true, force: true }))
   );
 });
+
 describe("playlist evaluation artifact storage", () => {
   test("creates a new run directory and refuses to reuse it", async () => {
     const root = await mkdtemp(join(tmpdir(), "playlist-eval-store-"));
@@ -40,5 +43,21 @@ describe("playlist evaluation artifact storage", () => {
     await expect(
       writeJsonExclusive(output, { result: "replacement" })
     ).rejects.toThrow("already exists");
+  });
+
+  test("does not reserve a file when JSON serialization fails", async () => {
+    const root = await mkdtemp(join(tmpdir(), "playlist-eval-json-"));
+    temporaryRoots.push(root);
+    const output = join(root, "artifact.json");
+    const circular: Record<string, unknown> = {};
+    circular.self = circular;
+
+    await expect(writeJsonExclusive(output, undefined)).rejects.toThrow(
+      "not JSON serializable"
+    );
+    await expect(writeJsonExclusive(output, circular)).rejects.toThrow();
+    await expect(readFile(output, "utf8")).rejects.toMatchObject({
+      code: "ENOENT",
+    });
   });
 });

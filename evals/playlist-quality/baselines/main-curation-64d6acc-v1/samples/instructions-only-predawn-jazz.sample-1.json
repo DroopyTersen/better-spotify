@@ -1,4 +1,5 @@
 {
+  "status": "success",
   "caseId": "instructions-only-predawn-jazz",
   "sample": 1,
   "startedAt": "2026-09-01T23:05:07.654Z",
@@ -76,8 +77,8 @@
       "newCount": 0,
       "familiarCount": 0,
       "unresolvedCount": 8,
-      "newRatio": 0,
-      "absoluteCountDelta": 8
+      "newRatio": null,
+      "absoluteCountDelta": null
     },
     "trackFixtureClassifications": [
       {

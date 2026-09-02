@@ -7,7 +7,7 @@ records harness revision `edf74ff` and a clean working tree.
 ## Run
 
 - Benchmark: 1.0.0, eight public fixture cases
-- Rubric: 1.0.0
+- Rubric: 1.0.1
 - Model: `gpt-5.6-luna`
 - Sampling: three independent generations per case, 24 total
 - Result: 24 successful generations, with no Spotify authentication, catalog
@@ -36,12 +36,12 @@ instrumental sample rebuilt after its intended landing.
 - fixture resolution: 87.5%; and
 - mean cross-sample track overlap: 78.8%.
 
-All 21 pool-backed samples hit the requested familiar/new mix exactly. The
-reported mean mix error of one track comes entirely from the three intentional
-instruction-only samples: their 24 music-knowledge selections have empty IDs
-and cannot be classified as fixture-new. Those samples also fully explain the
-87.5% fixture-resolution rate. One instrumental sample placed two tracks by the
-same artist next to each other; no other deterministic constraint failed.
+All 21 fixture-classifiable samples hit the requested familiar/new mix exactly.
+The three intentional instruction-only samples have no fixture candidates, so
+their 24 music-knowledge selections cannot be classified and are excluded from
+the mix-error calculation. Those samples fully explain the 87.5% fixture-
+resolution rate. One instrumental sample placed two tracks by the same artist
+next to each other; no other deterministic constraint failed.
 
 Pool-constrained cases were highly stable. Three cases returned the same track
 set in all samples, while the instruction-only case had only 9.2% mean pairwise

@@ -1,6 +1,5 @@
 import type { PlaylistCurationResponse as PlaylistCurationOutput } from "../../app/spotify/playlistBuilder/generatePlaylist.server";
 import { PlaylistCurationResponse } from "../../app/spotify/playlistBuilder/generatePlaylist.server";
-import { PLAYLIST_GENERATION_MODEL_ID } from "../../app/spotify/playlistBuilder/aiGeneration.server";
 import type { GeneratePlaylistInput } from "../../app/spotify/playlistBuilder/playlistBuilder.types";
 import { analyzePlaylistSample, validatePlaylistBenchmark } from "./metrics";
 import {
@@ -16,11 +15,13 @@ import {
   type PlaylistEvalCase,
   type PlaylistEvalRun,
   type PlaylistEvalSample,
+  type PlaylistSampleMetrics,
 } from "./schemas";
 
-type PlaylistGenerator = (
-  input: GeneratePlaylistInput
-) => Promise<PlaylistCurationOutput>;
+type PlaylistGenerator = {
+  modelId: string;
+  generate: (input: GeneratePlaylistInput) => Promise<PlaylistCurationOutput>;
+};
 
 export type RunPlaylistBenchmarkOptions = {
   label: string;
@@ -28,7 +29,7 @@ export type RunPlaylistBenchmarkOptions = {
   samplesPerCase: number;
   sourceRevision: string;
   sourceDirty: boolean;
-  generate: PlaylistGenerator;
+  generator: PlaylistGenerator;
   onSample?: (
     sample: PlaylistEvalSample,
     evalCase: PlaylistEvalCase
@@ -42,7 +43,7 @@ export async function runPlaylistBenchmark({
   samplesPerCase,
   sourceRevision,
   sourceDirty,
-  generate,
+  generator,
   onSample,
   now = Date.now,
 }: RunPlaylistBenchmarkOptions): Promise<PlaylistEvalRun> {
@@ -61,9 +62,10 @@ export async function runPlaylistBenchmark({
       let sample: PlaylistEvalSample;
       try {
         const output = PlaylistCurationResponse.parse(
-          await generate(evalCase.input)
+          await generator.generate(evalCase.input)
         );
         sample = {
+          status: "success",
           caseId: evalCase.id,
           sample: sampleNumber,
           startedAt: new Date(sampleStarted).toISOString(),
@@ -73,6 +75,7 @@ export async function runPlaylistBenchmark({
         };
       } catch (error) {
         sample = {
+          status: "failure",
           caseId: evalCase.id,
           sample: sampleNumber,
           startedAt: new Date(sampleStarted).toISOString(),
@@ -90,18 +93,17 @@ export async function runPlaylistBenchmark({
   return PlaylistEvalRunSchema.parse({
     schemaVersion: PLAYLIST_EVAL_SCHEMA_VERSION,
     benchmarkVersion: PLAYLIST_BENCHMARK_VERSION,
-    rubricVersion: PLAYLIST_RUBRIC_VERSION,
     runId: `${cleanLabel}-${compactTimestamp(runStarted)}`,
     label: cleanLabel,
     sourceRevision,
     sourceDirty,
-    modelId: PLAYLIST_GENERATION_MODEL_ID,
+    modelId: generator.modelId,
     samplesPerCase,
     startedAt: new Date(runStarted).toISOString(),
     completedAt: new Date(completedAt).toISOString(),
     durationMs: Math.max(0, completedAt - runStarted),
     complete: caseResults.every(({ samples }) =>
-      samples.every(({ output, metrics, error }) => output && metrics && !error)
+      samples.every(({ status }) => status === "success")
     ),
     cases: caseResults,
   });
@@ -114,11 +116,17 @@ export function createBlindComparison(
 ): { packet: BlindComparisonPacket; key: BlindComparisonKey } {
   const baseline = PlaylistEvalRunSchema.parse(rawBaseline);
   const candidate = PlaylistEvalRunSchema.parse(rawCandidate);
+  if (!baseline.complete || !candidate.complete) {
+    throw new Error("Blind comparison requires complete runs");
+  }
+  if (baseline.benchmarkVersion !== candidate.benchmarkVersion) {
+    throw new Error("Runs must use the same benchmark version");
+  }
   if (
-    baseline.benchmarkVersion !== candidate.benchmarkVersion ||
-    baseline.rubricVersion !== candidate.rubricVersion
+    JSON.stringify(baseline.cases.map(({ case: evalCase }) => evalCase)) !==
+    JSON.stringify(candidate.cases.map(({ case: evalCase }) => evalCase))
   ) {
-    throw new Error("Runs must use the same benchmark and rubric versions");
+    throw new Error("Runs contain different benchmark cases");
   }
 
   const candidateByCase = new Map(
@@ -148,18 +156,21 @@ export function createBlindComparison(
           `Candidate run is missing ${baselineCase.case.id}:${baselineSample.sample}`
         );
       }
-      const baselineOutput = baselineSample.output;
-      const candidateOutput = candidateSample.output;
-      if (!baselineOutput || !candidateOutput) continue;
+      if (
+        baselineSample.status !== "success" ||
+        candidateSample.status !== "success"
+      ) {
+        throw new Error("Complete runs cannot contain failed samples");
+      }
 
       const pairId = `${baselineCase.case.id}:${baselineSample.sample}`;
       const swap = stableHash(`${seed}:${pairId}`) % 2 === 1;
       const A = swap
-        ? { output: candidateOutput, metrics: candidateSample.metrics }
-        : { output: baselineOutput, metrics: baselineSample.metrics };
+        ? candidateSample
+        : baselineSample;
       const B = swap
-        ? { output: baselineOutput, metrics: baselineSample.metrics }
-        : { output: candidateOutput, metrics: candidateSample.metrics };
+        ? baselineSample
+        : candidateSample;
       pairs.push({
         pairId,
         caseId: baselineCase.case.id,
@@ -190,7 +201,7 @@ export function createBlindComparison(
     packet: BlindComparisonPacketSchema.parse({
       schemaVersion: PLAYLIST_EVAL_SCHEMA_VERSION,
       benchmarkVersion: baseline.benchmarkVersion,
-      rubricVersion: baseline.rubricVersion,
+      rubricVersion: PLAYLIST_RUBRIC_VERSION,
       comparisonId,
       pairs,
     }),
@@ -211,10 +222,10 @@ export function createJudgePacket(run: PlaylistEvalRun) {
   return PlaylistJudgePacketSchema.parse({
     schemaVersion: parsed.schemaVersion,
     benchmarkVersion: parsed.benchmarkVersion,
-    rubricVersion: parsed.rubricVersion,
+    rubricVersion: PLAYLIST_RUBRIC_VERSION,
     samples: parsed.cases.flatMap(({ case: evalCase, samples }) =>
       samples.flatMap((sample) =>
-        sample.output
+        sample.status === "success"
           ? [
               {
                 caseId: evalCase.id,
@@ -224,12 +235,10 @@ export function createJudgePacket(run: PlaylistEvalRun) {
                 intent: evalCase.intent,
                 request: judgeRequest(evalCase),
                 playlist: blindPlaylist(sample.output),
-                fixtureClassifications: sample.metrics
-                  ? {
-                      summary: sample.metrics.novelty,
-                      tracks: sample.metrics.trackFixtureClassifications,
-                    }
-                  : undefined,
+                fixtureClassifications: {
+                  summary: sample.metrics.novelty,
+                  tracks: sample.metrics.trackFixtureClassifications,
+                },
               },
             ]
           : []
@@ -257,16 +266,14 @@ function judgeRequest(evalCase: PlaylistEvalCase) {
 
 function blindEvaluatedPlaylist(
   output: PlaylistCurationOutput,
-  metrics: PlaylistEvalSample["metrics"]
+  metrics: PlaylistSampleMetrics
 ) {
   return {
     ...blindPlaylist(output),
-    fixtureClassifications: metrics
-      ? {
-          summary: metrics.novelty,
-          tracks: metrics.trackFixtureClassifications,
-        }
-      : undefined,
+    fixtureClassifications: {
+      summary: metrics.novelty,
+      tracks: metrics.trackFixtureClassifications,
+    },
   };
 }
 

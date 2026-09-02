@@ -13,10 +13,16 @@ export async function createArtifactDirectory(path: string): Promise<string> {
   }
   return path;
 }
+
 export async function writeJsonExclusive(
   path: string,
   value: unknown
 ): Promise<void> {
+  const json = JSON.stringify(value, null, 2);
+  if (json === undefined) {
+    throw new TypeError("Artifact value is not JSON serializable");
+  }
+  const serialized = `${json}\n`;
   await mkdir(dirname(path), { recursive: true });
   let file;
   try {
@@ -29,7 +35,7 @@ export async function writeJsonExclusive(
   }
 
   try {
-    await file.writeFile(`${JSON.stringify(value, null, 2)}\n`, "utf8");
+    await file.writeFile(serialized, "utf8");
   } finally {
     await file.close();
   }

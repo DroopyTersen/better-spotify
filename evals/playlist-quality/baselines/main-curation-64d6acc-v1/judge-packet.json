@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "benchmarkVersion": "1.0.0",
-  "rubricVersion": "1.0.0",
+  "rubricVersion": "1.0.1",
   "samples": [
     {
       "caseId": "artist-only-indie-folk",
@@ -1112,8 +1112,8 @@
           "newCount": 0,
           "familiarCount": 0,
           "unresolvedCount": 8,
-          "newRatio": 0,
-          "absoluteCountDelta": 8
+          "newRatio": null,
+          "absoluteCountDelta": null
         },
         "tracks": [
           {
@@ -1222,8 +1222,8 @@
           "newCount": 0,
           "familiarCount": 0,
           "unresolvedCount": 8,
-          "newRatio": 0,
-          "absoluteCountDelta": 8
+          "newRatio": null,
+          "absoluteCountDelta": null
         },
         "tracks": [
           {
@@ -1332,8 +1332,8 @@
           "newCount": 0,
           "familiarCount": 0,
           "unresolvedCount": 8,
-          "newRatio": 0,
-          "absoluteCountDelta": 8
+          "newRatio": null,
+          "absoluteCountDelta": null
         },
         "tracks": [
           {

@@ -1,7 +1,6 @@
 {
   "schemaVersion": 1,
   "benchmarkVersion": "1.0.0",
-  "rubricVersion": "1.0.0",
   "runId": "main-curation-64d6acc-20260901T230417456Z",
   "label": "main-curation-64d6acc",
   "sourceRevision": "edf74ff701b268e53d54c0de1d1577b68ebb0b9c",
@@ -187,6 +186,7 @@
       },
       "samples": [
         {
+          "status": "success",
           "caseId": "artist-only-indie-folk",
           "sample": 1,
           "startedAt": "2026-09-01T23:04:17.456Z",
@@ -307,6 +307,7 @@
           }
         },
         {
+          "status": "success",
           "caseId": "artist-only-indie-folk",
           "sample": 2,
           "startedAt": "2026-09-01T23:04:24.110Z",
@@ -427,6 +428,7 @@
           }
         },
         {
+          "status": "success",
           "caseId": "artist-only-indie-folk",
           "sample": 3,
           "startedAt": "2026-09-01T23:04:31.032Z",
@@ -721,6 +723,7 @@
       },
       "samples": [
         {
+          "status": "success",
           "caseId": "track-only-neon-drive",
           "sample": 1,
           "startedAt": "2026-09-01T23:04:35.779Z",
@@ -841,6 +844,7 @@
           }
         },
         {
+          "status": "success",
           "caseId": "track-only-neon-drive",
           "sample": 2,
           "startedAt": "2026-09-01T23:04:40.684Z",
@@ -961,6 +965,7 @@
           }
         },
         {
+          "status": "success",
           "caseId": "track-only-neon-drive",
           "sample": 3,
           "startedAt": "2026-09-01T23:04:46.713Z",
@@ -1250,6 +1255,7 @@
       },
       "samples": [
         {
+          "status": "success",
           "caseId": "mixed-indie-dance",
           "sample": 1,
           "startedAt": "2026-09-01T23:04:50.492Z",
@@ -1370,6 +1376,7 @@
           }
         },
         {
+          "status": "success",
           "caseId": "mixed-indie-dance",
           "sample": 2,
           "startedAt": "2026-09-01T23:04:54.842Z",
@@ -1490,6 +1497,7 @@
           }
         },
         {
+          "status": "success",
           "caseId": "mixed-indie-dance",
           "sample": 3,
           "startedAt": "2026-09-01T23:05:01.459Z",
@@ -1661,6 +1669,7 @@
       },
       "samples": [
         {
+          "status": "success",
           "caseId": "instructions-only-predawn-jazz",
           "sample": 1,
           "startedAt": "2026-09-01T23:05:07.654Z",
@@ -1738,8 +1747,8 @@
               "newCount": 0,
               "familiarCount": 0,
               "unresolvedCount": 8,
-              "newRatio": 0,
-              "absoluteCountDelta": 8
+              "newRatio": null,
+              "absoluteCountDelta": null
             },
             "trackFixtureClassifications": [
               {
@@ -1781,6 +1790,7 @@
           }
         },
         {
+          "status": "success",
           "caseId": "instructions-only-predawn-jazz",
           "sample": 2,
           "startedAt": "2026-09-01T23:05:17.761Z",
@@ -1858,8 +1868,8 @@
               "newCount": 0,
               "familiarCount": 0,
               "unresolvedCount": 8,
-              "newRatio": 0,
-              "absoluteCountDelta": 8
+              "newRatio": null,
+              "absoluteCountDelta": null
             },
             "trackFixtureClassifications": [
               {
@@ -1901,6 +1911,7 @@
           }
         },
         {
+          "status": "success",
           "caseId": "instructions-only-predawn-jazz",
           "sample": 3,
           "startedAt": "2026-09-01T23:05:27.095Z",
@@ -1978,8 +1989,8 @@
               "newCount": 0,
               "familiarCount": 0,
               "unresolvedCount": 8,
-              "newRatio": 0,
-              "absoluteCountDelta": 8
+              "newRatio": null,
+              "absoluteCountDelta": null
             },
             "trackFixtureClassifications": [
               {
@@ -2204,6 +2215,7 @@
       },
       "samples": [
         {
+          "status": "success",
           "caseId": "conflicting-dark-electronic",
           "sample": 1,
           "startedAt": "2026-09-01T23:05:33.444Z",
@@ -2324,6 +2336,7 @@
           }
         },
         {
+          "status": "success",
           "caseId": "conflicting-dark-electronic",
           "sample": 2,
           "startedAt": "2026-09-01T23:05:36.632Z",
@@ -2444,6 +2457,7 @@
           }
         },
         {
+          "status": "success",
           "caseId": "conflicting-dark-electronic",
           "sample": 3,
           "startedAt": "2026-09-01T23:05:40.269Z",
@@ -2733,6 +2747,7 @@
       },
       "samples": [
         {
+          "status": "success",
           "caseId": "instrumental-energy-arc",
           "sample": 1,
           "startedAt": "2026-09-01T23:05:44.276Z",
@@ -2855,6 +2870,7 @@
           }
         },
         {
+          "status": "success",
           "caseId": "instrumental-energy-arc",
           "sample": 2,
           "startedAt": "2026-09-01T23:05:55.082Z",
@@ -2975,6 +2991,7 @@
           }
         },
         {
+          "status": "success",
           "caseId": "instrumental-energy-arc",
           "sample": 3,
           "startedAt": "2026-09-01T23:06:01.848Z",
@@ -3243,6 +3260,7 @@
       },
       "samples": [
         {
+          "status": "success",
           "caseId": "familiar-only-slow-groove",
           "sample": 1,
           "startedAt": "2026-09-01T23:06:09.593Z",
@@ -3363,6 +3381,7 @@
           }
         },
         {
+          "status": "success",
           "caseId": "familiar-only-slow-groove",
           "sample": 2,
           "startedAt": "2026-09-01T23:06:14.342Z",
@@ -3483,6 +3502,7 @@
           }
         },
         {
+          "status": "success",
           "caseId": "familiar-only-slow-groove",
           "sample": 3,
           "startedAt": "2026-09-01T23:06:18.744Z",
@@ -3785,6 +3805,7 @@
       },
       "samples": [
         {
+          "status": "success",
           "caseId": "all-new-intimate-songwriters",
           "sample": 1,
           "startedAt": "2026-09-01T23:06:23.958Z",
@@ -3905,6 +3926,7 @@
           }
         },
         {
+          "status": "success",
           "caseId": "all-new-intimate-songwriters",
           "sample": 2,
           "startedAt": "2026-09-01T23:06:27.941Z",
@@ -4025,6 +4047,7 @@
           }
         },
         {
+          "status": "success",
           "caseId": "all-new-intimate-songwriters",
           "sample": 3,
           "startedAt": "2026-09-01T23:06:32.278Z",

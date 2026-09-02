@@ -18,6 +18,10 @@ import type {
   PlaylistEvalJudgments,
   PlaylistEvalInput,
 } from "./schemas";
+import {
+  PlaylistEvalRunSchema,
+  PlaylistEvalSampleSchema,
+} from "./schemas";
 
 describe("playlist quality benchmark", () => {
   test("covers the intended input shapes, novelty settings, and holdout split", () => {
@@ -117,6 +121,8 @@ describe("deterministic playlist metrics", () => {
     expect(metrics.duplicateCount).toBe(1);
     expect(metrics.unresolvedCount).toBe(3);
     expect(metrics.adjacentSameArtistCount).toBe(1);
+    expect(metrics.novelty.newRatio).toBeNull();
+    expect(metrics.novelty.absoluteCountDelta).toBeNull();
     expect(metrics.constraintViolations).toContain("invented-id");
     expect(metrics.constraintViolations).toContain("duplicate-track");
   });
@@ -134,10 +140,13 @@ describe("playlist quality harness", () => {
       samplesPerCase: 2,
       sourceRevision: "abc123",
       sourceDirty: false,
-      generate: async (input) => {
-        generationCalls += 1;
-        if (generationCalls === 2) throw new Error("provider unavailable");
-        return successfulOutput(input);
+      generator: {
+        modelId: "test-generator",
+        generate: async (input) => {
+          generationCalls += 1;
+          if (generationCalls === 2) throw new Error("provider unavailable");
+          return successfulOutput(input);
+        },
       },
       onSample: async ({ caseId, sample }) => {
         recordedSamples.push(`${caseId}:${sample}`);
@@ -147,9 +156,12 @@ describe("playlist quality harness", () => {
     expect(generationCalls).toBe(4);
     expect(recordedSamples).toEqual(["one:1", "one:2", "two:1", "two:2"]);
     expect(run.complete).toBe(false);
+    expect(run.modelId).toBe("test-generator");
     expect(run.cases.flatMap(({ samples }) => samples)).toHaveLength(4);
     expect(
-      run.cases.flatMap(({ samples }) => samples).filter(({ error }) => error)
+      run.cases
+        .flatMap(({ samples }) => samples)
+        .filter(({ status }) => status === "failure")
     ).toHaveLength(1);
     expect(JSON.stringify(run)).not.toContain("OPENAI_API_KEY");
     expect(summarizeDeterministicRun(run)).toMatchObject({
@@ -157,6 +169,42 @@ describe("playlist quality harness", () => {
       successfulSamples: 3,
       complete: false,
     });
+    expect(() => createBlindComparison(run, run, "incomplete")).toThrow(
+      "complete runs"
+    );
+  });
+
+  test("rejects contradictory persisted run and sample states", async () => {
+    const run = await completedRun(
+      "state-contract",
+      createEvalCase("state-contract"),
+      "Result"
+    );
+    const sample = run.cases[0]?.samples[0];
+    expect(sample?.status).toBe("success");
+
+    const outputWithoutMetrics = { ...sample } as Record<string, unknown>;
+    delete outputWithoutMetrics.metrics;
+    expect(PlaylistEvalSampleSchema.safeParse(outputWithoutMetrics).success).toBe(
+      false
+    );
+
+    expect(
+      PlaylistEvalSampleSchema.safeParse({
+        ...sample,
+        error: { name: "Error", message: "contradictory" },
+      }).success
+    ).toBe(false);
+
+    expect(
+      PlaylistEvalRunSchema.safeParse({ ...run, complete: false }).success
+    ).toBe(false);
+
+    const mismatchedCase = structuredClone(run);
+    if (mismatchedCase.cases[0]?.samples[0]) {
+      mismatchedCase.cases[0].samples[0].caseId = "different-case";
+    }
+    expect(PlaylistEvalRunSchema.safeParse(mismatchedCase).success).toBe(false);
   });
 
   test("creates a stable blind comparison without leaking implementation labels", async () => {
@@ -185,6 +233,14 @@ describe("playlist quality harness", () => {
       { position: 3, classification: "familiar" },
       { position: 4, classification: "new" },
     ]);
+
+    const changedCase = structuredClone(candidate);
+    if (changedCase.cases[0]) {
+      changedCase.cases[0].case.intent.vibe = "A different benchmark request";
+    }
+    expect(() =>
+      createBlindComparison(baseline, changedCase, "fixed-seed")
+    ).toThrow("different benchmark cases");
   });
 
   test("reports vibe first while keeping novelty and constraints separate", async () => {
@@ -192,7 +248,7 @@ describe("playlist quality harness", () => {
     const run = await completedRun("baseline", evalCase, "Result");
     const judgments: PlaylistEvalJudgments = {
       schemaVersion: 1,
-      rubricVersion: "1.0.0",
+      rubricVersion: "0.9.0",
       runId: run.runId,
       judgments: [
         {
@@ -215,8 +271,11 @@ describe("playlist quality harness", () => {
     expect(Object.keys(report)[0]).toBe("subjective");
     expect(report.subjective.vibeFit.mean).toBe(4);
     expect(report.subjective.noveltyQuality.mean).toBe(4);
+    expect(report.run.rubricVersion).toBe("0.9.0");
     expect(report.deterministic.sampleCount).toBe(1);
     expect(report.deterministic.generationSuccessRate).toBe(1);
+    expect(report.deterministic.requestedMixEvaluableSampleCount).toBe(1);
+    expect(report.deterministic.requestedMixMeanAbsoluteError).toBe(0);
 
     expect(() =>
       summarizePlaylistRun(run, { ...judgments, judgments: [] })
@@ -338,9 +397,12 @@ async function completedRun(
     samplesPerCase: 1,
     sourceRevision: "abc123",
     sourceDirty: false,
-    generate: async (input) => ({
-      ...successfulOutput(input),
-      playlist: { ...successfulOutput(input).playlist, name: playlistName },
-    }),
+    generator: {
+      modelId: "test-generator",
+      generate: async (input) => ({
+        ...successfulOutput(input),
+        playlist: { ...successfulOutput(input).playlist, name: playlistName },
+      }),
+    },
   });
 }

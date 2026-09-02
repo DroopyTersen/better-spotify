@@ -58,8 +58,8 @@ export const PREPARING_PLAYLIST_PROGRESS: PlaylistBuildProgress = {
 export const RECOMMENDING_ARTISTS_PROGRESS: PlaylistBuildProgress = {
   phase: "recommending",
   label: "Finding promising matches",
-  detail: "Looking for artists that fit your selection.",
-  percent: 18,
+  detail: "Building one vibe brief and finding artists that fit it.",
+  percent: 28,
 };
 
 export const STARTING_BUILD_PROGRESS: PlaylistBuildProgress = {
@@ -73,7 +73,7 @@ export const FINDING_TRACKS_PROGRESS: PlaylistBuildProgress = {
   phase: "finding-tracks",
   label: "Exploring fresh tracks",
   detail: "Checking the recommended artists' catalogs.",
-  percent: 32,
+  percent: 36,
 };
 
 export const CURATING_PLAYLIST_PROGRESS: PlaylistBuildProgress = {

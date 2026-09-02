@@ -341,7 +341,13 @@ describe("verified playlist creation", () => {
 
 describe("new-song candidate bounds", () => {
   test("deduplicates, round-robins artists, and caps work relative to song count", () => {
-    const duplicate = { id: "shared", name: "Shared" };
+    const duplicate = {
+      id: "shared",
+      name: "Shared",
+      release_date: "2025-04-01",
+      album_popularity: 72,
+      spotify_uri: "spotify:track:shared",
+    };
     const firstCatalog = [
       duplicate,
       ...Array.from({ length: 24 }, (_, index) => ({
@@ -371,6 +377,7 @@ describe("new-song candidate bounds", () => {
       "first-1",
       "second-1",
     ]);
+    expect(selected[0]).toBe(duplicate);
     expect(selected.some(({ id }) => id === "first-20")).toBeFalse();
     expect(selected.some(({ id }) => id === "second-20")).toBeFalse();
   });

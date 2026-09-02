@@ -62,11 +62,22 @@ export const BuildPlaylistRequestSchema = z
       selectedTracks: z.array(SelectedTrackSchema).max(200),
       selectedArtists: z.array(SelectedArtistSchema).max(25),
       familiarSongsPool: FamiliarSongsPoolSchema.nullable(),
-      recommendedArtists: z.array(SelectedArtistSchema).max(20),
       formData: BuildPlaylistFormDataSchema,
     }),
   })
   .superRefine((input, context) => {
+    if (
+      input.data.selectedTracks.length === 0 &&
+      input.data.selectedArtists.length === 0 &&
+      !input.formData.customInstructions
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Select music or provide playlist instructions",
+        path: ["formData", "customInstructions"],
+      });
+    }
+
     const pool = input.data.familiarSongsPool;
     if (!pool) return;
 
@@ -115,11 +126,4 @@ export const PlaylistModificationRequestSchema = z.object({
 export const StartPlaylistModificationRequestSchema = z.object({
   jobId: z.uuid(),
   input: PlaylistModificationRequestSchema,
-});
-
-export const ArtistRecommendationRequestSchema = z.object({
-  artistsToMatch: z.array(z.string().trim().min(1).max(200)).min(1).max(250),
-  artistsToExclude: z.array(z.string().trim().min(1).max(200)).max(500),
-  customInstructions: z.string().trim().max(MAX_INSTRUCTIONS_LENGTH).optional(),
-  desiredArtistCount: z.number().int().min(1).max(20),
 });

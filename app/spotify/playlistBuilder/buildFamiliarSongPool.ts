@@ -1,17 +1,19 @@
 import { AsyncReturnType } from "~/toolkit/utils/typescript.utils";
-import { getAllArtistTracks } from "../api/getAllArtistTracks";
+import { mapWithConcurrency } from "../api/mapWithConcurrency";
+import { spotifyWebApi } from "../api/spotifyWebApi";
 import { SpotifySdk } from "../createSpotifySdk";
+import { getArtistCatalogTracks } from "./getArtistCatalogTracks";
 import {
   type BuildPlaylistTrack,
   type FamiliarSongsPool,
 } from "./playlistBuilder.types";
 import { useSpotifyData } from "./useSpotifyData";
-import { spotifyWebApi } from "../api/spotifyWebApi";
-import { mapWithConcurrency } from "../api/mapWithConcurrency";
 
 const MAX_SELECTED_ARTISTS = 25;
 const MAX_SELECTED_TRACKS = 200;
 const ARTIST_CATALOG_CONCURRENCY = 3;
+const FAMILIAR_RELEASES_PER_ARTIST = 5;
+const FAMILIAR_TRACKS_PER_ARTIST = 20;
 
 type SpecifiedTrack = {
   id: string;
@@ -30,7 +32,11 @@ export function createFamiliarSongPoolDependencies(
 ): FamiliarSongPoolDependencies {
   return {
     getTracks: (trackIds) => spotifyWebApi.getTracks(sdk, trackIds),
-    getArtistTracks: (artistId) => getAllArtistTracks(sdk, artistId),
+    getArtistTracks: (artistId) =>
+      getArtistCatalogTracks(sdk, artistId, {
+        releaseLimit: FAMILIAR_RELEASES_PER_ARTIST,
+        trackLimit: FAMILIAR_TRACKS_PER_ARTIST,
+      }),
   };
 }
 
@@ -123,10 +129,7 @@ export async function buildFamiliarSongsPool(
     pool.artistCatalogs.push({
       artist_id: artistId,
       artist_name: artistName,
-      tracks: tracks?.map((t) => ({
-        id: t.id,
-        name: t.name,
-      })),
+      tracks: tracks.map(({ id, name }) => ({ id, name })),
     });
   });
 

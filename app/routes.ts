@@ -31,10 +31,6 @@ export default [
     "spotify/playlistBuilder/api.buildPlaylist.route.ts"
   ),
   route(
-    "api/new-artist-recommendations",
-    "spotify/playlistBuilder/api.new-artist-recommendations.route.ts"
-  ),
-  route(
     "api/modify-playlist",
     "spotify/playlistBuilder/api.modifyPlaylist.route.ts"
   ),

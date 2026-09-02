@@ -15,7 +15,11 @@ import type { SpotifySdk } from "../createSpotifySdk";
 import { mapWithConcurrency } from "./mapWithConcurrency";
 
 export type ArtistCatalogTrack = Pick<Track, "id" | "name" | "artists"> & {
-  album: Pick<Album, "id" | "name" | "images">;
+  spotifyUri: string | null;
+  album: Pick<Album, "id" | "name" | "images"> & {
+    releaseDate: string | null;
+    popularity: number | null;
+  };
 };
 
 type CurrentPlaylistItem = Omit<PlaylistedTrack<Track>, "track"> & {
@@ -333,13 +337,22 @@ export const spotifyWebApi = {
       Math.max(Math.trunc(trackLimit), 1),
       50
     );
-    const catalogAlbums: SimplifiedAlbum[] = [];
-    let estimatedTrackCount = 0;
-    for (const album of albums.items.slice(0, boundedAlbumLimit)) {
-      catalogAlbums.push(album);
-      estimatedTrackCount += Math.max(album.total_tracks || 1, 1);
-      if (estimatedTrackCount >= boundedTrackLimit) break;
-    }
+    const uniqueAlbumIds = new Set<string>();
+    const availableAlbums = [...albums.items]
+      .filter(({ id }) => {
+        if (!id || uniqueAlbumIds.has(id)) return false;
+        uniqueAlbumIds.add(id);
+        return true;
+      })
+      .sort(
+        (left, right) =>
+          (right.release_date ?? "").localeCompare(left.release_date ?? "") ||
+          left.id.localeCompare(right.id)
+      );
+    const catalogAlbums: SimplifiedAlbum[] = availableAlbums.slice(
+      0,
+      boundedAlbumLimit
+    );
 
     const fullAlbums = await fetchIndividually(
       catalogAlbums.map(({ id }) => id),
@@ -350,16 +363,25 @@ export const spotifyWebApi = {
 
     for (const album of fullAlbums) {
       for (const track of album.tracks.items) {
-        if (!track.id || seenTrackIds.has(track.id)) continue;
+        if (
+          !track.id ||
+          seenTrackIds.has(track.id) ||
+          !track.artists.some(({ id }) => id === artistId)
+        ) {
+          continue;
+        }
         seenTrackIds.add(track.id);
         tracks.push({
           id: track.id,
           name: track.name,
           artists: track.artists,
+          spotifyUri: track.uri ?? null,
           album: {
             id: album.id,
             name: album.name,
             images: album.images,
+            releaseDate: album.release_date ?? null,
+            popularity: album.popularity ?? null,
           },
         });
         if (tracks.length >= boundedTrackLimit) return tracks;

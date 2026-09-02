@@ -85,7 +85,7 @@ async function runCommand(args: string[]): Promise<void> {
     sourceDirty,
     generator: {
       modelId: PLAYLIST_GENERATION_MODEL_ID,
-      generate: (input) => generatePlaylist(input),
+      generate: (input) => generatePlaylist(input, { vibeBrief: null }),
     },
     onSample: async (sample) => {
       await writeJsonExclusive(

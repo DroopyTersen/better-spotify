@@ -1,6 +1,5 @@
 import { describe, expect, test } from "bun:test";
 import {
-  ArtistRecommendationRequestSchema,
   BuildPlaylistRequestSchema,
   PlaylistModificationRequestSchema,
   StartPlaylistModificationRequestSchema,
@@ -31,6 +30,22 @@ describe("playlist API request schemas", () => {
     };
 
     expect(BuildPlaylistRequestSchema.safeParse(request).success).toBeFalse();
+  });
+
+  test("requires selected music or non-blank instructions", () => {
+    const request = minimalBuildRequest();
+    request.formData.customInstructions = "   ";
+
+    expect(BuildPlaylistRequestSchema.safeParse(request).success).toBeFalse();
+
+    const withArtist = {
+      ...request,
+      data: {
+        ...request.data,
+        selectedArtists: [{ artist_id: "artist1" }],
+      },
+    };
+    expect(BuildPlaylistRequestSchema.safeParse(withArtist).success).toBeTrue();
   });
 
   test("rejects invalid Spotify ids and playlists over the replace limit", () => {
@@ -69,16 +84,6 @@ describe("playlist API request schemas", () => {
     ).toBeTrue();
     expect(StartPlaylistModificationRequestSchema.safeParse(input).success).toBeFalse();
   });
-
-  test("caps artist recommendation fan-out", () => {
-    expect(
-      ArtistRecommendationRequestSchema.safeParse({
-        artistsToMatch: ["Spoon"],
-        artistsToExclude: [],
-        desiredArtistCount: 21,
-      }).success
-    ).toBeFalse();
-  });
 });
 
 function minimalBuildRequest() {
@@ -99,7 +104,6 @@ function minimalBuildRequest() {
         likedTracks: [],
         recentlyPlayedTracks: [],
       },
-      recommendedArtists: [],
       formData: { ...formData },
     },
   };

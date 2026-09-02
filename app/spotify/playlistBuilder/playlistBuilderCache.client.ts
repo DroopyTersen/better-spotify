@@ -70,7 +70,6 @@ export function isPlaylistBuilderData(
     !SELECTION_HASH.test(value.hashedSelection) ||
     !isArrayOf(value.selectedTracks, 200, isSelectedTrack) ||
     !isArrayOf(value.selectedArtists, 25, isSelectedArtist) ||
-    !isArrayOf(value.recommendedArtists, 20, isSelectedArtist) ||
     !(
       value.familiarSongsPool === null ||
       isFamiliarSongsPool(value.familiarSongsPool)
@@ -143,7 +142,10 @@ function isPoolTrack(value: unknown): value is BuildPlaylistTrack {
     isNonemptyText(value.name) &&
     isOptionalPopularity(value.popularity) &&
     isOptionalNullableText(value.artist_name) &&
-    isOptionalNullableSpotifyId(value.artist_id)
+    isOptionalNullableSpotifyId(value.artist_id) &&
+    value.release_date === undefined &&
+    value.album_popularity === undefined &&
+    value.spotify_uri === undefined
   );
 }
 

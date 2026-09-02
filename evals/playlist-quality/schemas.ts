@@ -48,7 +48,6 @@ export const GeneratePlaylistEvalInputSchema = z.object({
     selectedTracks: z.array(SelectedTrackSchema),
     selectedArtists: z.array(SelectedArtistSchema),
     familiarSongsPool: FamiliarSongsPoolSchema,
-    recommendedArtists: z.array(SelectedArtistSchema),
     formData: FormDataSchema,
   }),
   newSongs: z.array(BuildPlaylistTrack),

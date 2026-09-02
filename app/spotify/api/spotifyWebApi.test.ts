@@ -312,6 +312,11 @@ describe("Spotify 2026 compatibility", () => {
                   name: `Track ${albumId}`,
                   artists: [{ id: "artist-1", name: "Artist One" }],
                 },
+                {
+                  id: `${albumId}-guest-track`,
+                  name: `Guest Track ${albumId}`,
+                  artists: [{ id: "guest-artist", name: "Guest Artist" }],
+                },
               ],
               limit: 50,
               next: null,

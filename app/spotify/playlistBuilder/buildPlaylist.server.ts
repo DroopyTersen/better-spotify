@@ -1,26 +1,28 @@
 import dayjs from "dayjs";
-import { SpotifySdk } from "../createSpotifySdk";
-import { generatePlaylist } from "./generatePlaylist.server";
-
-import {
-  BuildPlaylistInput,
-  BuildPlaylistTrack,
-} from "./playlistBuilder.types";
-import { getAllArtistTracks } from "../api/getAllArtistTracks";
-import { spotifyWebApi } from "../api/spotifyWebApi";
 import { mapWithConcurrency } from "../api/mapWithConcurrency";
+import { spotifyWebApi } from "../api/spotifyWebApi";
+import { SpotifySdk } from "../createSpotifySdk";
+import { discoverPlaylistArtists } from "./playlistDiscovery.server";
+import { generatePlaylist } from "./generatePlaylist.server";
+import { getArtistCatalogTracks } from "./getArtistCatalogTracks";
 import {
   CREATING_PLAYLIST_PROGRESS,
   CURATING_PLAYLIST_PROGRESS,
   FINDING_TRACKS_PROGRESS,
   getCurationProgress,
   PLAYLIST_COMPLETE_PROGRESS,
+  RECOMMENDING_ARTISTS_PROGRESS,
   type PlaylistBuildProgress,
   VERIFYING_TRACKS_PROGRESS,
 } from "./playlistBuildProgress";
+import type {
+  BuildPlaylistInput,
+  BuildPlaylistTrack,
+} from "./playlistBuilder.types";
 
 const ARTIST_CATALOG_CONCURRENCY = 3;
 const TRACK_SEARCH_CONCURRENCY = 5;
+const MAX_NEW_RELEASES_PER_ARTIST = 10;
 const MAX_NEW_TRACKS_PER_ARTIST = 20;
 const NEW_TRACK_CANDIDATE_MULTIPLIER = 3;
 
@@ -68,45 +70,43 @@ export async function buildPlaylist(
 ) {
   const reportProgress = options.onProgress ?? (() => undefined);
 
-  // 5. Fetch new songs from recommended artists
+  reportProgress(RECOMMENDING_ARTISTS_PROGRESS);
+  const discovery = await discoverPlaylistArtists(input, sdk);
+
   reportProgress(FINDING_TRACKS_PROGRESS);
-  const newSongCatalogs = await mapWithConcurrency(
-    input.data.recommendedArtists,
+  const rankedNewSongCatalogs = await mapWithConcurrency(
+    discovery.rankedArtists,
     ARTIST_CATALOG_CONCURRENCY,
-    async (artist) => {
-      const catalogTracks = await getAllArtistTracks(
+    (artist) =>
+      getArtistCatalogTracks(
         sdk,
         artist.artist_id,
-        MAX_NEW_TRACKS_PER_ARTIST
-      );
-      return catalogTracks.map((t) => ({
-        id: t.id,
-        name: t.name,
-        artist_name: t.artist_name,
-        artist_id: t.artist_id,
-        popularity: t.popularity,
-      }));
-    }
+        {
+          releaseLimit: MAX_NEW_RELEASES_PER_ARTIST,
+          trackLimit: MAX_NEW_TRACKS_PER_ARTIST,
+        }
+      )
   );
   const newSongs = selectNewSongCandidates(
-    newSongCatalogs,
+    rankedNewSongCatalogs,
     input.formData.songCount
   );
 
-  // 6. Generate final playlist
   reportProgress(CURATING_PLAYLIST_PROGRESS);
   const generatedPlaylist = await generatePlaylist(
     {
       ...input,
       newSongs,
     },
-    undefined,
-    (partialOutput) => {
-      const draftedSongs =
-        partialOutput.playlist?.tracks?.filter(Boolean).length ?? 0;
-      reportProgress(
-        getCurationProgress(draftedSongs, input.formData.songCount)
-      );
+    {
+      vibeBrief: discovery.vibeBrief,
+      onPartialOutput: (partialOutput) => {
+        const draftedSongs =
+          partialOutput.playlist?.tracks?.filter(Boolean).length ?? 0;
+        reportProgress(
+          getCurationProgress(draftedSongs, input.formData.songCount)
+        );
+      },
     }
   );
 
@@ -153,7 +153,7 @@ export async function buildPlaylist(
     );
   }
 
-  // 7. Re-read every final ID from Spotify before creating anything. Client
+  // Re-read every final ID from Spotify before creating anything. Client
   // pools and model output are candidates, never mutation authority.
   reportProgress(CREATING_PLAYLIST_PROGRESS);
   const finalPlaylist = await createVerifiedPlaylist(
@@ -261,7 +261,7 @@ export async function canonicalizePlaylistTracks(
 }
 
 export function selectNewSongCandidates(
-  artistCatalogs: readonly (readonly BuildPlaylistTrack[])[],
+  rankedArtistCatalogs: readonly (readonly BuildPlaylistTrack[])[],
   songCount: number
 ): BuildPlaylistTrack[] {
   if (!Number.isInteger(songCount) || songCount < 1) {
@@ -269,7 +269,9 @@ export function selectNewSongCandidates(
   }
 
   const globalLimit = songCount * NEW_TRACK_CANDIDATE_MULTIPLIER;
-  const boundedCatalogs = artistCatalogs.map((catalog) =>
+  // Catalog order carries the vibe-ranked artist order; track order within
+  // each catalog carries the deterministic freshness order from Spotify.
+  const boundedCatalogs = rankedArtistCatalogs.map((catalog) =>
     catalog.slice(0, MAX_NEW_TRACKS_PER_ARTIST)
   );
   const selected: BuildPlaylistTrack[] = [];

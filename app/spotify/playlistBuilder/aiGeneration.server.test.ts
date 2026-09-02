@@ -5,13 +5,6 @@ import {
   playlistGenerationModel,
 } from "./aiGeneration.server";
 import {
-  buildArtistRecommendationPrompt,
-  createArtistRecommendationsResponseSchema,
-  findExactArtistNameMatch,
-  generateArtistRecommendations,
-  normalizeArtistRecommendations,
-} from "./generateArtistRecommendations.server";
-import {
   buildPlaylistPrompt,
   createPlaylistCurationResponseSchema,
   generatePlaylist,
@@ -26,6 +19,7 @@ import type {
   GeneratePlaylistInput,
   PlaylistModificationInput,
 } from "./playlistBuilder.types";
+import type { VibeBrief } from "./vibeBrief";
 
 describe("OpenAI playlist generation configuration", () => {
   test("uses GPT-5.6 Luna through the Responses API configuration", () => {
@@ -95,14 +89,17 @@ describe("playlist curation", () => {
     let capturedPrompt = "";
     let capturedInstructions = "";
 
-    const result = await generatePlaylist(input, async (request) => {
-      capturedPrompt = request.prompt;
-      capturedInstructions = request.instructions;
-      return request.schema.parse(expected);
+    const result = await generatePlaylist(input, {
+      vibeBrief: null,
+      generate: async (request) => {
+        capturedPrompt = request.prompt;
+        capturedInstructions = request.instructions;
+        return request.schema.parse(expected);
+      },
     });
 
     expect(result).toEqual(expected);
-    expect(capturedPrompt).toBe(buildPlaylistPrompt(input));
+    expect(capturedPrompt).toBe(buildPlaylistPrompt(input, null));
     expect(capturedPrompt).toContain("exactly 2 songs");
     expect(capturedPrompt).toContain("<custom_instructions>");
     expect(capturedPrompt).toContain("selected-1 | Anchor | Anchor Band");
@@ -130,98 +127,88 @@ describe("playlist curation", () => {
       },
     };
 
-    await generatePlaylist(
-      input,
-      async (request) => {
+    await generatePlaylist(input, {
+      vibeBrief: null,
+      generate: async (request) => {
         request.onPartialOutput?.({
           playlist: { tracks: [expected.playlist.tracks[0]] },
         });
         request.onPartialOutput?.(expected);
         return expected;
       },
-      (partialOutput) => {
+      onPartialOutput: (partialOutput) => {
         draftedCounts.push(
           partialOutput.playlist?.tracks?.filter(Boolean).length ?? 0
         );
-      }
-    );
+      },
+    });
 
     expect(draftedCounts).toEqual([1, 2]);
   });
-});
 
-describe("artist recommendations", () => {
-  test("selects only an exact normalized Spotify artist name", () => {
-    const artists = [
-      { id: "tribute", name: "Spoon Tribute" },
-      { id: "exact", name: "  SPOON  " },
-    ];
-
-    expect(findExactArtistNameMatch(artists, "Spoon")).toEqual(artists[1]);
-    expect(findExactArtistNameMatch(artists, "Spooner")).toBeUndefined();
-  });
-
-  test("enforces candidate count and normalizes exclusions and duplicates", () => {
-    const schema = createArtistRecommendationsResponseSchema(4);
-    expect(
-      schema.safeParse({
-        recommended_artists: ["One", "Two", "Three", "Four"],
-      }).success
-    ).toBe(true);
-    expect(
-      schema.safeParse({ recommended_artists: ["One", "Two", "Three"] })
-        .success
-    ).toBe(false);
-
-    expect(
-      normalizeArtistRecommendations(
-        [
-          "Radiohead",
-          " Fresh One ",
-          "fresh one",
-          "Excluded Band",
-          "Fresh Two",
-          "Fresh Three",
-        ],
-        {
-          artistsToMatch: ["Radiohead"],
-          artistsToExclude: ["Excluded Band"],
-        },
-        3
-      )
-    ).toEqual(["Fresh One", "Fresh Two", "Fresh Three"]);
-  });
-
-  test("returns the requested number without asking for fake search access", async () => {
-    const input = {
-      artistsToMatch: ["Reference Band"],
-      artistsToExclude: ["Blocked Band"],
-      customInstructions: "Keep it energetic",
-      desiredArtistCount: 2,
+  test("keeps explicit instructions authoritative over conflicting inference and preserves truthful metadata", async () => {
+    const input = createPlaylistInput();
+    input.newSongs[0] = {
+      ...input.newSongs[0],
+      release_date: "2025-02-14",
+      album_popularity: 70,
+    };
+    const vibeBrief: VibeBrief = {
+      source: {
+        selectedArtists: ["Anchor Band"],
+        selectedTracks: [{ name: "Anchor", artist: "Anchor Band" }],
+        explicitInstructions: "Warm acoustic road-trip music",
+      },
+      profile: {
+        summary: "Warm, forward-moving acoustic folk for an open road",
+        mood: ["abrasive", "restless"],
+        energy: "high",
+        tempoFeel: "urgent and fast",
+        genres: { include: ["indie folk"], avoid: ["metal"] },
+        era: ["contemporary"],
+        positiveAnchors: ["distorted electric guitars", "hard-driving drums"],
+        vocals: "human, close-miked vocals",
+        instrumentation: ["acoustic guitar", "light percussion"],
+        productionTexture: ["organic", "open"],
+        negativeConstraints: ["no glossy dance production"],
+        arc: "start intimate, build gently, finish expansive",
+      },
     };
     let capturedPrompt = "";
     let capturedInstructions = "";
 
-    const result = await generateArtistRecommendations(input, async (request) => {
-      capturedPrompt = request.prompt;
-      capturedInstructions = request.instructions;
-      return request.schema.parse({
-        recommended_artists: [
-          "Reference Band",
-          "Blocked Band",
-          "Fresh One",
-          "Fresh Two",
-          "Fresh Three",
-        ],
-      });
+    await generatePlaylist(input, {
+      vibeBrief,
+      generate: async (request) => {
+        capturedPrompt = request.prompt;
+        capturedInstructions = request.instructions;
+        return request.schema.parse({
+          playlist: {
+            name: "Road Folk",
+            description:
+              "Sun-cracked roads, warm strings, and a gentle climb toward the horizon.",
+            tracks: [
+              { id: "selected-1", name: "Anchor", artist_name: "Anchor Band" },
+              { id: "new-1", name: "Fresh", artist_name: "Fresh Band" },
+            ],
+          },
+        });
+      },
     });
 
-    expect(result).toEqual(["Fresh One", "Fresh Two"]);
-    expect(capturedPrompt).toBe(buildArtistRecommendationPrompt(input));
-    expect(capturedPrompt).toContain("exactly 5 candidate artists");
-    expect(capturedPrompt).toContain("<artists_to_exclude>");
-    expect(capturedInstructions).not.toContain("Google Search");
-    expect(capturedInstructions).not.toContain("thought process");
+    expect(capturedPrompt).toBe(buildPlaylistPrompt(input, vibeBrief));
+    expect(capturedPrompt).toContain("<vibe_brief>");
+    expect(capturedPrompt).toContain(
+      '"explicitInstructions":"Warm acoustic road-trip music"'
+    );
+    expect(capturedPrompt).toContain('"energy":"high"');
+    expect(capturedPrompt).not.toContain("<custom_instructions>");
+    expect(capturedPrompt).toContain("released:2025-02-14");
+    expect(capturedPrompt).toContain("popularity:55");
+    expect(capturedPrompt).toContain("album-popularity:70");
+    expect(capturedInstructions).toContain(
+      "source.explicitInstructions are authoritative"
+    );
   });
 });
 
@@ -311,7 +298,6 @@ function createPlaylistInput(): GeneratePlaylistInput {
         likedTracks: [],
         recentlyPlayedTracks: [],
       },
-      recommendedArtists: [],
       formData,
     },
     newSongs: [

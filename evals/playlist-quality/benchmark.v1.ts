@@ -308,7 +308,6 @@ function playlistCase(seedCase: CaseSeed): PlaylistEvalCase {
           artistCatalogs: [],
           recentlyPlayedTracks: [],
         },
-        recommendedArtists: uniqueArtists(newSongs),
         formData,
       },
       newSongs: newSongs.map(buildTrack),
@@ -328,13 +327,6 @@ function buildTrack(track: TrackSeed): BuildPlaylistTrack {
     artist_name: track.artist,
     popularity: null,
   };
-}
-
-function uniqueArtists(tracks: TrackSeed[]) {
-  return Array.from(new Set(tracks.map(({ artist }) => artist))).map((name) => ({
-    artist_id: artistId(name),
-    artist_name: name,
-  }));
 }
 
 function artistId(name: string): string {

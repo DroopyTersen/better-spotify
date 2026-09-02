@@ -47,6 +47,9 @@ describe("buildFamiliarSongsPool", () => {
             name: `Track ${artistId}`,
             artist_id: artistId,
             artist_name: `Artist ${artistId}`,
+            release_date: "2025-01-01",
+            album_popularity: 80,
+            spotify_uri: `spotify:track:${artistId}`,
           },
         ];
       },
@@ -65,6 +68,10 @@ describe("buildFamiliarSongsPool", () => {
       "d",
       "e",
     ]);
+    expect(pool.artistCatalogs[0]?.tracks[0]).toEqual({
+      id: "track-a",
+      name: "Track a",
+    });
   });
 
   test("keeps every explicitly selected track beyond the former 20-track cutoff", async () => {

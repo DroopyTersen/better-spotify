@@ -143,9 +143,9 @@ function isPoolTrack(value: unknown): value is BuildPlaylistTrack {
     isOptionalPopularity(value.popularity) &&
     isOptionalNullableText(value.artist_name) &&
     isOptionalNullableSpotifyId(value.artist_id) &&
-    isOptionalNullableText(value.release_date) &&
-    isOptionalNullableText(value.spotify_uri) &&
-    isOptionalNullableText(value.external_url)
+    value.release_date === undefined &&
+    value.album_popularity === undefined &&
+    value.spotify_uri === undefined
   );
 }
 

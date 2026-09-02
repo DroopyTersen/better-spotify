@@ -29,8 +29,8 @@ preference, and optional custom instructions.
 The server turns the selected artists, selected tracks, and exact custom
 instructions into one typed vibe brief. Its concise profile covers mood,
 energy, tempo feel, genre boundaries, era, vocals, instrumentation, production
-texture, negative constraints, and playlist arc. Explicit instructions take
-precedence over anything inferred from the selected music.
+texture, positive anchors, negative constraints, and playlist arc. Explicit
+instructions take precedence over anything inferred from the selected music.
 
 ## 2. Build candidate pools
 

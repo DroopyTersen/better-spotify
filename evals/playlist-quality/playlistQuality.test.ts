@@ -324,7 +324,6 @@ function createEvalCase(id: string): PlaylistEvalCase {
         artistCatalogs: [],
         recentlyPlayedTracks: [],
       },
-      recommendedArtists: [],
       formData,
     },
     newSongs: [

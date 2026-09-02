@@ -54,9 +54,9 @@ type PlaylistGenerator = (
 ) => Promise<PlaylistCurationResponse>;
 
 type GeneratePlaylistOptions = {
+  vibeBrief: VibeBrief | null;
   generate?: PlaylistGenerator;
   onPartialOutput?: (partialOutput: DeepPartial<PlaylistCurationResponse>) => void;
-  vibeBrief?: VibeBrief;
 };
 
 export const generatePlaylist = async (
@@ -65,7 +65,7 @@ export const generatePlaylist = async (
     generate = generateStructuredObject,
     onPartialOutput,
     vibeBrief,
-  }: GeneratePlaylistOptions = {}
+  }: GeneratePlaylistOptions
 ) => {
   return generate({
     instructions: PLAYLIST_CURATION_INSTRUCTIONS,
@@ -77,7 +77,7 @@ export const generatePlaylist = async (
 
 export function buildPlaylistPrompt(
   input: GeneratePlaylistInput,
-  vibeBrief?: VibeBrief
+  vibeBrief: VibeBrief | null
 ): string {
   const sections = [
     `Create a playlist with exactly ${input.formData.songCount} songs.\nNew versus familiar distribution: ${input.formData.newStuffAmount}.`,
@@ -143,6 +143,9 @@ function formatNewSongCandidate(song: GeneratePlaylistInput["newSongs"][number])
     song.popularity === null || song.popularity === undefined
       ? ""
       : `popularity:${song.popularity}`,
+    song.album_popularity === null || song.album_popularity === undefined
+      ? ""
+      : `album-popularity:${song.album_popularity}`,
   ]
     .filter(Boolean)
     .join(" | ");

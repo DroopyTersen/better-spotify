@@ -32,6 +32,22 @@ describe("playlist API request schemas", () => {
     expect(BuildPlaylistRequestSchema.safeParse(request).success).toBeFalse();
   });
 
+  test("requires selected music or non-blank instructions", () => {
+    const request = minimalBuildRequest();
+    request.formData.customInstructions = "   ";
+
+    expect(BuildPlaylistRequestSchema.safeParse(request).success).toBeFalse();
+
+    const withArtist = {
+      ...request,
+      data: {
+        ...request.data,
+        selectedArtists: [{ artist_id: "artist1" }],
+      },
+    };
+    expect(BuildPlaylistRequestSchema.safeParse(withArtist).success).toBeTrue();
+  });
+
   test("rejects invalid Spotify ids and playlists over the replace limit", () => {
     const request = {
       playlistId: "validPlaylistId123",
@@ -68,7 +84,6 @@ describe("playlist API request schemas", () => {
     ).toBeTrue();
     expect(StartPlaylistModificationRequestSchema.safeParse(input).success).toBeFalse();
   });
-
 });
 
 function minimalBuildRequest() {

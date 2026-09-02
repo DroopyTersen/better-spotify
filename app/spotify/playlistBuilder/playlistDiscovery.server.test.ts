@@ -18,6 +18,7 @@ const profile: VibeProfile = {
   tempoFeel: "Unhurried but always moving forward.",
   genres: { include: ["indie folk"], avoid: ["arena rock"] },
   era: ["2010s", "2020s"],
+  positiveAnchors: ["weathered acoustic guitars", "conversational vocals"],
   vocals: "Conversational lead vocals.",
   instrumentation: ["acoustic guitar", "restrained drums"],
   productionTexture: ["organic", "lightly weathered"],
@@ -66,6 +67,19 @@ describe("playlist vibe brief", () => {
       selectedArtists: [],
       selectedTracks: [],
       explicitInstructions: "Keep it warm and avoid glossy production.",
+    });
+  });
+
+  test("supports selected music without instructions", () => {
+    const input = buildInput();
+    input.formData.customInstructions = "";
+
+    expect(buildVibeBriefSource(input)).toEqual({
+      selectedArtists: ["Selected Artist"],
+      selectedTracks: [
+        { name: "Selected Track", artist: "Track Artist" },
+      ],
+      explicitInstructions: "",
     });
   });
 });
@@ -199,7 +213,7 @@ describe("playlist artist discovery", () => {
       selectedTracks: [],
       explicitInstructions: "Keep it warm and avoid glossy production.",
     });
-    expect(discovery.artists).toHaveLength(5);
+    expect(discovery.rankedArtists).toHaveLength(5);
   });
 });
 

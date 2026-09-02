@@ -16,7 +16,6 @@ import { mapWithConcurrency } from "./mapWithConcurrency";
 
 export type ArtistCatalogTrack = Pick<Track, "id" | "name" | "artists"> & {
   spotifyUri: string | null;
-  externalUrl: string | null;
   album: Pick<Album, "id" | "name" | "images"> & {
     releaseDate: string | null;
     popularity: number | null;
@@ -350,13 +349,10 @@ export const spotifyWebApi = {
           (right.release_date ?? "").localeCompare(left.release_date ?? "") ||
           left.id.localeCompare(right.id)
       );
-    const catalogAlbums: SimplifiedAlbum[] = [];
-    let estimatedTrackCount = 0;
-    for (const album of availableAlbums.slice(0, boundedAlbumLimit)) {
-      catalogAlbums.push(album);
-      estimatedTrackCount += Math.max(album.total_tracks || 1, 1);
-      if (estimatedTrackCount >= boundedTrackLimit) break;
-    }
+    const catalogAlbums: SimplifiedAlbum[] = availableAlbums.slice(
+      0,
+      boundedAlbumLimit
+    );
 
     const fullAlbums = await fetchIndividually(
       catalogAlbums.map(({ id }) => id),
@@ -367,14 +363,19 @@ export const spotifyWebApi = {
 
     for (const album of fullAlbums) {
       for (const track of album.tracks.items) {
-        if (!track.id || seenTrackIds.has(track.id)) continue;
+        if (
+          !track.id ||
+          seenTrackIds.has(track.id) ||
+          !track.artists.some(({ id }) => id === artistId)
+        ) {
+          continue;
+        }
         seenTrackIds.add(track.id);
         tracks.push({
           id: track.id,
           name: track.name,
           artists: track.artists,
           spotifyUri: track.uri ?? null,
-          externalUrl: track.external_urls?.spotify ?? null,
           album: {
             id: album.id,
             name: album.name,

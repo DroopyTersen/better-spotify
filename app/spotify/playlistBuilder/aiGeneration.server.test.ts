@@ -90,6 +90,7 @@ describe("playlist curation", () => {
     let capturedInstructions = "";
 
     const result = await generatePlaylist(input, {
+      vibeBrief: null,
       generate: async (request) => {
         capturedPrompt = request.prompt;
         capturedInstructions = request.instructions;
@@ -98,7 +99,7 @@ describe("playlist curation", () => {
     });
 
     expect(result).toEqual(expected);
-    expect(capturedPrompt).toBe(buildPlaylistPrompt(input));
+    expect(capturedPrompt).toBe(buildPlaylistPrompt(input, null));
     expect(capturedPrompt).toContain("exactly 2 songs");
     expect(capturedPrompt).toContain("<custom_instructions>");
     expect(capturedPrompt).toContain("selected-1 | Anchor | Anchor Band");
@@ -127,6 +128,7 @@ describe("playlist curation", () => {
     };
 
     await generatePlaylist(input, {
+      vibeBrief: null,
       generate: async (request) => {
         request.onPartialOutput?.({
           playlist: { tracks: [expected.playlist.tracks[0]] },
@@ -144,11 +146,12 @@ describe("playlist curation", () => {
     expect(draftedCounts).toEqual([1, 2]);
   });
 
-  test("uses one vibe brief and candidate metadata for final curation", () => {
+  test("keeps explicit instructions authoritative over conflicting inference and preserves truthful metadata", async () => {
     const input = createPlaylistInput();
     input.newSongs[0] = {
       ...input.newSongs[0],
       release_date: "2025-02-14",
+      album_popularity: 70,
     };
     const vibeBrief: VibeBrief = {
       source: {
@@ -158,11 +161,12 @@ describe("playlist curation", () => {
       },
       profile: {
         summary: "Warm, forward-moving acoustic folk for an open road",
-        mood: ["warm", "hopeful"],
-        energy: "medium",
-        tempoFeel: "steady mid-tempo",
+        mood: ["abrasive", "restless"],
+        energy: "high",
+        tempoFeel: "urgent and fast",
         genres: { include: ["indie folk"], avoid: ["metal"] },
         era: ["contemporary"],
+        positiveAnchors: ["distorted electric guitars", "hard-driving drums"],
         vocals: "human, close-miked vocals",
         instrumentation: ["acoustic guitar", "light percussion"],
         productionTexture: ["organic", "open"],
@@ -170,14 +174,41 @@ describe("playlist curation", () => {
         arc: "start intimate, build gently, finish expansive",
       },
     };
+    let capturedPrompt = "";
+    let capturedInstructions = "";
 
-    const prompt = buildPlaylistPrompt(input, vibeBrief);
+    await generatePlaylist(input, {
+      vibeBrief,
+      generate: async (request) => {
+        capturedPrompt = request.prompt;
+        capturedInstructions = request.instructions;
+        return request.schema.parse({
+          playlist: {
+            name: "Road Folk",
+            description:
+              "Sun-cracked roads, warm strings, and a gentle climb toward the horizon.",
+            tracks: [
+              { id: "selected-1", name: "Anchor", artist_name: "Anchor Band" },
+              { id: "new-1", name: "Fresh", artist_name: "Fresh Band" },
+            ],
+          },
+        });
+      },
+    });
 
-    expect(prompt).toContain("<vibe_brief>");
-    expect(prompt).toContain('"explicitInstructions":"Warm acoustic road-trip music"');
-    expect(prompt).not.toContain("<custom_instructions>");
-    expect(prompt).toContain("released:2025-02-14");
-    expect(prompt).toContain("popularity:55");
+    expect(capturedPrompt).toBe(buildPlaylistPrompt(input, vibeBrief));
+    expect(capturedPrompt).toContain("<vibe_brief>");
+    expect(capturedPrompt).toContain(
+      '"explicitInstructions":"Warm acoustic road-trip music"'
+    );
+    expect(capturedPrompt).toContain('"energy":"high"');
+    expect(capturedPrompt).not.toContain("<custom_instructions>");
+    expect(capturedPrompt).toContain("released:2025-02-14");
+    expect(capturedPrompt).toContain("popularity:55");
+    expect(capturedPrompt).toContain("album-popularity:70");
+    expect(capturedInstructions).toContain(
+      "source.explicitInstructions are authoritative"
+    );
   });
 });
 

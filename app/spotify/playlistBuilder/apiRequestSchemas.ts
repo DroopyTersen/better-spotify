@@ -25,9 +25,6 @@ const BuildPlaylistTrackSchema = z.object({
   popularity: z.number().int().min(0).max(100).nullable().optional(),
   artist_name: z.string().trim().max(MAX_TEXT_LENGTH).nullable().optional(),
   artist_id: SpotifyId.nullable().optional(),
-  release_date: z.string().trim().max(32).nullable().optional(),
-  spotify_uri: z.string().trim().max(512).nullable().optional(),
-  external_url: z.string().trim().max(2_048).nullable().optional(),
 });
 
 const SelectedTrackSchema = z.object({
@@ -69,6 +66,18 @@ export const BuildPlaylistRequestSchema = z
     }),
   })
   .superRefine((input, context) => {
+    if (
+      input.data.selectedTracks.length === 0 &&
+      input.data.selectedArtists.length === 0 &&
+      !input.formData.customInstructions
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Select music or provide playlist instructions",
+        path: ["formData", "customInstructions"],
+      });
+    }
+
     const pool = input.data.familiarSongsPool;
     if (!pool) return;
 

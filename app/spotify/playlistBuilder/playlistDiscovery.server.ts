@@ -14,6 +14,7 @@ import {
   buildVibeBriefSource,
   VibeBriefSchema,
   VibeProfileSchema,
+  VibeBriefSourceSchema,
   type VibeBrief,
   type VibeBriefSource,
 } from "./vibeBrief";
@@ -38,7 +39,7 @@ type PlaylistDiscoveryGenerator = (
 
 export type PlaylistDiscovery = {
   vibeBrief: VibeBrief;
-  artists: SelectedPlaylistArtist[];
+  rankedArtists: SelectedPlaylistArtist[];
 };
 
 export async function discoverPlaylistArtists(
@@ -59,11 +60,15 @@ export async function discoverPlaylistArtists(
 
   return {
     vibeBrief: generated.vibeBrief,
-    artists: await resolveArtistCandidates(
+    rankedArtists: await resolveArtistCandidates(
       sdk,
       generated.artistCandidates,
       desiredArtistCount,
-      [...artistsToExclude, ...source.selectedArtists]
+      [
+        ...artistsToExclude,
+        ...source.selectedArtists,
+        ...source.selectedTracks.map(({ artist }) => artist),
+      ]
     ),
   };
 }
@@ -79,7 +84,7 @@ export async function generatePlaylistDiscovery(
     desiredArtistCount === 0
       ? 0
       : desiredArtistCount + ARTIST_CANDIDATE_BUFFER;
-  const normalizedSource = buildVibeBriefSourceFromValue(source);
+  const normalizedSource = VibeBriefSourceSchema.parse(source);
   const exclusions = uniqueArtistNames(artistsToExclude).slice(
     0,
     MAX_EXCLUDED_ARTISTS
@@ -246,12 +251,6 @@ function uniqueArtistNames(names: readonly string[]): string[] {
   });
 }
 
-function buildVibeBriefSourceFromValue(
-  source: VibeBriefSource
-): VibeBriefSource {
-  return VibeBriefSchema.shape.source.parse(source);
-}
-
 function assertArtistCount(count: number): void {
   if (!Number.isInteger(count) || count < 0 || count > 20) {
     throw new RangeError("desiredArtistCount must be between 0 and 20");
@@ -263,7 +262,7 @@ const PLAYLIST_DISCOVERY_INSTRUCTIONS = `You are a music curator. Turn the suppl
 Vibe rules:
 - Treat selected artists and tracks as positive stylistic evidence, not automatic inclusion requirements.
 - Explicit instructions are authoritative. They override any conflicting inference from the selected music.
-- Describe mood, energy, tempo feel, genre boundaries, era, vocal character, instrumentation, production texture, negative constraints, and playlist arc.
+- Describe mood, energy, tempo feel, genre boundaries, era, positive stylistic anchors, vocal character, instrumentation, production texture, negative constraints, and playlist arc.
 - Keep every field concise and grounded in the supplied sources. Do not invent a user preference that the evidence does not support.
 
 Artist rules:

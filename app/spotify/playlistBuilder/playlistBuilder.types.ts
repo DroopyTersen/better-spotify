@@ -8,8 +8,8 @@ export const BuildPlaylistTrack = z.object({
   artist_name: z.string().nullable().optional(),
   artist_id: z.string().nullable().optional(),
   release_date: z.string().nullable().optional(),
+  album_popularity: z.number().nullable().optional(),
   spotify_uri: z.string().nullable().optional(),
-  external_url: z.string().nullable().optional(),
 });
 
 export type BuildPlaylistTrack = z.infer<typeof BuildPlaylistTrack>;

@@ -202,7 +202,8 @@ export function BuilderForm() {
         type="button"
         className="w-full"
         disabled={
-          (totalSelectedCount === 0 && !formData.customInstructions) ||
+          (totalSelectedCount === 0 &&
+            !formData.customInstructions?.trim()) ||
           isBuilding
         }
         onClick={handleBuildPlaylist}

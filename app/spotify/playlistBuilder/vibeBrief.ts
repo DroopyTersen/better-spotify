@@ -39,6 +39,7 @@ export const VibeProfileSchema = z
       })
       .strict(),
     era: z.array(Descriptor).max(6),
+    positiveAnchors: z.array(Descriptor).min(1).max(12),
     vocals: Note,
     instrumentation: z.array(Descriptor).max(10),
     productionTexture: z.array(Descriptor).max(8),

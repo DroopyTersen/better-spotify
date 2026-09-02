@@ -17,6 +17,9 @@ Spotify state.
   a fully refreshed snapshot from a partial or interrupted refresh.
 - **Selection** — artists and tracks the user deliberately supplies to the
   Playlist Builder.
+- **Vibe brief** — the bounded interpretation of a selection and optional
+  instructions that guides both music discovery and final curation. Explicit
+  instructions remain authoritative over inferred attributes.
 - **Curation** — a structured playlist or artist proposal generated from a
   bounded selection and preferences.
 - **Materialization** — the explicit, authenticated write that creates or
@@ -67,6 +70,8 @@ Spotify state.
    counts, non-empty values, exclusions, and truthful unresolved Spotify IDs.
 9. Vendor-specific configuration stays behind its adapter seam so feature code
    remains testable without network calls.
+10. One validated vibe brief guides discovery, candidate ranking, and final
+    curation; those stages do not independently reinterpret the user's intent.
 
 The per-account PGlite cache and Playlist Builder draft intentionally survive
 logout. Clearing them during logout would race browser work that is being

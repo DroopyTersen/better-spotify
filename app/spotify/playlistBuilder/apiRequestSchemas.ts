@@ -25,6 +25,9 @@ const BuildPlaylistTrackSchema = z.object({
   popularity: z.number().int().min(0).max(100).nullable().optional(),
   artist_name: z.string().trim().max(MAX_TEXT_LENGTH).nullable().optional(),
   artist_id: SpotifyId.nullable().optional(),
+  release_date: z.string().trim().max(32).nullable().optional(),
+  spotify_uri: z.string().trim().max(512).nullable().optional(),
+  external_url: z.string().trim().max(2_048).nullable().optional(),
 });
 
 const SelectedTrackSchema = z.object({
@@ -62,7 +65,6 @@ export const BuildPlaylistRequestSchema = z
       selectedTracks: z.array(SelectedTrackSchema).max(200),
       selectedArtists: z.array(SelectedArtistSchema).max(25),
       familiarSongsPool: FamiliarSongsPoolSchema.nullable(),
-      recommendedArtists: z.array(SelectedArtistSchema).max(20),
       formData: BuildPlaylistFormDataSchema,
     }),
   })
@@ -115,11 +117,4 @@ export const PlaylistModificationRequestSchema = z.object({
 export const StartPlaylistModificationRequestSchema = z.object({
   jobId: z.uuid(),
   input: PlaylistModificationRequestSchema,
-});
-
-export const ArtistRecommendationRequestSchema = z.object({
-  artistsToMatch: z.array(z.string().trim().min(1).max(200)).min(1).max(250),
-  artistsToExclude: z.array(z.string().trim().min(1).max(200)).max(500),
-  customInstructions: z.string().trim().max(MAX_INSTRUCTIONS_LENGTH).optional(),
-  desiredArtistCount: z.number().int().min(1).max(20),
 });

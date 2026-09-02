@@ -7,7 +7,8 @@ never treated as a Spotify identifier authority.
 
 ```mermaid
 flowchart LR
-    Selection[Account-scoped selection] --> Pool[Build bounded song pools]
+    Selection[Account-scoped selection] --> Brief[Build one vibe brief]
+    Brief --> Pool[Build bounded song pools]
     Pool --> Model[Structured curation]
     Model --> Verify[Verify or resolve every track]
     Verify --> Review[User review]
@@ -25,6 +26,12 @@ Inputs are bounded at the authenticated route boundary. The current controls
 include a requested song count, a `none` / `sprinkle` / `half` / `all` new-music
 preference, and optional custom instructions.
 
+The server turns the selected artists, selected tracks, and exact custom
+instructions into one typed vibe brief. Its concise profile covers mood,
+energy, tempo feel, genre boundaries, era, vocals, instrumentation, production
+texture, negative constraints, and playlist arc. Explicit instructions take
+precedence over anything inferred from the selected music.
+
 ## 2. Build candidate pools
 
 The familiar pool combines:
@@ -34,10 +41,16 @@ The familiar pool combines:
 - supported Spotify album/single catalog results for selected artists; and
 - recent listening context.
 
-Artist recommendations are generated as names, normalized, deduplicated, and
-filtered against both selected and excluded artists. Each name must then match
-an exact normalized Spotify search result. The app fetches catalog tracks only
-for verified Spotify artists.
+New-artist candidates are ranked against the same vibe brief, normalized,
+deduplicated, and filtered against both selected and familiar artists. The
+model returns a small overflow buffer so failed Spotify matches do not
+immediately underfill discovery. Each name must match an exact normalized
+Spotify search result before use.
+
+For each verified artist, the compatibility adapter loads a bounded set of
+albums and singles in deterministic release order. The resulting candidates
+retain release and Spotify metadata. A round-robin cap prevents one artist's
+catalog from crowding out the others before final curation.
 
 ## 3. Generate a structured proposal
 
@@ -50,6 +63,11 @@ The playlist schema requires exactly the requested number of tracks. A model
 may retain a non-empty Spotify ID only when that exact ID was supplied in a
 candidate pool. It must leave the ID empty for a music-knowledge suggestion.
 No hidden chain of thought is requested or stored.
+
+Final curation receives the same vibe brief used for discovery, along with the
+bounded familiar and new-song pools. It therefore sequences one shared
+interpretation of the request instead of independently guessing the vibe a
+second time.
 
 ## 4. Resolve before writing
 

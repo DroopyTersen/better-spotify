@@ -6,15 +6,17 @@ import {
   BuildPlaylistInput,
   BuildPlaylistTrack,
 } from "./playlistBuilder.types";
-import { getAllArtistTracks } from "../api/getAllArtistTracks";
+import { getArtistCatalogTracks } from "../api/getArtistCatalogTracks";
 import { spotifyWebApi } from "../api/spotifyWebApi";
 import { mapWithConcurrency } from "../api/mapWithConcurrency";
+import { discoverPlaylistArtists } from "./playlistDiscovery.server";
 import {
   CREATING_PLAYLIST_PROGRESS,
   CURATING_PLAYLIST_PROGRESS,
   FINDING_TRACKS_PROGRESS,
   getCurationProgress,
   PLAYLIST_COMPLETE_PROGRESS,
+  RECOMMENDING_ARTISTS_PROGRESS,
   type PlaylistBuildProgress,
   VERIFYING_TRACKS_PROGRESS,
 } from "./playlistBuildProgress";
@@ -68,13 +70,15 @@ export async function buildPlaylist(
 ) {
   const reportProgress = options.onProgress ?? (() => undefined);
 
-  // 5. Fetch new songs from recommended artists
+  reportProgress(RECOMMENDING_ARTISTS_PROGRESS);
+  const discovery = await discoverPlaylistArtists(input, sdk);
+
   reportProgress(FINDING_TRACKS_PROGRESS);
   const newSongCatalogs = await mapWithConcurrency(
-    input.data.recommendedArtists,
+    discovery.artists,
     ARTIST_CATALOG_CONCURRENCY,
     async (artist) => {
-      const catalogTracks = await getAllArtistTracks(
+      const catalogTracks = await getArtistCatalogTracks(
         sdk,
         artist.artist_id,
         MAX_NEW_TRACKS_PER_ARTIST
@@ -93,20 +97,21 @@ export async function buildPlaylist(
     input.formData.songCount
   );
 
-  // 6. Generate final playlist
   reportProgress(CURATING_PLAYLIST_PROGRESS);
   const generatedPlaylist = await generatePlaylist(
     {
       ...input,
       newSongs,
     },
-    undefined,
-    (partialOutput) => {
-      const draftedSongs =
-        partialOutput.playlist?.tracks?.filter(Boolean).length ?? 0;
-      reportProgress(
-        getCurationProgress(draftedSongs, input.formData.songCount)
-      );
+    {
+      vibeBrief: discovery.vibeBrief,
+      onPartialOutput: (partialOutput) => {
+        const draftedSongs =
+          partialOutput.playlist?.tracks?.filter(Boolean).length ?? 0;
+        reportProgress(
+          getCurationProgress(draftedSongs, input.formData.songCount)
+        );
+      },
     }
   );
 
@@ -153,7 +158,7 @@ export async function buildPlaylist(
     );
   }
 
-  // 7. Re-read every final ID from Spotify before creating anything. Client
+  // Re-read every final ID from Spotify before creating anything. Client
   // pools and model output are candidates, never mutation authority.
   reportProgress(CREATING_PLAYLIST_PROGRESS);
   const finalPlaylist = await createVerifiedPlaylist(

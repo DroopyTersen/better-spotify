@@ -1,6 +1,5 @@
 import { describe, expect, test } from "bun:test";
 import {
-  ArtistRecommendationRequestSchema,
   BuildPlaylistRequestSchema,
   PlaylistModificationRequestSchema,
   StartPlaylistModificationRequestSchema,
@@ -70,15 +69,6 @@ describe("playlist API request schemas", () => {
     expect(StartPlaylistModificationRequestSchema.safeParse(input).success).toBeFalse();
   });
 
-  test("caps artist recommendation fan-out", () => {
-    expect(
-      ArtistRecommendationRequestSchema.safeParse({
-        artistsToMatch: ["Spoon"],
-        artistsToExclude: [],
-        desiredArtistCount: 21,
-      }).success
-    ).toBeFalse();
-  });
 });
 
 function minimalBuildRequest() {
@@ -99,7 +89,6 @@ function minimalBuildRequest() {
         likedTracks: [],
         recentlyPlayedTracks: [],
       },
-      recommendedArtists: [],
       formData: { ...formData },
     },
   };

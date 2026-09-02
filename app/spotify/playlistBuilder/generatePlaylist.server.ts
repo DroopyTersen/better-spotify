@@ -5,6 +5,7 @@ import {
   type StructuredGenerationRequest,
 } from "./aiGeneration.server";
 import type { GeneratePlaylistInput } from "./playlistBuilder.types";
+import { formatVibeBrief, type VibeBrief } from "./vibeBrief";
 
 const PlaylistTrackResponse = z.object({
   id: z
@@ -52,25 +53,41 @@ type PlaylistGenerator = (
   request: StructuredGenerationRequest<PlaylistCurationResponse>
 ) => Promise<PlaylistCurationResponse>;
 
+type GeneratePlaylistOptions = {
+  generate?: PlaylistGenerator;
+  onPartialOutput?: (partialOutput: DeepPartial<PlaylistCurationResponse>) => void;
+  vibeBrief?: VibeBrief;
+};
+
 export const generatePlaylist = async (
   input: GeneratePlaylistInput,
-  generate: PlaylistGenerator = generateStructuredObject,
-  onPartialOutput?: (partialOutput: DeepPartial<PlaylistCurationResponse>) => void
+  {
+    generate = generateStructuredObject,
+    onPartialOutput,
+    vibeBrief,
+  }: GeneratePlaylistOptions = {}
 ) => {
   return generate({
     instructions: PLAYLIST_CURATION_INSTRUCTIONS,
-    prompt: buildPlaylistPrompt(input),
+    prompt: buildPlaylistPrompt(input, vibeBrief),
     schema: createPlaylistCurationResponseSchema(input.formData.songCount),
     onPartialOutput,
   });
 };
 
-export function buildPlaylistPrompt(input: GeneratePlaylistInput): string {
+export function buildPlaylistPrompt(
+  input: GeneratePlaylistInput,
+  vibeBrief?: VibeBrief
+): string {
   const sections = [
     `Create a playlist with exactly ${input.formData.songCount} songs.\nNew versus familiar distribution: ${input.formData.newStuffAmount}.`,
   ];
 
-  if (input.formData.customInstructions?.trim()) {
+  if (vibeBrief) {
+    sections.push(`<vibe_brief>
+${formatVibeBrief(vibeBrief)}
+</vibe_brief>`);
+  } else if (input.formData.customInstructions?.trim()) {
     sections.push(
       `<custom_instructions>\n${input.formData.customInstructions.trim()}\n</custom_instructions>`
     );
@@ -109,7 +126,7 @@ ${JSON.stringify({
   if (input.newSongs.length > 0) {
     sections.push(`<new_songs_pool>
 ${input.newSongs
-  .map((song) => `${song.id} | ${song.name} | ${song.artist_name ?? ""}`)
+  .map(formatNewSongCandidate)
   .join("\n")}
 </new_songs_pool>`);
   }
@@ -117,7 +134,26 @@ ${input.newSongs
   return sections.join("\n\n");
 }
 
+function formatNewSongCandidate(song: GeneratePlaylistInput["newSongs"][number]) {
+  return [
+    song.id,
+    song.name,
+    song.artist_name ?? "",
+    song.release_date ? `released:${song.release_date}` : "",
+    song.popularity === null || song.popularity === undefined
+      ? ""
+      : `popularity:${song.popularity}`,
+  ]
+    .filter(Boolean)
+    .join(" | ");
+}
+
 const PLAYLIST_CURATION_INSTRUCTIONS = `You are a professional music curator. Create one cohesive playlist that follows the user's requested vibe and uses referenced artists and tracks as style anchors.
+
+Vibe priority:
+- When a structured vibe brief is supplied, use it as the shared direction for selection and sequencing.
+- The brief's source.explicitInstructions are authoritative and override any conflicting inferred profile attribute.
+- Treat source selections as stylistic evidence as well as inclusion requirements described below.
 
 Selection rules:
 - Return exactly the requested number of unique tracks.

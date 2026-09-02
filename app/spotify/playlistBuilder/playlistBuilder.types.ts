@@ -7,6 +7,9 @@ export const BuildPlaylistTrack = z.object({
   popularity: z.number().nullable().optional(),
   artist_name: z.string().nullable().optional(),
   artist_id: z.string().nullable().optional(),
+  release_date: z.string().nullable().optional(),
+  spotify_uri: z.string().nullable().optional(),
+  external_url: z.string().nullable().optional(),
 });
 
 export type BuildPlaylistTrack = z.infer<typeof BuildPlaylistTrack>;
@@ -31,7 +34,6 @@ export interface PlaylistBuilderData {
   selectedArtists: SelectedPlaylistArtist[];
   // Computed results
   familiarSongsPool: FamiliarSongsPool | null;
-  recommendedArtists: SelectedPlaylistArtist[];
   // Add form data
   formData?: BuildPlaylistFormData;
 }
@@ -45,7 +47,7 @@ export type BuildPlaylistInput = {
 
 export type GeneratePlaylistInput = {
   formData: BuildPlaylistFormData;
-  data: Required<Omit<PlaylistBuilderData, "hashedSelection">>;
+  data: BuildPlaylistInput["data"];
   newSongs: BuildPlaylistTrack[];
 };
 

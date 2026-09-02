@@ -2,7 +2,6 @@ import type { AccountDatabase } from "~/db/db.client";
 import { EventEmitter } from "~/toolkit/utils/EventEmitter";
 import { CacheManager, LocalStorageCache } from "~/toolkit/utils/cache.client";
 import { createHash } from "~/toolkit/utils/createHash.client";
-import { jsonRequest } from "~/toolkit/utils/fetch.utils";
 import { SpotifySdk } from "../createSpotifySdk";
 import { SpotifyData, spotifyDb } from "../spotify.db";
 import { syncNewArtists, syncNewTracks } from "../sync/syncNewItems";
@@ -29,7 +28,6 @@ import {
 import {
   getReconnectingProgress,
   PREPARING_PLAYLIST_PROGRESS,
-  RECOMMENDING_ARTISTS_PROGRESS,
   type PlaylistBuildProgress,
 } from "./playlistBuildProgress";
 import {
@@ -71,7 +69,6 @@ export class PlaylistBuildingService extends EventEmitter<void> {
   sdk: SpotifySdk;
   spotifyData: SpotifyData;
   familiarSongsPool: FamiliarSongsPool | null = null;
-  newArtists: Array<SelectedPlaylistArtist> = [];
 
   private _formData: BuildPlaylistFormData = {
     newStuffAmount: "sprinkle",
@@ -117,7 +114,6 @@ export class PlaylistBuildingService extends EventEmitter<void> {
       this._selectedTracks = state.selectedTracks;
       this._selectedArtists = state.selectedArtists;
       this.familiarSongsPool = state.familiarSongsPool;
-      this.newArtists = state.recommendedArtists;
       if (state.formData) {
         this._formData = state.formData;
       }
@@ -136,7 +132,6 @@ export class PlaylistBuildingService extends EventEmitter<void> {
   };
   private triggerChange = async () => {
     this.familiarSongsPool = null;
-    this.newArtists = [];
     await this.saveSelectionToCache();
     this.emit();
   };
@@ -218,47 +213,6 @@ export class PlaylistBuildingService extends EventEmitter<void> {
       ({ track_id }) => track_id
     );
   };
-  private loadRecommendedNewArtists = async (
-    familiarSongsPool: FamiliarSongsPool
-  ): Promise<SelectedPlaylistArtist[]> => {
-    let artistsToMatch = Array.from(
-      new Set([
-        ...familiarSongsPool.artistCatalogs.map((a) => a.artist_name || ""),
-        ...familiarSongsPool.specifiedTracks.map(
-          (t) => t.artist_name || ""
-        ),
-        ...familiarSongsPool.topTracks.map((t) => t.artist_name || ""),
-        ...familiarSongsPool.likedTracks.map((t) => t.artist_name || ""),
-      ])
-    ).filter(Boolean);
-    let artistsToExclude = Array.from(
-      new Set([
-        ...this.spotifyData.likedTracks.map((t) => t.artist_name || ""),
-        ...this.spotifyData.topTracks.map((t) => t.artist_name || ""),
-        ...this.spotifyData.topArtists.map((t) => t.artist_name || ""),
-        ...this.spotifyData.playHistory.map((t) => t.artist_name || ""),
-      ])
-    ).filter(Boolean);
-    if (artistsToMatch.length < 1) {
-      return [];
-    }
-
-    return jsonRequest<SelectedPlaylistArtist[]>(
-      "/api/new-artist-recommendations",
-      {
-        method: "POST",
-        body: JSON.stringify({
-          artistsToMatch,
-          artistsToExclude,
-          desiredArtistCount: 5,
-        }),
-      }
-    ).catch(() => {
-      console.error("Error getting new artist recommendations");
-      return [];
-    });
-  };
-
   private buildFamiliarSongsPool = async (): Promise<FamiliarSongsPool> => {
     let input = await getBuildFamiliarSongPoolInput(this.spotifyData, {
       selectedArtistIds: this._selectedArtists.map((a) => a.artist_id),
@@ -287,7 +241,6 @@ export class PlaylistBuildingService extends EventEmitter<void> {
         selectedArtists: this._selectedArtists,
         // Clear computed results when selection changes
         familiarSongsPool: null,
-        recommendedArtists: [],
         formData: this._formData,
       };
       await this.cache.setItem(this.cacheKey, cacheData);
@@ -298,8 +251,7 @@ export class PlaylistBuildingService extends EventEmitter<void> {
 
   private async saveComputedResults(
     expectedHash: string,
-    familiarSongsPool: FamiliarSongsPool,
-    recommendedArtists: SelectedPlaylistArtist[]
+    familiarSongsPool: FamiliarSongsPool
   ) {
     try {
       const currentCache = await readPlaylistBuilderCacheState(
@@ -311,7 +263,6 @@ export class PlaylistBuildingService extends EventEmitter<void> {
       await this.cache.setItem(this.cacheKey, {
         ...currentCache,
         familiarSongsPool,
-        recommendedArtists,
       });
     } catch {
       console.error("Failed to save playlist-builder computed results");
@@ -337,9 +288,8 @@ export class PlaylistBuildingService extends EventEmitter<void> {
       this.cacheKey
     );
     if (cachedState?.hashedSelection === currentHash) {
-      if (cachedState.familiarSongsPool && cachedState.recommendedArtists) {
+      if (cachedState.familiarSongsPool) {
         this.familiarSongsPool = cachedState.familiarSongsPool;
-        this.newArtists = cachedState.recommendedArtists;
         this.lastWarmUp = {
           hash: currentHash,
           promise: Promise.resolve(),
@@ -355,20 +305,11 @@ export class PlaylistBuildingService extends EventEmitter<void> {
         try {
           reportProgress?.(PREPARING_PLAYLIST_PROGRESS);
           const familiarSongsPool = await this.buildFamiliarSongsPool();
-          reportProgress?.(RECOMMENDING_ARTISTS_PROGRESS);
-          const newArtists = await this.loadRecommendedNewArtists(
-            familiarSongsPool
-          );
 
           if ((await this.getSelectionsHash()) !== currentHash) return;
 
           this.familiarSongsPool = familiarSongsPool;
-          this.newArtists = newArtists;
-          await this.saveComputedResults(
-            currentHash,
-            familiarSongsPool,
-            newArtists
-          );
+          await this.saveComputedResults(currentHash, familiarSongsPool);
         } finally {
           if (this.lastWarmUp?.hash === currentHash) {
             this.lastWarmUp = null;
@@ -561,7 +502,6 @@ export class PlaylistBuildingService extends EventEmitter<void> {
           selectedTracks: state.selectedTracks || [],
           selectedArtists: state.selectedArtists || [],
           familiarSongsPool: this.familiarSongsPool,
-          recommendedArtists: this.newArtists || [],
           formData: this._formData,
         },
       } satisfies BuildPlaylistInput;

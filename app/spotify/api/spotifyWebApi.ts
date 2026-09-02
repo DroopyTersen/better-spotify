@@ -15,7 +15,12 @@ import type { SpotifySdk } from "../createSpotifySdk";
 import { mapWithConcurrency } from "./mapWithConcurrency";
 
 export type ArtistCatalogTrack = Pick<Track, "id" | "name" | "artists"> & {
-  album: Pick<Album, "id" | "name" | "images">;
+  spotifyUri: string | null;
+  externalUrl: string | null;
+  album: Pick<Album, "id" | "name" | "images"> & {
+    releaseDate: string | null;
+    popularity: number | null;
+  };
 };
 
 type CurrentPlaylistItem = Omit<PlaylistedTrack<Track>, "track"> & {
@@ -333,9 +338,21 @@ export const spotifyWebApi = {
       Math.max(Math.trunc(trackLimit), 1),
       50
     );
+    const uniqueAlbumIds = new Set<string>();
+    const availableAlbums = [...albums.items]
+      .filter(({ id }) => {
+        if (!id || uniqueAlbumIds.has(id)) return false;
+        uniqueAlbumIds.add(id);
+        return true;
+      })
+      .sort(
+        (left, right) =>
+          (right.release_date ?? "").localeCompare(left.release_date ?? "") ||
+          left.id.localeCompare(right.id)
+      );
     const catalogAlbums: SimplifiedAlbum[] = [];
     let estimatedTrackCount = 0;
-    for (const album of albums.items.slice(0, boundedAlbumLimit)) {
+    for (const album of availableAlbums.slice(0, boundedAlbumLimit)) {
       catalogAlbums.push(album);
       estimatedTrackCount += Math.max(album.total_tracks || 1, 1);
       if (estimatedTrackCount >= boundedTrackLimit) break;
@@ -356,10 +373,14 @@ export const spotifyWebApi = {
           id: track.id,
           name: track.name,
           artists: track.artists,
+          spotifyUri: track.uri ?? null,
+          externalUrl: track.external_urls?.spotify ?? null,
           album: {
             id: album.id,
             name: album.name,
             images: album.images,
+            releaseDate: album.release_date ?? null,
+            popularity: album.popularity ?? null,
           },
         });
         if (tracks.length >= boundedTrackLimit) return tracks;

@@ -1,5 +1,5 @@
 import { AsyncReturnType } from "~/toolkit/utils/typescript.utils";
-import { getAllArtistTracks } from "../api/getAllArtistTracks";
+import { getArtistCatalogTracks } from "../api/getArtistCatalogTracks";
 import { SpotifySdk } from "../createSpotifySdk";
 import {
   type BuildPlaylistTrack,
@@ -30,7 +30,7 @@ export function createFamiliarSongPoolDependencies(
 ): FamiliarSongPoolDependencies {
   return {
     getTracks: (trackIds) => spotifyWebApi.getTracks(sdk, trackIds),
-    getArtistTracks: (artistId) => getAllArtistTracks(sdk, artistId),
+    getArtistTracks: (artistId) => getArtistCatalogTracks(sdk, artistId),
   };
 }
 
@@ -123,10 +123,7 @@ export async function buildFamiliarSongsPool(
     pool.artistCatalogs.push({
       artist_id: artistId,
       artist_name: artistName,
-      tracks: tracks?.map((t) => ({
-        id: t.id,
-        name: t.name,
-      })),
+      tracks,
     });
   });
 

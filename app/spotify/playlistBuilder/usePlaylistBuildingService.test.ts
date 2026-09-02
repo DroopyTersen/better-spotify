@@ -177,7 +177,6 @@ describe("playlist-builder account isolation", () => {
       selectedTracks: [],
       selectedArtists: [{ artist_id: "artist1", artist_name: "Artist" }],
       familiarSongsPool: null,
-      recommendedArtists: [],
       formData: {
         customInstructions: "Keep it mellow",
         newStuffAmount: "sprinkle" as const,

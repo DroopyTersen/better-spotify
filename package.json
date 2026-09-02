@@ -8,9 +8,10 @@
     "dev": "react-router dev",
     "start": "bun --bun ./server.ts",
     "test": "bun test --max-concurrency 4 --timeout 60000",
-    "lint": "oxlint app server.ts serverRequest.ts serverRequest.test.ts --deny-warnings",
+    "lint": "oxlint app evals server.ts serverRequest.ts serverRequest.test.ts --deny-warnings",
     "typecheck": "react-router typegen && tsc --noEmit --incremental false",
     "check": "bun run test && bun run lint && bun run typecheck && bun run build",
+    "eval:playlist": "bun run evals/playlist-quality/cli.ts",
     "clean": "rm -rf build && rm -rf public/build",
     "db:generate": "drizzle-kit generate"
   },

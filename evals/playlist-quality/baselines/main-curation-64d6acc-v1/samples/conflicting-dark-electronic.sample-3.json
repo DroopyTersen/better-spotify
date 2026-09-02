@@ -1,0 +1,121 @@
+{
+  "status": "success",
+  "caseId": "conflicting-dark-electronic",
+  "sample": 3,
+  "startedAt": "2026-09-01T23:05:40.269Z",
+  "durationMs": 4004,
+  "output": {
+    "playlist": {
+      "name": "Velvet Static",
+      "description": "A nocturnal pulse of bruised synths, spectral voices, and slow-burning circuitry—intimate enough for headphones, ominous enough for the last train home.",
+      "tracks": [
+        {
+          "id": "conflict-n2",
+          "name": "Archangel",
+          "artist_name": "Burial"
+        },
+        {
+          "id": "conflict-n5",
+          "name": "Retrograde",
+          "artist_name": "James Blake"
+        },
+        {
+          "id": "conflict-n4",
+          "name": "Keep the Streets Empty for Me",
+          "artist_name": "Fever Ray"
+        },
+        {
+          "id": "conflict-n1",
+          "name": "Bad Kingdom",
+          "artist_name": "Moderat"
+        },
+        {
+          "id": "conflict-n3",
+          "name": "The Highest Flood",
+          "artist_name": "Forest Swords"
+        },
+        {
+          "id": "conflict-n7",
+          "name": "On",
+          "artist_name": "Kelly Lee Owens"
+        },
+        {
+          "id": "conflict-n8",
+          "name": "Anvil",
+          "artist_name": "Lorn"
+        },
+        {
+          "id": "conflict-n6",
+          "name": "Luminous Beings",
+          "artist_name": "Jon Hopkins"
+        }
+      ]
+    }
+  },
+  "metrics": {
+    "exactTrackCount": true,
+    "trackCount": 8,
+    "uniqueTrackCount": 8,
+    "duplicateCount": 0,
+    "duplicateKeys": [],
+    "inventedIds": [],
+    "unresolvedCount": 0,
+    "fixtureResolvableCount": 8,
+    "fixtureResolvableRate": 1,
+    "selectedTrackCoverage": {
+      "required": 0,
+      "included": 0,
+      "missingIds": []
+    },
+    "selectedArtistCoverage": {
+      "required": 0,
+      "represented": 0,
+      "missingIds": []
+    },
+    "novelty": {
+      "requestedCount": 8,
+      "newCount": 8,
+      "familiarCount": 0,
+      "unresolvedCount": 0,
+      "newRatio": 1,
+      "absoluteCountDelta": 0
+    },
+    "trackFixtureClassifications": [
+      {
+        "position": 1,
+        "classification": "new"
+      },
+      {
+        "position": 2,
+        "classification": "new"
+      },
+      {
+        "position": 3,
+        "classification": "new"
+      },
+      {
+        "position": 4,
+        "classification": "new"
+      },
+      {
+        "position": 5,
+        "classification": "new"
+      },
+      {
+        "position": 6,
+        "classification": "new"
+      },
+      {
+        "position": 7,
+        "classification": "new"
+      },
+      {
+        "position": 8,
+        "classification": "new"
+      }
+    ],
+    "adjacentSameArtistCount": 0,
+    "maxNewTracksByArtist": 1,
+    "constraintViolations": []
+  }
+}

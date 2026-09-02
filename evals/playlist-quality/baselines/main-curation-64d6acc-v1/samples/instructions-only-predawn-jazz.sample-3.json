@@ -1,0 +1,121 @@
+{
+  "status": "success",
+  "caseId": "instructions-only-predawn-jazz",
+  "sample": 3,
+  "startedAt": "2026-09-01T23:05:27.095Z",
+  "durationMs": 6347,
+  "output": {
+    "playlist": {
+      "name": "First Light, Hushed",
+      "description": "Eight patient prayers in piano, bass, brushwork, and breath—music for watching the dark thin out without disturbing the room.",
+      "tracks": [
+        {
+          "id": "",
+          "name": "Being There",
+          "artist_name": "Tord Gustavsen Trio"
+        },
+        {
+          "id": "",
+          "name": "Golden Rain",
+          "artist_name": "Bobo Stenson Trio"
+        },
+        {
+          "id": "",
+          "name": "Gefion",
+          "artist_name": "Jakob Bro"
+        },
+        {
+          "id": "",
+          "name": "Night Train",
+          "artist_name": "Marcin Wasilewski Trio"
+        },
+        {
+          "id": "",
+          "name": "This Is How You Disappear",
+          "artist_name": "Craig Taborn"
+        },
+        {
+          "id": "",
+          "name": "Desolation Sound",
+          "artist_name": "Charles Lloyd"
+        },
+        {
+          "id": "",
+          "name": "Sex",
+          "artist_name": "The Necks"
+        },
+        {
+          "id": "",
+          "name": "It Should Have Happened a Long Time Ago",
+          "artist_name": "Paul Motian"
+        }
+      ]
+    }
+  },
+  "metrics": {
+    "exactTrackCount": true,
+    "trackCount": 8,
+    "uniqueTrackCount": 8,
+    "duplicateCount": 0,
+    "duplicateKeys": [],
+    "inventedIds": [],
+    "unresolvedCount": 8,
+    "fixtureResolvableCount": 0,
+    "fixtureResolvableRate": 0,
+    "selectedTrackCoverage": {
+      "required": 0,
+      "included": 0,
+      "missingIds": []
+    },
+    "selectedArtistCoverage": {
+      "required": 0,
+      "represented": 0,
+      "missingIds": []
+    },
+    "novelty": {
+      "requestedCount": 8,
+      "newCount": 0,
+      "familiarCount": 0,
+      "unresolvedCount": 8,
+      "newRatio": null,
+      "absoluteCountDelta": null
+    },
+    "trackFixtureClassifications": [
+      {
+        "position": 1,
+        "classification": "unresolved"
+      },
+      {
+        "position": 2,
+        "classification": "unresolved"
+      },
+      {
+        "position": 3,
+        "classification": "unresolved"
+      },
+      {
+        "position": 4,
+        "classification": "unresolved"
+      },
+      {
+        "position": 5,
+        "classification": "unresolved"
+      },
+      {
+        "position": 6,
+        "classification": "unresolved"
+      },
+      {
+        "position": 7,
+        "classification": "unresolved"
+      },
+      {
+        "position": 8,
+        "classification": "unresolved"
+      }
+    ],
+    "adjacentSameArtistCount": 0,
+    "maxNewTracksByArtist": 0,
+    "constraintViolations": []
+  }
+}

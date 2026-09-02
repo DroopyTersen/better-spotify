@@ -1,0 +1,121 @@
+{
+  "status": "success",
+  "caseId": "instructions-only-predawn-jazz",
+  "sample": 2,
+  "startedAt": "2026-09-01T23:05:17.761Z",
+  "durationMs": 9333,
+  "output": {
+    "playlist": {
+      "name": "Vespers Before Dawn",
+      "description": "A hushed pre-sunrise vigil of glowing reeds, suspended piano, and patient drums, where every note moves like light across an empty room.",
+      "tracks": [
+        {
+          "id": "",
+          "name": "Blue Nile",
+          "artist_name": "Matthew Halsall"
+        },
+        {
+          "id": "",
+          "name": "The Ground",
+          "artist_name": "Tord Gustavsen Trio"
+        },
+        {
+          "id": "",
+          "name": "Gefion",
+          "artist_name": "Jakob Bro"
+        },
+        {
+          "id": "",
+          "name": "Ruins",
+          "artist_name": "Portico Quartet"
+        },
+        {
+          "id": "",
+          "name": "Kandaiki",
+          "artist_name": "Mammal Hands"
+        },
+        {
+          "id": "",
+          "name": "Bardo",
+          "artist_name": "GoGo Penguin"
+        },
+        {
+          "id": "",
+          "name": "It's OK to Listen to the Gray Voice",
+          "artist_name": "Jan Garbarek"
+        },
+        {
+          "id": "",
+          "name": "Unfold",
+          "artist_name": "The Necks"
+        }
+      ]
+    }
+  },
+  "metrics": {
+    "exactTrackCount": true,
+    "trackCount": 8,
+    "uniqueTrackCount": 8,
+    "duplicateCount": 0,
+    "duplicateKeys": [],
+    "inventedIds": [],
+    "unresolvedCount": 8,
+    "fixtureResolvableCount": 0,
+    "fixtureResolvableRate": 0,
+    "selectedTrackCoverage": {
+      "required": 0,
+      "included": 0,
+      "missingIds": []
+    },
+    "selectedArtistCoverage": {
+      "required": 0,
+      "represented": 0,
+      "missingIds": []
+    },
+    "novelty": {
+      "requestedCount": 8,
+      "newCount": 0,
+      "familiarCount": 0,
+      "unresolvedCount": 8,
+      "newRatio": null,
+      "absoluteCountDelta": null
+    },
+    "trackFixtureClassifications": [
+      {
+        "position": 1,
+        "classification": "unresolved"
+      },
+      {
+        "position": 2,
+        "classification": "unresolved"
+      },
+      {
+        "position": 3,
+        "classification": "unresolved"
+      },
+      {
+        "position": 4,
+        "classification": "unresolved"
+      },
+      {
+        "position": 5,
+        "classification": "unresolved"
+      },
+      {
+        "position": 6,
+        "classification": "unresolved"
+      },
+      {
+        "position": 7,
+        "classification": "unresolved"
+      },
+      {
+        "position": 8,
+        "classification": "unresolved"
+      }
+    ],
+    "adjacentSameArtistCount": 0,
+    "maxNewTracksByArtist": 0,
+    "constraintViolations": []
+  }
+}

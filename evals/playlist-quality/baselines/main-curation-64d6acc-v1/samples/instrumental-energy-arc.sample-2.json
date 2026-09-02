@@ -1,0 +1,121 @@
+{
+  "status": "success",
+  "caseId": "instrumental-energy-arc",
+  "sample": 2,
+  "startedAt": "2026-09-01T23:05:55.082Z",
+  "durationMs": 6764,
+  "output": {
+    "playlist": {
+      "name": "Gravity, Then Gone",
+      "description": "A slow-blooming instrumental ascent from hush to full-throttle circuitry, cresting in radiant motion before dissolving into weightless blue-hour calm.",
+      "tracks": [
+        {
+          "id": "arc-f3",
+          "name": "Abandon Window",
+          "artist_name": "Jon Hopkins"
+        },
+        {
+          "id": "arc-f1",
+          "name": "A Walk",
+          "artist_name": "Tycho"
+        },
+        {
+          "id": "arc-n1",
+          "name": "Recovery",
+          "artist_name": "Rival Consoles"
+        },
+        {
+          "id": "arc-n3",
+          "name": "Looped",
+          "artist_name": "Kiasmos"
+        },
+        {
+          "id": "arc-n2",
+          "name": "Order from Chaos",
+          "artist_name": "Max Cooper"
+        },
+        {
+          "id": "arc-f2",
+          "name": "Open Eye Signal",
+          "artist_name": "Jon Hopkins"
+        },
+        {
+          "id": "arc-n5",
+          "name": "Says",
+          "artist_name": "Nils Frahm"
+        },
+        {
+          "id": "arc-f5",
+          "name": "Hours",
+          "artist_name": "Tycho"
+        }
+      ]
+    }
+  },
+  "metrics": {
+    "exactTrackCount": true,
+    "trackCount": 8,
+    "uniqueTrackCount": 8,
+    "duplicateCount": 0,
+    "duplicateKeys": [],
+    "inventedIds": [],
+    "unresolvedCount": 0,
+    "fixtureResolvableCount": 8,
+    "fixtureResolvableRate": 1,
+    "selectedTrackCoverage": {
+      "required": 1,
+      "included": 1,
+      "missingIds": []
+    },
+    "selectedArtistCoverage": {
+      "required": 1,
+      "represented": 1,
+      "missingIds": []
+    },
+    "novelty": {
+      "requestedCount": 4,
+      "newCount": 4,
+      "familiarCount": 4,
+      "unresolvedCount": 0,
+      "newRatio": 0.5,
+      "absoluteCountDelta": 0
+    },
+    "trackFixtureClassifications": [
+      {
+        "position": 1,
+        "classification": "familiar"
+      },
+      {
+        "position": 2,
+        "classification": "familiar"
+      },
+      {
+        "position": 3,
+        "classification": "new"
+      },
+      {
+        "position": 4,
+        "classification": "new"
+      },
+      {
+        "position": 5,
+        "classification": "new"
+      },
+      {
+        "position": 6,
+        "classification": "familiar"
+      },
+      {
+        "position": 7,
+        "classification": "new"
+      },
+      {
+        "position": 8,
+        "classification": "familiar"
+      }
+    ],
+    "adjacentSameArtistCount": 0,
+    "maxNewTracksByArtist": 1,
+    "constraintViolations": []
+  }
+}

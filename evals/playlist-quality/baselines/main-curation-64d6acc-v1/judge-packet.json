@@ -1,0 +1,2752 @@
+{
+  "schemaVersion": 1,
+  "benchmarkVersion": "1.0.0",
+  "rubricVersion": "1.0.1",
+  "samples": [
+    {
+      "caseId": "artist-only-indie-folk",
+      "sample": 1,
+      "split": "development",
+      "rationale": "Checks whether artist selections alone provide enough evidence for a coherent vibe.",
+      "intent": {
+        "vibe": "Weathered, intimate indie folk with warm guitars, conversational vocals, and enough forward motion for a long rural drive.",
+        "mustHave": [
+          "Organic texture",
+          "Emotional intimacy",
+          "Steady momentum"
+        ],
+        "mustAvoid": [
+          "Glossy pop production",
+          "Arena-rock bombast"
+        ],
+        "novelty": "A small number of adjacent artists without losing the anchors"
+      },
+      "request": {
+        "selectedTracks": [],
+        "selectedArtists": [
+          "Big Thief",
+          "Waxahatchee"
+        ],
+        "customInstructions": "",
+        "newStuffAmount": "sprinkle",
+        "songCount": 8
+      },
+      "playlist": {
+        "name": "Porchlight Static",
+        "description": "Tender guitars, bruised devotion, and late-night momentum for driving past dark windows with the windows down and your heart slightly misbehaving.",
+        "tracks": [
+          {
+            "name": "Right Back to It",
+            "artist_name": "Waxahatchee"
+          },
+          {
+            "name": "Vampire Empire",
+            "artist_name": "Big Thief"
+          },
+          {
+            "name": "True Love",
+            "artist_name": "Hovvdy"
+          },
+          {
+            "name": "Fire",
+            "artist_name": "Waxahatchee"
+          },
+          {
+            "name": "Simulation Swarm",
+            "artist_name": "Big Thief"
+          },
+          {
+            "name": "Chosen to Deserve",
+            "artist_name": "Wednesday"
+          },
+          {
+            "name": "Lilacs",
+            "artist_name": "Waxahatchee"
+          },
+          {
+            "name": "Not",
+            "artist_name": "Big Thief"
+          }
+        ]
+      },
+      "fixtureClassifications": {
+        "summary": {
+          "requestedCount": 2,
+          "newCount": 2,
+          "familiarCount": 6,
+          "unresolvedCount": 0,
+          "newRatio": 0.25,
+          "absoluteCountDelta": 0
+        },
+        "tracks": [
+          {
+            "position": 1,
+            "classification": "familiar"
+          },
+          {
+            "position": 2,
+            "classification": "familiar"
+          },
+          {
+            "position": 3,
+            "classification": "new"
+          },
+          {
+            "position": 4,
+            "classification": "familiar"
+          },
+          {
+            "position": 5,
+            "classification": "familiar"
+          },
+          {
+            "position": 6,
+            "classification": "new"
+          },
+          {
+            "position": 7,
+            "classification": "familiar"
+          },
+          {
+            "position": 8,
+            "classification": "familiar"
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "artist-only-indie-folk",
+      "sample": 2,
+      "split": "development",
+      "rationale": "Checks whether artist selections alone provide enough evidence for a coherent vibe.",
+      "intent": {
+        "vibe": "Weathered, intimate indie folk with warm guitars, conversational vocals, and enough forward motion for a long rural drive.",
+        "mustHave": [
+          "Organic texture",
+          "Emotional intimacy",
+          "Steady momentum"
+        ],
+        "mustAvoid": [
+          "Glossy pop production",
+          "Arena-rock bombast"
+        ],
+        "novelty": "A small number of adjacent artists without losing the anchors"
+      },
+      "request": {
+        "selectedTracks": [],
+        "selectedArtists": [
+          "Big Thief",
+          "Waxahatchee"
+        ],
+        "customInstructions": "",
+        "newStuffAmount": "sprinkle",
+        "songCount": 8
+      },
+      "playlist": {
+        "name": "Tender Static",
+        "description": "A bruised, golden-hour indie-rock drive where jangling guitars, restless hearts, and sudden emotional left turns keep the windows down.",
+        "tracks": [
+          {
+            "name": "Vampire Empire",
+            "artist_name": "Big Thief"
+          },
+          {
+            "name": "True Love",
+            "artist_name": "Hovvdy"
+          },
+          {
+            "name": "Right Back to It",
+            "artist_name": "Waxahatchee"
+          },
+          {
+            "name": "Chosen to Deserve",
+            "artist_name": "Wednesday"
+          },
+          {
+            "name": "Simulation Swarm",
+            "artist_name": "Big Thief"
+          },
+          {
+            "name": "Lilacs",
+            "artist_name": "Waxahatchee"
+          },
+          {
+            "name": "Not",
+            "artist_name": "Big Thief"
+          },
+          {
+            "name": "Fire",
+            "artist_name": "Waxahatchee"
+          }
+        ]
+      },
+      "fixtureClassifications": {
+        "summary": {
+          "requestedCount": 2,
+          "newCount": 2,
+          "familiarCount": 6,
+          "unresolvedCount": 0,
+          "newRatio": 0.25,
+          "absoluteCountDelta": 0
+        },
+        "tracks": [
+          {
+            "position": 1,
+            "classification": "familiar"
+          },
+          {
+            "position": 2,
+            "classification": "new"
+          },
+          {
+            "position": 3,
+            "classification": "familiar"
+          },
+          {
+            "position": 4,
+            "classification": "new"
+          },
+          {
+            "position": 5,
+            "classification": "familiar"
+          },
+          {
+            "position": 6,
+            "classification": "familiar"
+          },
+          {
+            "position": 7,
+            "classification": "familiar"
+          },
+          {
+            "position": 8,
+            "classification": "familiar"
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "artist-only-indie-folk",
+      "sample": 3,
+      "split": "development",
+      "rationale": "Checks whether artist selections alone provide enough evidence for a coherent vibe.",
+      "intent": {
+        "vibe": "Weathered, intimate indie folk with warm guitars, conversational vocals, and enough forward motion for a long rural drive.",
+        "mustHave": [
+          "Organic texture",
+          "Emotional intimacy",
+          "Steady momentum"
+        ],
+        "mustAvoid": [
+          "Glossy pop production",
+          "Arena-rock bombast"
+        ],
+        "novelty": "A small number of adjacent artists without losing the anchors"
+      },
+      "request": {
+        "selectedTracks": [],
+        "selectedArtists": [
+          "Big Thief",
+          "Waxahatchee"
+        ],
+        "customInstructions": "",
+        "newStuffAmount": "sprinkle",
+        "songCount": 8
+      },
+      "playlist": {
+        "name": "Porchlight Static",
+        "description": "Tender twang, bruised-heart confessionals, and late-night guitar shimmer for driving nowhere fast with the windows down.",
+        "tracks": [
+          {
+            "name": "Vampire Empire",
+            "artist_name": "Big Thief"
+          },
+          {
+            "name": "Right Back to It",
+            "artist_name": "Waxahatchee"
+          },
+          {
+            "name": "Chosen to Deserve",
+            "artist_name": "Wednesday"
+          },
+          {
+            "name": "Simulation Swarm",
+            "artist_name": "Big Thief"
+          },
+          {
+            "name": "Lilacs",
+            "artist_name": "Waxahatchee"
+          },
+          {
+            "name": "She's Leaving You",
+            "artist_name": "MJ Lenderman"
+          },
+          {
+            "name": "Not",
+            "artist_name": "Big Thief"
+          },
+          {
+            "name": "Fire",
+            "artist_name": "Waxahatchee"
+          }
+        ]
+      },
+      "fixtureClassifications": {
+        "summary": {
+          "requestedCount": 2,
+          "newCount": 2,
+          "familiarCount": 6,
+          "unresolvedCount": 0,
+          "newRatio": 0.25,
+          "absoluteCountDelta": 0
+        },
+        "tracks": [
+          {
+            "position": 1,
+            "classification": "familiar"
+          },
+          {
+            "position": 2,
+            "classification": "familiar"
+          },
+          {
+            "position": 3,
+            "classification": "new"
+          },
+          {
+            "position": 4,
+            "classification": "familiar"
+          },
+          {
+            "position": 5,
+            "classification": "familiar"
+          },
+          {
+            "position": 6,
+            "classification": "new"
+          },
+          {
+            "position": 7,
+            "classification": "familiar"
+          },
+          {
+            "position": 8,
+            "classification": "familiar"
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "track-only-neon-drive",
+      "sample": 1,
+      "split": "development",
+      "rationale": "Checks whether selected tracks can define a vibe without selected artists or prose instructions.",
+      "intent": {
+        "vibe": "Nocturnal synth-pop: neon reflections, propulsive bass, cool vocals, and a slightly dangerous cinematic glow.",
+        "mustHave": [
+          "Night-drive momentum",
+          "Synth-led production",
+          "Cool restraint"
+        ],
+        "mustAvoid": [
+          "Acoustic singer-songwriter tracks",
+          "Festival EDM drops"
+        ],
+        "arc": "Start sleek, accelerate through the middle, and finish in a hazy afterglow",
+        "novelty": "Half fixture-new tracks that feel naturally adjacent to the two anchors"
+      },
+      "request": {
+        "selectedTracks": [
+          {
+            "name": "Midnight City",
+            "artist_name": "M83"
+          },
+          {
+            "name": "Under Your Spell",
+            "artist_name": "Desire"
+          }
+        ],
+        "selectedArtists": [],
+        "customInstructions": "",
+        "newStuffAmount": "half",
+        "songCount": 8
+      },
+      "playlist": {
+        "name": "Neon Afterglow",
+        "description": "Cruise through a midnight skyline of pulsing synths, velvet vocals, and glossy danger, where every chorus feels like headlights cutting through rain.",
+        "tracks": [
+          {
+            "name": "Midnight City",
+            "artist_name": "M83"
+          },
+          {
+            "name": "Under Your Spell",
+            "artist_name": "Desire"
+          },
+          {
+            "name": "Sunset",
+            "artist_name": "The Midnight"
+          },
+          {
+            "name": "Wait",
+            "artist_name": "M83"
+          },
+          {
+            "name": "A Real Hero",
+            "artist_name": "College"
+          },
+          {
+            "name": "Mirroir mirroir",
+            "artist_name": "Desire"
+          },
+          {
+            "name": "Shadow",
+            "artist_name": "Chromatics"
+          },
+          {
+            "name": "Fire for You",
+            "artist_name": "Cannons"
+          }
+        ]
+      },
+      "fixtureClassifications": {
+        "summary": {
+          "requestedCount": 4,
+          "newCount": 4,
+          "familiarCount": 4,
+          "unresolvedCount": 0,
+          "newRatio": 0.5,
+          "absoluteCountDelta": 0
+        },
+        "tracks": [
+          {
+            "position": 1,
+            "classification": "familiar"
+          },
+          {
+            "position": 2,
+            "classification": "familiar"
+          },
+          {
+            "position": 3,
+            "classification": "new"
+          },
+          {
+            "position": 4,
+            "classification": "familiar"
+          },
+          {
+            "position": 5,
+            "classification": "new"
+          },
+          {
+            "position": 6,
+            "classification": "familiar"
+          },
+          {
+            "position": 7,
+            "classification": "new"
+          },
+          {
+            "position": 8,
+            "classification": "new"
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "track-only-neon-drive",
+      "sample": 2,
+      "split": "development",
+      "rationale": "Checks whether selected tracks can define a vibe without selected artists or prose instructions.",
+      "intent": {
+        "vibe": "Nocturnal synth-pop: neon reflections, propulsive bass, cool vocals, and a slightly dangerous cinematic glow.",
+        "mustHave": [
+          "Night-drive momentum",
+          "Synth-led production",
+          "Cool restraint"
+        ],
+        "mustAvoid": [
+          "Acoustic singer-songwriter tracks",
+          "Festival EDM drops"
+        ],
+        "arc": "Start sleek, accelerate through the middle, and finish in a hazy afterglow",
+        "novelty": "Half fixture-new tracks that feel naturally adjacent to the two anchors"
+      },
+      "request": {
+        "selectedTracks": [
+          {
+            "name": "Midnight City",
+            "artist_name": "M83"
+          },
+          {
+            "name": "Under Your Spell",
+            "artist_name": "Desire"
+          }
+        ],
+        "selectedArtists": [],
+        "customInstructions": "",
+        "newStuffAmount": "half",
+        "songCount": 8
+      },
+      "playlist": {
+        "name": "Neon Afterimage",
+        "description": "Cruise through a midnight boulevard where velvet synths, fluorescent heartbreak, and slow-burning desire glow beneath the city lights.",
+        "tracks": [
+          {
+            "name": "Midnight City",
+            "artist_name": "M83"
+          },
+          {
+            "name": "Sunset",
+            "artist_name": "The Midnight"
+          },
+          {
+            "name": "Under Your Spell",
+            "artist_name": "Desire"
+          },
+          {
+            "name": "Shadow",
+            "artist_name": "Chromatics"
+          },
+          {
+            "name": "Wait",
+            "artist_name": "M83"
+          },
+          {
+            "name": "A Real Hero",
+            "artist_name": "College"
+          },
+          {
+            "name": "Mirroir mirroir",
+            "artist_name": "Desire"
+          },
+          {
+            "name": "Fire for You",
+            "artist_name": "Cannons"
+          }
+        ]
+      },
+      "fixtureClassifications": {
+        "summary": {
+          "requestedCount": 4,
+          "newCount": 4,
+          "familiarCount": 4,
+          "unresolvedCount": 0,
+          "newRatio": 0.5,
+          "absoluteCountDelta": 0
+        },
+        "tracks": [
+          {
+            "position": 1,
+            "classification": "familiar"
+          },
+          {
+            "position": 2,
+            "classification": "new"
+          },
+          {
+            "position": 3,
+            "classification": "familiar"
+          },
+          {
+            "position": 4,
+            "classification": "new"
+          },
+          {
+            "position": 5,
+            "classification": "familiar"
+          },
+          {
+            "position": 6,
+            "classification": "new"
+          },
+          {
+            "position": 7,
+            "classification": "familiar"
+          },
+          {
+            "position": 8,
+            "classification": "new"
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "track-only-neon-drive",
+      "sample": 3,
+      "split": "development",
+      "rationale": "Checks whether selected tracks can define a vibe without selected artists or prose instructions.",
+      "intent": {
+        "vibe": "Nocturnal synth-pop: neon reflections, propulsive bass, cool vocals, and a slightly dangerous cinematic glow.",
+        "mustHave": [
+          "Night-drive momentum",
+          "Synth-led production",
+          "Cool restraint"
+        ],
+        "mustAvoid": [
+          "Acoustic singer-songwriter tracks",
+          "Festival EDM drops"
+        ],
+        "arc": "Start sleek, accelerate through the middle, and finish in a hazy afterglow",
+        "novelty": "Half fixture-new tracks that feel naturally adjacent to the two anchors"
+      },
+      "request": {
+        "selectedTracks": [
+          {
+            "name": "Midnight City",
+            "artist_name": "M83"
+          },
+          {
+            "name": "Under Your Spell",
+            "artist_name": "Desire"
+          }
+        ],
+        "selectedArtists": [],
+        "customInstructions": "",
+        "newStuffAmount": "half",
+        "songCount": 8
+      },
+      "playlist": {
+        "name": "Neon Afterimage",
+        "description": "A midnight drive through violet streets—glossy synths, aching vocals, and enough chrome-plated momentum to outrun the sunrise.",
+        "tracks": [
+          {
+            "name": "Under Your Spell",
+            "artist_name": "Desire"
+          },
+          {
+            "name": "Sunset",
+            "artist_name": "The Midnight"
+          },
+          {
+            "name": "Wait",
+            "artist_name": "M83"
+          },
+          {
+            "name": "Propagation",
+            "artist_name": "Com Truise"
+          },
+          {
+            "name": "Mirroir mirroir",
+            "artist_name": "Desire"
+          },
+          {
+            "name": "Shadow",
+            "artist_name": "Chromatics"
+          },
+          {
+            "name": "Midnight City",
+            "artist_name": "M83"
+          },
+          {
+            "name": "Killshot",
+            "artist_name": "Magdalena Bay"
+          }
+        ]
+      },
+      "fixtureClassifications": {
+        "summary": {
+          "requestedCount": 4,
+          "newCount": 4,
+          "familiarCount": 4,
+          "unresolvedCount": 0,
+          "newRatio": 0.5,
+          "absoluteCountDelta": 0
+        },
+        "tracks": [
+          {
+            "position": 1,
+            "classification": "familiar"
+          },
+          {
+            "position": 2,
+            "classification": "new"
+          },
+          {
+            "position": 3,
+            "classification": "familiar"
+          },
+          {
+            "position": 4,
+            "classification": "new"
+          },
+          {
+            "position": 5,
+            "classification": "familiar"
+          },
+          {
+            "position": 6,
+            "classification": "new"
+          },
+          {
+            "position": 7,
+            "classification": "familiar"
+          },
+          {
+            "position": 8,
+            "classification": "new"
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "mixed-indie-dance",
+      "sample": 1,
+      "split": "development",
+      "rationale": "Exercises selected tracks, selected artists, and narrowing instructions together.",
+      "intent": {
+        "vibe": "A sweaty, urgent indie-dance floor with live-drum energy, wiry guitars, and synths that stay human rather than polished.",
+        "mustHave": [
+          "Escalating physical energy",
+          "Tension and release",
+          "A human live-band edge"
+        ],
+        "mustAvoid": [
+          "Acoustic ballads",
+          "Big-room EDM",
+          "Passive background music"
+        ],
+        "arc": "Open with tension, hit a crowded-room peak, and end exhilarated rather than exhausted",
+        "novelty": "A balanced mix of anchors and credible adjacent discoveries"
+      },
+      "request": {
+        "selectedTracks": [
+          {
+            "name": "All My Friends",
+            "artist_name": "LCD Soundsystem"
+          }
+        ],
+        "selectedArtists": [
+          "Yeah Yeah Yeahs"
+        ],
+        "customInstructions": "Make it feel like a tiny club at 1 a.m.: urgent and communal, with no acoustic comedown.",
+        "newStuffAmount": "half",
+        "songCount": 8
+      },
+      "playlist": {
+        "name": "1:00 A.M. Pressure",
+        "description": "Sweat, strobes, and shoulder-to-shoulder momentum—an urgent midnight circuit that keeps the room locked in and refuses the quiet way home.",
+        "tracks": [
+          {
+            "name": "NY Excuse",
+            "artist_name": "Soulwax"
+          },
+          {
+            "name": "Heads Will Roll",
+            "artist_name": "Yeah Yeah Yeahs"
+          },
+          {
+            "name": "Over and Over",
+            "artist_name": "Hot Chip"
+          },
+          {
+            "name": "Tribulations",
+            "artist_name": "LCD Soundsystem"
+          },
+          {
+            "name": "House of Jealous Lovers",
+            "artist_name": "The Rapture"
+          },
+          {
+            "name": "All My Friends",
+            "artist_name": "LCD Soundsystem"
+          },
+          {
+            "name": "Tournament",
+            "artist_name": "Nation of Language"
+          },
+          {
+            "name": "Zero",
+            "artist_name": "Yeah Yeah Yeahs"
+          }
+        ]
+      },
+      "fixtureClassifications": {
+        "summary": {
+          "requestedCount": 4,
+          "newCount": 4,
+          "familiarCount": 4,
+          "unresolvedCount": 0,
+          "newRatio": 0.5,
+          "absoluteCountDelta": 0
+        },
+        "tracks": [
+          {
+            "position": 1,
+            "classification": "new"
+          },
+          {
+            "position": 2,
+            "classification": "familiar"
+          },
+          {
+            "position": 3,
+            "classification": "new"
+          },
+          {
+            "position": 4,
+            "classification": "familiar"
+          },
+          {
+            "position": 5,
+            "classification": "new"
+          },
+          {
+            "position": 6,
+            "classification": "familiar"
+          },
+          {
+            "position": 7,
+            "classification": "new"
+          },
+          {
+            "position": 8,
+            "classification": "familiar"
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "mixed-indie-dance",
+      "sample": 2,
+      "split": "development",
+      "rationale": "Exercises selected tracks, selected artists, and narrowing instructions together.",
+      "intent": {
+        "vibe": "A sweaty, urgent indie-dance floor with live-drum energy, wiry guitars, and synths that stay human rather than polished.",
+        "mustHave": [
+          "Escalating physical energy",
+          "Tension and release",
+          "A human live-band edge"
+        ],
+        "mustAvoid": [
+          "Acoustic ballads",
+          "Big-room EDM",
+          "Passive background music"
+        ],
+        "arc": "Open with tension, hit a crowded-room peak, and end exhilarated rather than exhausted",
+        "novelty": "A balanced mix of anchors and credible adjacent discoveries"
+      },
+      "request": {
+        "selectedTracks": [
+          {
+            "name": "All My Friends",
+            "artist_name": "LCD Soundsystem"
+          }
+        ],
+        "selectedArtists": [
+          "Yeah Yeah Yeahs"
+        ],
+        "customInstructions": "Make it feel like a tiny club at 1 a.m.: urgent and communal, with no acoustic comedown.",
+        "newStuffAmount": "half",
+        "songCount": 8
+      },
+      "playlist": {
+        "name": "1:00 A.M. Pressure",
+        "description": "Sweaty bodies, flashing strobes, and a bassline that refuses to let anyone leave—the room locks in and surges until the final communal release.",
+        "tracks": [
+          {
+            "name": "Tribulations",
+            "artist_name": "LCD Soundsystem"
+          },
+          {
+            "name": "House of Jealous Lovers",
+            "artist_name": "The Rapture"
+          },
+          {
+            "name": "Heads Will Roll",
+            "artist_name": "Yeah Yeah Yeahs"
+          },
+          {
+            "name": "Over and Over",
+            "artist_name": "Hot Chip"
+          },
+          {
+            "name": "NY Excuse",
+            "artist_name": "Soulwax"
+          },
+          {
+            "name": "Zero",
+            "artist_name": "Yeah Yeah Yeahs"
+          },
+          {
+            "name": "Holiday",
+            "artist_name": "Confidence Man"
+          },
+          {
+            "name": "All My Friends",
+            "artist_name": "LCD Soundsystem"
+          }
+        ]
+      },
+      "fixtureClassifications": {
+        "summary": {
+          "requestedCount": 4,
+          "newCount": 4,
+          "familiarCount": 4,
+          "unresolvedCount": 0,
+          "newRatio": 0.5,
+          "absoluteCountDelta": 0
+        },
+        "tracks": [
+          {
+            "position": 1,
+            "classification": "familiar"
+          },
+          {
+            "position": 2,
+            "classification": "new"
+          },
+          {
+            "position": 3,
+            "classification": "familiar"
+          },
+          {
+            "position": 4,
+            "classification": "new"
+          },
+          {
+            "position": 5,
+            "classification": "new"
+          },
+          {
+            "position": 6,
+            "classification": "familiar"
+          },
+          {
+            "position": 7,
+            "classification": "new"
+          },
+          {
+            "position": 8,
+            "classification": "familiar"
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "mixed-indie-dance",
+      "sample": 3,
+      "split": "development",
+      "rationale": "Exercises selected tracks, selected artists, and narrowing instructions together.",
+      "intent": {
+        "vibe": "A sweaty, urgent indie-dance floor with live-drum energy, wiry guitars, and synths that stay human rather than polished.",
+        "mustHave": [
+          "Escalating physical energy",
+          "Tension and release",
+          "A human live-band edge"
+        ],
+        "mustAvoid": [
+          "Acoustic ballads",
+          "Big-room EDM",
+          "Passive background music"
+        ],
+        "arc": "Open with tension, hit a crowded-room peak, and end exhilarated rather than exhausted",
+        "novelty": "A balanced mix of anchors and credible adjacent discoveries"
+      },
+      "request": {
+        "selectedTracks": [
+          {
+            "name": "All My Friends",
+            "artist_name": "LCD Soundsystem"
+          }
+        ],
+        "selectedArtists": [
+          "Yeah Yeah Yeahs"
+        ],
+        "customInstructions": "Make it feel like a tiny club at 1 a.m.: urgent and communal, with no acoustic comedown.",
+        "newStuffAmount": "half",
+        "songCount": 8
+      },
+      "playlist": {
+        "name": "1 A.M. Pressure System",
+        "description": "Sweaty bodies, strobes, and a bassline that refuses to let go—an urgent little room where everyone moves like the night just started.",
+        "tracks": [
+          {
+            "name": "All My Friends",
+            "artist_name": "LCD Soundsystem"
+          },
+          {
+            "name": "Heads Will Roll",
+            "artist_name": "Yeah Yeah Yeahs"
+          },
+          {
+            "name": "NY Excuse",
+            "artist_name": "Soulwax"
+          },
+          {
+            "name": "Zero",
+            "artist_name": "Yeah Yeah Yeahs"
+          },
+          {
+            "name": "House of Jealous Lovers",
+            "artist_name": "The Rapture"
+          },
+          {
+            "name": "Tribulations",
+            "artist_name": "LCD Soundsystem"
+          },
+          {
+            "name": "Over and Over",
+            "artist_name": "Hot Chip"
+          },
+          {
+            "name": "The Wall",
+            "artist_name": "Yard Act"
+          }
+        ]
+      },
+      "fixtureClassifications": {
+        "summary": {
+          "requestedCount": 4,
+          "newCount": 4,
+          "familiarCount": 4,
+          "unresolvedCount": 0,
+          "newRatio": 0.5,
+          "absoluteCountDelta": 0
+        },
+        "tracks": [
+          {
+            "position": 1,
+            "classification": "familiar"
+          },
+          {
+            "position": 2,
+            "classification": "familiar"
+          },
+          {
+            "position": 3,
+            "classification": "new"
+          },
+          {
+            "position": 4,
+            "classification": "familiar"
+          },
+          {
+            "position": 5,
+            "classification": "new"
+          },
+          {
+            "position": 6,
+            "classification": "familiar"
+          },
+          {
+            "position": 7,
+            "classification": "new"
+          },
+          {
+            "position": 8,
+            "classification": "new"
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "instructions-only-predawn-jazz",
+      "sample": 1,
+      "split": "development",
+      "rationale": "Verifies that a sparse request can be judged fairly when the model must use music knowledge and leave IDs unresolved.",
+      "intent": {
+        "vibe": "Quiet, devotional modern jazz for the hour before sunrise: spacious, patient, mostly instrumental, and emotionally luminous.",
+        "mustHave": [
+          "Space and patience",
+          "Acoustic detail",
+          "Predawn calm"
+        ],
+        "mustAvoid": [
+          "Showy fusion solos",
+          "Vocal standards",
+          "Cocktail-lounge cheer"
+        ],
+        "arc": "Nearly still at the opening, gradually warmer, then return to silence",
+        "novelty": "All selections come from music knowledge; unresolved IDs are expected"
+      },
+      "request": {
+        "selectedTracks": [],
+        "selectedArtists": [],
+        "customInstructions": "Quiet devotional modern jazz for the hour before sunrise. Mostly instrumental, spacious, patient, and never showy.",
+        "newStuffAmount": "all",
+        "songCount": 8
+      },
+      "playlist": {
+        "name": "Before the First Light",
+        "description": "A hushed pilgrimage through piano, breath, and brushed rhythm—music for empty streets, cooling darkness, and the first pale seam of dawn.",
+        "tracks": [
+          {
+            "name": "Gefion",
+            "artist_name": "Jakob Bro"
+          },
+          {
+            "name": "The Other Side",
+            "artist_name": "Tord Gustavsen Trio"
+          },
+          {
+            "name": "Night Train to You",
+            "artist_name": "Marcin Wasilewski Trio"
+          },
+          {
+            "name": "Desolation Sound",
+            "artist_name": "Charles Lloyd"
+          },
+          {
+            "name": "Opening Image",
+            "artist_name": "Arve Henriksen"
+          },
+          {
+            "name": "Quiet Fire",
+            "artist_name": "Mammal Hands"
+          },
+          {
+            "name": "Modul 36",
+            "artist_name": "Nik Bärtsch's Ronin"
+          },
+          {
+            "name": "Hopopono",
+            "artist_name": "GoGo Penguin"
+          }
+        ]
+      },
+      "fixtureClassifications": {
+        "summary": {
+          "requestedCount": 8,
+          "newCount": 0,
+          "familiarCount": 0,
+          "unresolvedCount": 8,
+          "newRatio": null,
+          "absoluteCountDelta": null
+        },
+        "tracks": [
+          {
+            "position": 1,
+            "classification": "unresolved"
+          },
+          {
+            "position": 2,
+            "classification": "unresolved"
+          },
+          {
+            "position": 3,
+            "classification": "unresolved"
+          },
+          {
+            "position": 4,
+            "classification": "unresolved"
+          },
+          {
+            "position": 5,
+            "classification": "unresolved"
+          },
+          {
+            "position": 6,
+            "classification": "unresolved"
+          },
+          {
+            "position": 7,
+            "classification": "unresolved"
+          },
+          {
+            "position": 8,
+            "classification": "unresolved"
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "instructions-only-predawn-jazz",
+      "sample": 2,
+      "split": "development",
+      "rationale": "Verifies that a sparse request can be judged fairly when the model must use music knowledge and leave IDs unresolved.",
+      "intent": {
+        "vibe": "Quiet, devotional modern jazz for the hour before sunrise: spacious, patient, mostly instrumental, and emotionally luminous.",
+        "mustHave": [
+          "Space and patience",
+          "Acoustic detail",
+          "Predawn calm"
+        ],
+        "mustAvoid": [
+          "Showy fusion solos",
+          "Vocal standards",
+          "Cocktail-lounge cheer"
+        ],
+        "arc": "Nearly still at the opening, gradually warmer, then return to silence",
+        "novelty": "All selections come from music knowledge; unresolved IDs are expected"
+      },
+      "request": {
+        "selectedTracks": [],
+        "selectedArtists": [],
+        "customInstructions": "Quiet devotional modern jazz for the hour before sunrise. Mostly instrumental, spacious, patient, and never showy.",
+        "newStuffAmount": "all",
+        "songCount": 8
+      },
+      "playlist": {
+        "name": "Vespers Before Dawn",
+        "description": "A hushed pre-sunrise vigil of glowing reeds, suspended piano, and patient drums, where every note moves like light across an empty room.",
+        "tracks": [
+          {
+            "name": "Blue Nile",
+            "artist_name": "Matthew Halsall"
+          },
+          {
+            "name": "The Ground",
+            "artist_name": "Tord Gustavsen Trio"
+          },
+          {
+            "name": "Gefion",
+            "artist_name": "Jakob Bro"
+          },
+          {
+            "name": "Ruins",
+            "artist_name": "Portico Quartet"
+          },
+          {
+            "name": "Kandaiki",
+            "artist_name": "Mammal Hands"
+          },
+          {
+            "name": "Bardo",
+            "artist_name": "GoGo Penguin"
+          },
+          {
+            "name": "It's OK to Listen to the Gray Voice",
+            "artist_name": "Jan Garbarek"
+          },
+          {
+            "name": "Unfold",
+            "artist_name": "The Necks"
+          }
+        ]
+      },
+      "fixtureClassifications": {
+        "summary": {
+          "requestedCount": 8,
+          "newCount": 0,
+          "familiarCount": 0,
+          "unresolvedCount": 8,
+          "newRatio": null,
+          "absoluteCountDelta": null
+        },
+        "tracks": [
+          {
+            "position": 1,
+            "classification": "unresolved"
+          },
+          {
+            "position": 2,
+            "classification": "unresolved"
+          },
+          {
+            "position": 3,
+            "classification": "unresolved"
+          },
+          {
+            "position": 4,
+            "classification": "unresolved"
+          },
+          {
+            "position": 5,
+            "classification": "unresolved"
+          },
+          {
+            "position": 6,
+            "classification": "unresolved"
+          },
+          {
+            "position": 7,
+            "classification": "unresolved"
+          },
+          {
+            "position": 8,
+            "classification": "unresolved"
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "instructions-only-predawn-jazz",
+      "sample": 3,
+      "split": "development",
+      "rationale": "Verifies that a sparse request can be judged fairly when the model must use music knowledge and leave IDs unresolved.",
+      "intent": {
+        "vibe": "Quiet, devotional modern jazz for the hour before sunrise: spacious, patient, mostly instrumental, and emotionally luminous.",
+        "mustHave": [
+          "Space and patience",
+          "Acoustic detail",
+          "Predawn calm"
+        ],
+        "mustAvoid": [
+          "Showy fusion solos",
+          "Vocal standards",
+          "Cocktail-lounge cheer"
+        ],
+        "arc": "Nearly still at the opening, gradually warmer, then return to silence",
+        "novelty": "All selections come from music knowledge; unresolved IDs are expected"
+      },
+      "request": {
+        "selectedTracks": [],
+        "selectedArtists": [],
+        "customInstructions": "Quiet devotional modern jazz for the hour before sunrise. Mostly instrumental, spacious, patient, and never showy.",
+        "newStuffAmount": "all",
+        "songCount": 8
+      },
+      "playlist": {
+        "name": "First Light, Hushed",
+        "description": "Eight patient prayers in piano, bass, brushwork, and breath—music for watching the dark thin out without disturbing the room.",
+        "tracks": [
+          {
+            "name": "Being There",
+            "artist_name": "Tord Gustavsen Trio"
+          },
+          {
+            "name": "Golden Rain",
+            "artist_name": "Bobo Stenson Trio"
+          },
+          {
+            "name": "Gefion",
+            "artist_name": "Jakob Bro"
+          },
+          {
+            "name": "Night Train",
+            "artist_name": "Marcin Wasilewski Trio"
+          },
+          {
+            "name": "This Is How You Disappear",
+            "artist_name": "Craig Taborn"
+          },
+          {
+            "name": "Desolation Sound",
+            "artist_name": "Charles Lloyd"
+          },
+          {
+            "name": "Sex",
+            "artist_name": "The Necks"
+          },
+          {
+            "name": "It Should Have Happened a Long Time Ago",
+            "artist_name": "Paul Motian"
+          }
+        ]
+      },
+      "fixtureClassifications": {
+        "summary": {
+          "requestedCount": 8,
+          "newCount": 0,
+          "familiarCount": 0,
+          "unresolvedCount": 8,
+          "newRatio": null,
+          "absoluteCountDelta": null
+        },
+        "tracks": [
+          {
+            "position": 1,
+            "classification": "unresolved"
+          },
+          {
+            "position": 2,
+            "classification": "unresolved"
+          },
+          {
+            "position": 3,
+            "classification": "unresolved"
+          },
+          {
+            "position": 4,
+            "classification": "unresolved"
+          },
+          {
+            "position": 5,
+            "classification": "unresolved"
+          },
+          {
+            "position": 6,
+            "classification": "unresolved"
+          },
+          {
+            "position": 7,
+            "classification": "unresolved"
+          },
+          {
+            "position": 8,
+            "classification": "unresolved"
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "conflicting-dark-electronic",
+      "sample": 1,
+      "split": "development",
+      "rationale": "Tests whether explicit instructions can redirect acoustic anchors without discarding their intimacy and harmony.",
+      "intent": {
+        "vibe": "Dark, close-mic electronic music that preserves the anchors' intimacy and layered harmony while removing their acoustic surface.",
+        "mustHave": [
+          "Shadowy electronic texture",
+          "Intimate vocals or human detail",
+          "Subtle harmonic richness"
+        ],
+        "mustAvoid": [
+          "Acoustic guitar",
+          "Campfire folk",
+          "Bright festival production"
+        ],
+        "novelty": "Only fixture-new artists; familiar selections are style references"
+      },
+      "request": {
+        "selectedTracks": [
+          {
+            "name": "Blue Ridge Mountains",
+            "artist_name": "Fleet Foxes"
+          }
+        ],
+        "selectedArtists": [
+          "Bon Iver"
+        ],
+        "customInstructions": "Use the anchors only for intimacy and layered harmony. Make the actual playlist dark electronic with no acoustic guitar.",
+        "newStuffAmount": "all",
+        "songCount": 8
+      },
+      "playlist": {
+        "name": "Velvet Static",
+        "description": "A midnight procession of sub-bass, fractured light, and ghostly harmonies—intimate enough to whisper, heavy enough to make the floor feel unstable.",
+        "tracks": [
+          {
+            "name": "Archangel",
+            "artist_name": "Burial"
+          },
+          {
+            "name": "Keep the Streets Empty for Me",
+            "artist_name": "Fever Ray"
+          },
+          {
+            "name": "Bad Kingdom",
+            "artist_name": "Moderat"
+          },
+          {
+            "name": "Retrograde",
+            "artist_name": "James Blake"
+          },
+          {
+            "name": "The Highest Flood",
+            "artist_name": "Forest Swords"
+          },
+          {
+            "name": "Anvil",
+            "artist_name": "Lorn"
+          },
+          {
+            "name": "On",
+            "artist_name": "Kelly Lee Owens"
+          },
+          {
+            "name": "Luminous Beings",
+            "artist_name": "Jon Hopkins"
+          }
+        ]
+      },
+      "fixtureClassifications": {
+        "summary": {
+          "requestedCount": 8,
+          "newCount": 8,
+          "familiarCount": 0,
+          "unresolvedCount": 0,
+          "newRatio": 1,
+          "absoluteCountDelta": 0
+        },
+        "tracks": [
+          {
+            "position": 1,
+            "classification": "new"
+          },
+          {
+            "position": 2,
+            "classification": "new"
+          },
+          {
+            "position": 3,
+            "classification": "new"
+          },
+          {
+            "position": 4,
+            "classification": "new"
+          },
+          {
+            "position": 5,
+            "classification": "new"
+          },
+          {
+            "position": 6,
+            "classification": "new"
+          },
+          {
+            "position": 7,
+            "classification": "new"
+          },
+          {
+            "position": 8,
+            "classification": "new"
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "conflicting-dark-electronic",
+      "sample": 2,
+      "split": "development",
+      "rationale": "Tests whether explicit instructions can redirect acoustic anchors without discarding their intimacy and harmony.",
+      "intent": {
+        "vibe": "Dark, close-mic electronic music that preserves the anchors' intimacy and layered harmony while removing their acoustic surface.",
+        "mustHave": [
+          "Shadowy electronic texture",
+          "Intimate vocals or human detail",
+          "Subtle harmonic richness"
+        ],
+        "mustAvoid": [
+          "Acoustic guitar",
+          "Campfire folk",
+          "Bright festival production"
+        ],
+        "novelty": "Only fixture-new artists; familiar selections are style references"
+      },
+      "request": {
+        "selectedTracks": [
+          {
+            "name": "Blue Ridge Mountains",
+            "artist_name": "Fleet Foxes"
+          }
+        ],
+        "selectedArtists": [
+          "Bon Iver"
+        ],
+        "customInstructions": "Use the anchors only for intimacy and layered harmony. Make the actual playlist dark electronic with no acoustic guitar.",
+        "newStuffAmount": "all",
+        "songCount": 8
+      },
+      "playlist": {
+        "name": "Nocturne Circuit",
+        "description": "A midnight descent through bruised bass, shadowed synths, and intimate vocal ghosts—sleek enough for neon streets, heavy enough to leave a mark.",
+        "tracks": [
+          {
+            "name": "Archangel",
+            "artist_name": "Burial"
+          },
+          {
+            "name": "On",
+            "artist_name": "Kelly Lee Owens"
+          },
+          {
+            "name": "Bad Kingdom",
+            "artist_name": "Moderat"
+          },
+          {
+            "name": "Retrograde",
+            "artist_name": "James Blake"
+          },
+          {
+            "name": "Keep the Streets Empty for Me",
+            "artist_name": "Fever Ray"
+          },
+          {
+            "name": "Luminous Beings",
+            "artist_name": "Jon Hopkins"
+          },
+          {
+            "name": "The Highest Flood",
+            "artist_name": "Forest Swords"
+          },
+          {
+            "name": "Anvil",
+            "artist_name": "Lorn"
+          }
+        ]
+      },
+      "fixtureClassifications": {
+        "summary": {
+          "requestedCount": 8,
+          "newCount": 8,
+          "familiarCount": 0,
+          "unresolvedCount": 0,
+          "newRatio": 1,
+          "absoluteCountDelta": 0
+        },
+        "tracks": [
+          {
+            "position": 1,
+            "classification": "new"
+          },
+          {
+            "position": 2,
+            "classification": "new"
+          },
+          {
+            "position": 3,
+            "classification": "new"
+          },
+          {
+            "position": 4,
+            "classification": "new"
+          },
+          {
+            "position": 5,
+            "classification": "new"
+          },
+          {
+            "position": 6,
+            "classification": "new"
+          },
+          {
+            "position": 7,
+            "classification": "new"
+          },
+          {
+            "position": 8,
+            "classification": "new"
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "conflicting-dark-electronic",
+      "sample": 3,
+      "split": "development",
+      "rationale": "Tests whether explicit instructions can redirect acoustic anchors without discarding their intimacy and harmony.",
+      "intent": {
+        "vibe": "Dark, close-mic electronic music that preserves the anchors' intimacy and layered harmony while removing their acoustic surface.",
+        "mustHave": [
+          "Shadowy electronic texture",
+          "Intimate vocals or human detail",
+          "Subtle harmonic richness"
+        ],
+        "mustAvoid": [
+          "Acoustic guitar",
+          "Campfire folk",
+          "Bright festival production"
+        ],
+        "novelty": "Only fixture-new artists; familiar selections are style references"
+      },
+      "request": {
+        "selectedTracks": [
+          {
+            "name": "Blue Ridge Mountains",
+            "artist_name": "Fleet Foxes"
+          }
+        ],
+        "selectedArtists": [
+          "Bon Iver"
+        ],
+        "customInstructions": "Use the anchors only for intimacy and layered harmony. Make the actual playlist dark electronic with no acoustic guitar.",
+        "newStuffAmount": "all",
+        "songCount": 8
+      },
+      "playlist": {
+        "name": "Velvet Static",
+        "description": "A nocturnal pulse of bruised synths, spectral voices, and slow-burning circuitry—intimate enough for headphones, ominous enough for the last train home.",
+        "tracks": [
+          {
+            "name": "Archangel",
+            "artist_name": "Burial"
+          },
+          {
+            "name": "Retrograde",
+            "artist_name": "James Blake"
+          },
+          {
+            "name": "Keep the Streets Empty for Me",
+            "artist_name": "Fever Ray"
+          },
+          {
+            "name": "Bad Kingdom",
+            "artist_name": "Moderat"
+          },
+          {
+            "name": "The Highest Flood",
+            "artist_name": "Forest Swords"
+          },
+          {
+            "name": "On",
+            "artist_name": "Kelly Lee Owens"
+          },
+          {
+            "name": "Anvil",
+            "artist_name": "Lorn"
+          },
+          {
+            "name": "Luminous Beings",
+            "artist_name": "Jon Hopkins"
+          }
+        ]
+      },
+      "fixtureClassifications": {
+        "summary": {
+          "requestedCount": 8,
+          "newCount": 8,
+          "familiarCount": 0,
+          "unresolvedCount": 0,
+          "newRatio": 1,
+          "absoluteCountDelta": 0
+        },
+        "tracks": [
+          {
+            "position": 1,
+            "classification": "new"
+          },
+          {
+            "position": 2,
+            "classification": "new"
+          },
+          {
+            "position": 3,
+            "classification": "new"
+          },
+          {
+            "position": 4,
+            "classification": "new"
+          },
+          {
+            "position": 5,
+            "classification": "new"
+          },
+          {
+            "position": 6,
+            "classification": "new"
+          },
+          {
+            "position": 7,
+            "classification": "new"
+          },
+          {
+            "position": 8,
+            "classification": "new"
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "instrumental-energy-arc",
+      "sample": 1,
+      "split": "development",
+      "rationale": "Makes ordering observable by requesting a restrained opening, a clear peak, and a gentle landing.",
+      "intent": {
+        "vibe": "Detailed instrumental electronic music with tactile percussion, melodic patience, and a cinematic sense of motion.",
+        "mustHave": [
+          "Instrumental focus",
+          "Textural continuity",
+          "One unmistakable peak"
+        ],
+        "mustAvoid": [
+          "Pop vocals",
+          "Abrupt genre changes",
+          "Peak energy in the opening"
+        ],
+        "arc": "Two restrained openers, a steady four-track climb, one peak, and a weightless final landing",
+        "novelty": "Half fixture-new tracks woven through familiar anchors"
+      },
+      "request": {
+        "selectedTracks": [
+          {
+            "name": "A Walk",
+            "artist_name": "Tycho"
+          }
+        ],
+        "selectedArtists": [
+          "Jon Hopkins"
+        ],
+        "customInstructions": "Sequence an instrumental arc: restrained opening, steady climb, one unmistakable peak, then a weightless landing.",
+        "newStuffAmount": "half",
+        "songCount": 8
+      },
+      "playlist": {
+        "name": "Signal to Stillness",
+        "description": "A measured pulse rises from dusk-lit restraint through intricate motion and a full-spectrum summit, then drifts into an almost weightless afterglow.",
+        "tracks": [
+          {
+            "name": "A Walk",
+            "artist_name": "Tycho"
+          },
+          {
+            "name": "Recovery",
+            "artist_name": "Rival Consoles"
+          },
+          {
+            "name": "Hours",
+            "artist_name": "Tycho"
+          },
+          {
+            "name": "Looped",
+            "artist_name": "Kiasmos"
+          },
+          {
+            "name": "Order from Chaos",
+            "artist_name": "Max Cooper"
+          },
+          {
+            "name": "Open Eye Signal",
+            "artist_name": "Jon Hopkins"
+          },
+          {
+            "name": "Abandon Window",
+            "artist_name": "Jon Hopkins"
+          },
+          {
+            "name": "Says",
+            "artist_name": "Nils Frahm"
+          }
+        ]
+      },
+      "fixtureClassifications": {
+        "summary": {
+          "requestedCount": 4,
+          "newCount": 4,
+          "familiarCount": 4,
+          "unresolvedCount": 0,
+          "newRatio": 0.5,
+          "absoluteCountDelta": 0
+        },
+        "tracks": [
+          {
+            "position": 1,
+            "classification": "familiar"
+          },
+          {
+            "position": 2,
+            "classification": "new"
+          },
+          {
+            "position": 3,
+            "classification": "familiar"
+          },
+          {
+            "position": 4,
+            "classification": "new"
+          },
+          {
+            "position": 5,
+            "classification": "new"
+          },
+          {
+            "position": 6,
+            "classification": "familiar"
+          },
+          {
+            "position": 7,
+            "classification": "familiar"
+          },
+          {
+            "position": 8,
+            "classification": "new"
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "instrumental-energy-arc",
+      "sample": 2,
+      "split": "development",
+      "rationale": "Makes ordering observable by requesting a restrained opening, a clear peak, and a gentle landing.",
+      "intent": {
+        "vibe": "Detailed instrumental electronic music with tactile percussion, melodic patience, and a cinematic sense of motion.",
+        "mustHave": [
+          "Instrumental focus",
+          "Textural continuity",
+          "One unmistakable peak"
+        ],
+        "mustAvoid": [
+          "Pop vocals",
+          "Abrupt genre changes",
+          "Peak energy in the opening"
+        ],
+        "arc": "Two restrained openers, a steady four-track climb, one peak, and a weightless final landing",
+        "novelty": "Half fixture-new tracks woven through familiar anchors"
+      },
+      "request": {
+        "selectedTracks": [
+          {
+            "name": "A Walk",
+            "artist_name": "Tycho"
+          }
+        ],
+        "selectedArtists": [
+          "Jon Hopkins"
+        ],
+        "customInstructions": "Sequence an instrumental arc: restrained opening, steady climb, one unmistakable peak, then a weightless landing.",
+        "newStuffAmount": "half",
+        "songCount": 8
+      },
+      "playlist": {
+        "name": "Gravity, Then Gone",
+        "description": "A slow-blooming instrumental ascent from hush to full-throttle circuitry, cresting in radiant motion before dissolving into weightless blue-hour calm.",
+        "tracks": [
+          {
+            "name": "Abandon Window",
+            "artist_name": "Jon Hopkins"
+          },
+          {
+            "name": "A Walk",
+            "artist_name": "Tycho"
+          },
+          {
+            "name": "Recovery",
+            "artist_name": "Rival Consoles"
+          },
+          {
+            "name": "Looped",
+            "artist_name": "Kiasmos"
+          },
+          {
+            "name": "Order from Chaos",
+            "artist_name": "Max Cooper"
+          },
+          {
+            "name": "Open Eye Signal",
+            "artist_name": "Jon Hopkins"
+          },
+          {
+            "name": "Says",
+            "artist_name": "Nils Frahm"
+          },
+          {
+            "name": "Hours",
+            "artist_name": "Tycho"
+          }
+        ]
+      },
+      "fixtureClassifications": {
+        "summary": {
+          "requestedCount": 4,
+          "newCount": 4,
+          "familiarCount": 4,
+          "unresolvedCount": 0,
+          "newRatio": 0.5,
+          "absoluteCountDelta": 0
+        },
+        "tracks": [
+          {
+            "position": 1,
+            "classification": "familiar"
+          },
+          {
+            "position": 2,
+            "classification": "familiar"
+          },
+          {
+            "position": 3,
+            "classification": "new"
+          },
+          {
+            "position": 4,
+            "classification": "new"
+          },
+          {
+            "position": 5,
+            "classification": "new"
+          },
+          {
+            "position": 6,
+            "classification": "familiar"
+          },
+          {
+            "position": 7,
+            "classification": "new"
+          },
+          {
+            "position": 8,
+            "classification": "familiar"
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "instrumental-energy-arc",
+      "sample": 3,
+      "split": "development",
+      "rationale": "Makes ordering observable by requesting a restrained opening, a clear peak, and a gentle landing.",
+      "intent": {
+        "vibe": "Detailed instrumental electronic music with tactile percussion, melodic patience, and a cinematic sense of motion.",
+        "mustHave": [
+          "Instrumental focus",
+          "Textural continuity",
+          "One unmistakable peak"
+        ],
+        "mustAvoid": [
+          "Pop vocals",
+          "Abrupt genre changes",
+          "Peak energy in the opening"
+        ],
+        "arc": "Two restrained openers, a steady four-track climb, one peak, and a weightless final landing",
+        "novelty": "Half fixture-new tracks woven through familiar anchors"
+      },
+      "request": {
+        "selectedTracks": [
+          {
+            "name": "A Walk",
+            "artist_name": "Tycho"
+          }
+        ],
+        "selectedArtists": [
+          "Jon Hopkins"
+        ],
+        "customInstructions": "Sequence an instrumental arc: restrained opening, steady climb, one unmistakable peak, then a weightless landing.",
+        "newStuffAmount": "half",
+        "songCount": 8
+      },
+      "playlist": {
+        "name": "Gravity to Glass",
+        "description": "A patient pulse rises from soft-focus dawn through crystalline motion, breaks into a full-spectrum electronic surge, then drifts weightless into the blue.",
+        "tracks": [
+          {
+            "name": "Abandon Window",
+            "artist_name": "Jon Hopkins"
+          },
+          {
+            "name": "A Walk",
+            "artist_name": "Tycho"
+          },
+          {
+            "name": "Two Thousand and Seventeen",
+            "artist_name": "Four Tet"
+          },
+          {
+            "name": "Hours",
+            "artist_name": "Tycho"
+          },
+          {
+            "name": "Looped",
+            "artist_name": "Kiasmos"
+          },
+          {
+            "name": "Order from Chaos",
+            "artist_name": "Max Cooper"
+          },
+          {
+            "name": "Open Eye Signal",
+            "artist_name": "Jon Hopkins"
+          },
+          {
+            "name": "Recovery",
+            "artist_name": "Rival Consoles"
+          }
+        ]
+      },
+      "fixtureClassifications": {
+        "summary": {
+          "requestedCount": 4,
+          "newCount": 4,
+          "familiarCount": 4,
+          "unresolvedCount": 0,
+          "newRatio": 0.5,
+          "absoluteCountDelta": 0
+        },
+        "tracks": [
+          {
+            "position": 1,
+            "classification": "familiar"
+          },
+          {
+            "position": 2,
+            "classification": "familiar"
+          },
+          {
+            "position": 3,
+            "classification": "new"
+          },
+          {
+            "position": 4,
+            "classification": "familiar"
+          },
+          {
+            "position": 5,
+            "classification": "new"
+          },
+          {
+            "position": 6,
+            "classification": "new"
+          },
+          {
+            "position": 7,
+            "classification": "familiar"
+          },
+          {
+            "position": 8,
+            "classification": "new"
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "familiar-only-slow-groove",
+      "sample": 1,
+      "split": "holdout",
+      "rationale": "Holdout control for the none setting and for coherence across two compatible but distinct anchors.",
+      "intent": {
+        "vibe": "Unhurried, elegant groove music with warm bass, negative space, and understated sensuality.",
+        "mustHave": [
+          "Slow groove",
+          "Warm bass",
+          "Elegant restraint"
+        ],
+        "mustAvoid": [
+          "Aggressive percussion",
+          "Rock distortion",
+          "Novel tracks"
+        ],
+        "novelty": "No fixture-new tracks"
+      },
+      "request": {
+        "selectedTracks": [],
+        "selectedArtists": [
+          "Khruangbin",
+          "Sade"
+        ],
+        "customInstructions": "Keep it familiar, unhurried, warm, and elegant. Favor space over density.",
+        "newStuffAmount": "none",
+        "songCount": 8
+      },
+      "playlist": {
+        "name": "Velvet Slowburn",
+        "description": "Velvet dusk, open windows, and a low-lit groove—silky vocals and sun-warmed guitar moving with effortless poise through the evening.",
+        "tracks": [
+          {
+            "name": "August 10",
+            "artist_name": "Khruangbin"
+          },
+          {
+            "name": "Kiss of Life",
+            "artist_name": "Sade"
+          },
+          {
+            "name": "Friday Morning",
+            "artist_name": "Khruangbin"
+          },
+          {
+            "name": "No Ordinary Love",
+            "artist_name": "Sade"
+          },
+          {
+            "name": "White Gloves",
+            "artist_name": "Khruangbin"
+          },
+          {
+            "name": "Like a Tattoo",
+            "artist_name": "Sade"
+          },
+          {
+            "name": "Time (You and I)",
+            "artist_name": "Khruangbin"
+          },
+          {
+            "name": "Cherish the Day",
+            "artist_name": "Sade"
+          }
+        ]
+      },
+      "fixtureClassifications": {
+        "summary": {
+          "requestedCount": 0,
+          "newCount": 0,
+          "familiarCount": 8,
+          "unresolvedCount": 0,
+          "newRatio": 0,
+          "absoluteCountDelta": 0
+        },
+        "tracks": [
+          {
+            "position": 1,
+            "classification": "familiar"
+          },
+          {
+            "position": 2,
+            "classification": "familiar"
+          },
+          {
+            "position": 3,
+            "classification": "familiar"
+          },
+          {
+            "position": 4,
+            "classification": "familiar"
+          },
+          {
+            "position": 5,
+            "classification": "familiar"
+          },
+          {
+            "position": 6,
+            "classification": "familiar"
+          },
+          {
+            "position": 7,
+            "classification": "familiar"
+          },
+          {
+            "position": 8,
+            "classification": "familiar"
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "familiar-only-slow-groove",
+      "sample": 2,
+      "split": "holdout",
+      "rationale": "Holdout control for the none setting and for coherence across two compatible but distinct anchors.",
+      "intent": {
+        "vibe": "Unhurried, elegant groove music with warm bass, negative space, and understated sensuality.",
+        "mustHave": [
+          "Slow groove",
+          "Warm bass",
+          "Elegant restraint"
+        ],
+        "mustAvoid": [
+          "Aggressive percussion",
+          "Rock distortion",
+          "Novel tracks"
+        ],
+        "novelty": "No fixture-new tracks"
+      },
+      "request": {
+        "selectedTracks": [],
+        "selectedArtists": [
+          "Khruangbin",
+          "Sade"
+        ],
+        "customInstructions": "Keep it familiar, unhurried, warm, and elegant. Favor space over density.",
+        "newStuffAmount": "none",
+        "songCount": 8
+      },
+      "playlist": {
+        "name": "Velvet Afterglow",
+        "description": "Late-afternoon light, bare feet on cool floors, and a slow drive where silken vocals and sun-warmed guitar leave plenty of room to breathe.",
+        "tracks": [
+          {
+            "name": "August 10",
+            "artist_name": "Khruangbin"
+          },
+          {
+            "name": "Like a Tattoo",
+            "artist_name": "Sade"
+          },
+          {
+            "name": "Friday Morning",
+            "artist_name": "Khruangbin"
+          },
+          {
+            "name": "Kiss of Life",
+            "artist_name": "Sade"
+          },
+          {
+            "name": "White Gloves",
+            "artist_name": "Khruangbin"
+          },
+          {
+            "name": "Cherish the Day",
+            "artist_name": "Sade"
+          },
+          {
+            "name": "Time (You and I)",
+            "artist_name": "Khruangbin"
+          },
+          {
+            "name": "No Ordinary Love",
+            "artist_name": "Sade"
+          }
+        ]
+      },
+      "fixtureClassifications": {
+        "summary": {
+          "requestedCount": 0,
+          "newCount": 0,
+          "familiarCount": 8,
+          "unresolvedCount": 0,
+          "newRatio": 0,
+          "absoluteCountDelta": 0
+        },
+        "tracks": [
+          {
+            "position": 1,
+            "classification": "familiar"
+          },
+          {
+            "position": 2,
+            "classification": "familiar"
+          },
+          {
+            "position": 3,
+            "classification": "familiar"
+          },
+          {
+            "position": 4,
+            "classification": "familiar"
+          },
+          {
+            "position": 5,
+            "classification": "familiar"
+          },
+          {
+            "position": 6,
+            "classification": "familiar"
+          },
+          {
+            "position": 7,
+            "classification": "familiar"
+          },
+          {
+            "position": 8,
+            "classification": "familiar"
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "familiar-only-slow-groove",
+      "sample": 3,
+      "split": "holdout",
+      "rationale": "Holdout control for the none setting and for coherence across two compatible but distinct anchors.",
+      "intent": {
+        "vibe": "Unhurried, elegant groove music with warm bass, negative space, and understated sensuality.",
+        "mustHave": [
+          "Slow groove",
+          "Warm bass",
+          "Elegant restraint"
+        ],
+        "mustAvoid": [
+          "Aggressive percussion",
+          "Rock distortion",
+          "Novel tracks"
+        ],
+        "novelty": "No fixture-new tracks"
+      },
+      "request": {
+        "selectedTracks": [],
+        "selectedArtists": [
+          "Khruangbin",
+          "Sade"
+        ],
+        "customInstructions": "Keep it familiar, unhurried, warm, and elegant. Favor space over density.",
+        "newStuffAmount": "none",
+        "songCount": 8
+      },
+      "playlist": {
+        "name": "Velvet Miles",
+        "description": "A slow, sunlit drift through warm guitar, brushed rhythms, and midnight soul—roomy enough for the road to disappear beneath you.",
+        "tracks": [
+          {
+            "name": "Friday Morning",
+            "artist_name": "Khruangbin"
+          },
+          {
+            "name": "Kiss of Life",
+            "artist_name": "Sade"
+          },
+          {
+            "name": "White Gloves",
+            "artist_name": "Khruangbin"
+          },
+          {
+            "name": "Like a Tattoo",
+            "artist_name": "Sade"
+          },
+          {
+            "name": "August 10",
+            "artist_name": "Khruangbin"
+          },
+          {
+            "name": "No Ordinary Love",
+            "artist_name": "Sade"
+          },
+          {
+            "name": "Time (You and I)",
+            "artist_name": "Khruangbin"
+          },
+          {
+            "name": "Cherish the Day",
+            "artist_name": "Sade"
+          }
+        ]
+      },
+      "fixtureClassifications": {
+        "summary": {
+          "requestedCount": 0,
+          "newCount": 0,
+          "familiarCount": 8,
+          "unresolvedCount": 0,
+          "newRatio": 0,
+          "absoluteCountDelta": 0
+        },
+        "tracks": [
+          {
+            "position": 1,
+            "classification": "familiar"
+          },
+          {
+            "position": 2,
+            "classification": "familiar"
+          },
+          {
+            "position": 3,
+            "classification": "familiar"
+          },
+          {
+            "position": 4,
+            "classification": "familiar"
+          },
+          {
+            "position": 5,
+            "classification": "familiar"
+          },
+          {
+            "position": 6,
+            "classification": "familiar"
+          },
+          {
+            "position": 7,
+            "classification": "familiar"
+          },
+          {
+            "position": 8,
+            "classification": "familiar"
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "all-new-intimate-songwriters",
+      "sample": 1,
+      "split": "holdout",
+      "rationale": "Holdout case for new-artist exposure where a familiar selected track is reference-only.",
+      "intent": {
+        "vibe": "Intimate, literate indie songwriting with dry-room detail, emotional specificity, and restrained arrangements.",
+        "mustHave": [
+          "Close emotional detail",
+          "Distinctive writing",
+          "Restrained arrangement"
+        ],
+        "mustAvoid": [
+          "Arena crescendos",
+          "Generic coffeehouse folk",
+          "The selected familiar artist"
+        ],
+        "novelty": "Every track comes from fixture-new artists"
+      },
+      "request": {
+        "selectedTracks": [
+          {
+            "name": "Motion Sickness",
+            "artist_name": "Phoebe Bridgers"
+          }
+        ],
+        "selectedArtists": [],
+        "customInstructions": "Use the selected track only as a writing and intimacy reference. Recommend different artists, keep arrangements restrained, and avoid arena-sized crescendos.",
+        "newStuffAmount": "all",
+        "songCount": 8
+      },
+      "playlist": {
+        "name": "Low-Light Confessions",
+        "description": "A hush-lit drift through bruised guitars, close-mic vocals, and small revelations—intimate enough for the last train home, never reaching for the cheap grand finale.",
+        "tracks": [
+          {
+            "name": "Song for Nick Drake",
+            "artist_name": "Skullcrusher"
+          },
+          {
+            "name": "Any Other Way",
+            "artist_name": "Tomberlin"
+          },
+          {
+            "name": "Hannah Sun",
+            "artist_name": "Lomelda"
+          },
+          {
+            "name": "Cool Dry Place",
+            "artist_name": "Katy Kirby"
+          },
+          {
+            "name": "Aquamarine",
+            "artist_name": "Hand Habits"
+          },
+          {
+            "name": "Hard Drive",
+            "artist_name": "Cassandra Jenkins"
+          },
+          {
+            "name": "The Bug Collector",
+            "artist_name": "Haley Heynderickx"
+          },
+          {
+            "name": "Bad Dreams",
+            "artist_name": "Teddy Geiger"
+          }
+        ]
+      },
+      "fixtureClassifications": {
+        "summary": {
+          "requestedCount": 8,
+          "newCount": 8,
+          "familiarCount": 0,
+          "unresolvedCount": 0,
+          "newRatio": 1,
+          "absoluteCountDelta": 0
+        },
+        "tracks": [
+          {
+            "position": 1,
+            "classification": "new"
+          },
+          {
+            "position": 2,
+            "classification": "new"
+          },
+          {
+            "position": 3,
+            "classification": "new"
+          },
+          {
+            "position": 4,
+            "classification": "new"
+          },
+          {
+            "position": 5,
+            "classification": "new"
+          },
+          {
+            "position": 6,
+            "classification": "new"
+          },
+          {
+            "position": 7,
+            "classification": "new"
+          },
+          {
+            "position": 8,
+            "classification": "new"
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "all-new-intimate-songwriters",
+      "sample": 2,
+      "split": "holdout",
+      "rationale": "Holdout case for new-artist exposure where a familiar selected track is reference-only.",
+      "intent": {
+        "vibe": "Intimate, literate indie songwriting with dry-room detail, emotional specificity, and restrained arrangements.",
+        "mustHave": [
+          "Close emotional detail",
+          "Distinctive writing",
+          "Restrained arrangement"
+        ],
+        "mustAvoid": [
+          "Arena crescendos",
+          "Generic coffeehouse folk",
+          "The selected familiar artist"
+        ],
+        "novelty": "Every track comes from fixture-new artists"
+      },
+      "request": {
+        "selectedTracks": [
+          {
+            "name": "Motion Sickness",
+            "artist_name": "Phoebe Bridgers"
+          }
+        ],
+        "selectedArtists": [],
+        "customInstructions": "Use the selected track only as a writing and intimacy reference. Recommend different artists, keep arrangements restrained, and avoid arena-sized crescendos.",
+        "newStuffAmount": "all",
+        "songCount": 8
+      },
+      "playlist": {
+        "name": "Low Light, Open Wounds",
+        "description": "A hushed midnight drift through nervous tenderness, soft guitars, and close-mic confessions—intimate enough to hear the room breathe between each ache.",
+        "tracks": [
+          {
+            "name": "Song for Nick Drake",
+            "artist_name": "Skullcrusher"
+          },
+          {
+            "name": "Any Other Way",
+            "artist_name": "Tomberlin"
+          },
+          {
+            "name": "Cool Dry Place",
+            "artist_name": "Katy Kirby"
+          },
+          {
+            "name": "Hannah Sun",
+            "artist_name": "Lomelda"
+          },
+          {
+            "name": "Aquamarine",
+            "artist_name": "Hand Habits"
+          },
+          {
+            "name": "The Bug Collector",
+            "artist_name": "Haley Heynderickx"
+          },
+          {
+            "name": "Hard Drive",
+            "artist_name": "Cassandra Jenkins"
+          },
+          {
+            "name": "Bad Dreams",
+            "artist_name": "Teddy Geiger"
+          }
+        ]
+      },
+      "fixtureClassifications": {
+        "summary": {
+          "requestedCount": 8,
+          "newCount": 8,
+          "familiarCount": 0,
+          "unresolvedCount": 0,
+          "newRatio": 1,
+          "absoluteCountDelta": 0
+        },
+        "tracks": [
+          {
+            "position": 1,
+            "classification": "new"
+          },
+          {
+            "position": 2,
+            "classification": "new"
+          },
+          {
+            "position": 3,
+            "classification": "new"
+          },
+          {
+            "position": 4,
+            "classification": "new"
+          },
+          {
+            "position": 5,
+            "classification": "new"
+          },
+          {
+            "position": 6,
+            "classification": "new"
+          },
+          {
+            "position": 7,
+            "classification": "new"
+          },
+          {
+            "position": 8,
+            "classification": "new"
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "all-new-intimate-songwriters",
+      "sample": 3,
+      "split": "holdout",
+      "rationale": "Holdout case for new-artist exposure where a familiar selected track is reference-only.",
+      "intent": {
+        "vibe": "Intimate, literate indie songwriting with dry-room detail, emotional specificity, and restrained arrangements.",
+        "mustHave": [
+          "Close emotional detail",
+          "Distinctive writing",
+          "Restrained arrangement"
+        ],
+        "mustAvoid": [
+          "Arena crescendos",
+          "Generic coffeehouse folk",
+          "The selected familiar artist"
+        ],
+        "novelty": "Every track comes from fixture-new artists"
+      },
+      "request": {
+        "selectedTracks": [
+          {
+            "name": "Motion Sickness",
+            "artist_name": "Phoebe Bridgers"
+          }
+        ],
+        "selectedArtists": [],
+        "customInstructions": "Use the selected track only as a writing and intimacy reference. Recommend different artists, keep arrangements restrained, and avoid arena-sized crescendos.",
+        "newStuffAmount": "all",
+        "songCount": 8
+      },
+      "playlist": {
+        "name": "Quiet Damage",
+        "description": "A low-lit drift through tender confessions, dry-room guitars, and soft fractures—intimate enough for midnight walks, sharp enough to leave a mark.",
+        "tracks": [
+          {
+            "name": "Song for Nick Drake",
+            "artist_name": "Skullcrusher"
+          },
+          {
+            "name": "Any Other Way",
+            "artist_name": "Tomberlin"
+          },
+          {
+            "name": "Hannah Sun",
+            "artist_name": "Lomelda"
+          },
+          {
+            "name": "Cool Dry Place",
+            "artist_name": "Katy Kirby"
+          },
+          {
+            "name": "Aquamarine",
+            "artist_name": "Hand Habits"
+          },
+          {
+            "name": "Hard Drive",
+            "artist_name": "Cassandra Jenkins"
+          },
+          {
+            "name": "The Bug Collector",
+            "artist_name": "Haley Heynderickx"
+          },
+          {
+            "name": "Bad Dreams",
+            "artist_name": "Teddy Geiger"
+          }
+        ]
+      },
+      "fixtureClassifications": {
+        "summary": {
+          "requestedCount": 8,
+          "newCount": 8,
+          "familiarCount": 0,
+          "unresolvedCount": 0,
+          "newRatio": 1,
+          "absoluteCountDelta": 0
+        },
+        "tracks": [
+          {
+            "position": 1,
+            "classification": "new"
+          },
+          {
+            "position": 2,
+            "classification": "new"
+          },
+          {
+            "position": 3,
+            "classification": "new"
+          },
+          {
+            "position": 4,
+            "classification": "new"
+          },
+          {
+            "position": 5,
+            "classification": "new"
+          },
+          {
+            "position": 6,
+            "classification": "new"
+          },
+          {
+            "position": 7,
+            "classification": "new"
+          },
+          {
+            "position": 8,
+            "classification": "new"
+          }
+        ]
+      }
+    }
+  ]
+}

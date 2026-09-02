@@ -1,0 +1,121 @@
+{
+  "status": "success",
+  "caseId": "all-new-intimate-songwriters",
+  "sample": 2,
+  "startedAt": "2026-09-01T23:06:27.941Z",
+  "durationMs": 4334,
+  "output": {
+    "playlist": {
+      "name": "Low Light, Open Wounds",
+      "description": "A hushed midnight drift through nervous tenderness, soft guitars, and close-mic confessions—intimate enough to hear the room breathe between each ache.",
+      "tracks": [
+        {
+          "id": "all-n1",
+          "name": "Song for Nick Drake",
+          "artist_name": "Skullcrusher"
+        },
+        {
+          "id": "all-n2",
+          "name": "Any Other Way",
+          "artist_name": "Tomberlin"
+        },
+        {
+          "id": "all-n4",
+          "name": "Cool Dry Place",
+          "artist_name": "Katy Kirby"
+        },
+        {
+          "id": "all-n8",
+          "name": "Hannah Sun",
+          "artist_name": "Lomelda"
+        },
+        {
+          "id": "all-n6",
+          "name": "Aquamarine",
+          "artist_name": "Hand Habits"
+        },
+        {
+          "id": "all-n5",
+          "name": "The Bug Collector",
+          "artist_name": "Haley Heynderickx"
+        },
+        {
+          "id": "all-n3",
+          "name": "Hard Drive",
+          "artist_name": "Cassandra Jenkins"
+        },
+        {
+          "id": "all-n7",
+          "name": "Bad Dreams",
+          "artist_name": "Teddy Geiger"
+        }
+      ]
+    }
+  },
+  "metrics": {
+    "exactTrackCount": true,
+    "trackCount": 8,
+    "uniqueTrackCount": 8,
+    "duplicateCount": 0,
+    "duplicateKeys": [],
+    "inventedIds": [],
+    "unresolvedCount": 0,
+    "fixtureResolvableCount": 8,
+    "fixtureResolvableRate": 1,
+    "selectedTrackCoverage": {
+      "required": 0,
+      "included": 0,
+      "missingIds": []
+    },
+    "selectedArtistCoverage": {
+      "required": 0,
+      "represented": 0,
+      "missingIds": []
+    },
+    "novelty": {
+      "requestedCount": 8,
+      "newCount": 8,
+      "familiarCount": 0,
+      "unresolvedCount": 0,
+      "newRatio": 1,
+      "absoluteCountDelta": 0
+    },
+    "trackFixtureClassifications": [
+      {
+        "position": 1,
+        "classification": "new"
+      },
+      {
+        "position": 2,
+        "classification": "new"
+      },
+      {
+        "position": 3,
+        "classification": "new"
+      },
+      {
+        "position": 4,
+        "classification": "new"
+      },
+      {
+        "position": 5,
+        "classification": "new"
+      },
+      {
+        "position": 6,
+        "classification": "new"
+      },
+      {
+        "position": 7,
+        "classification": "new"
+      },
+      {
+        "position": 8,
+        "classification": "new"
+      }
+    ],
+    "adjacentSameArtistCount": 0,
+    "maxNewTracksByArtist": 1,
+    "constraintViolations": []
+  }
+}

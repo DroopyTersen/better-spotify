@@ -1,0 +1,421 @@
+{
+  "schemaVersion": 1,
+  "rubricVersion": "1.0.1",
+  "runId": "main-curation-64d6acc-20260901T230417456Z",
+  "judgments": [
+    {
+      "caseId": "artist-only-indie-folk",
+      "sample": 1,
+      "vibeFit": 4,
+      "anchorFidelity": 5,
+      "coherence": 4,
+      "orderedFlow": 4,
+      "noveltyQuality": 5,
+      "verdict": "green",
+      "failureMode": "none",
+      "reason": "The Big Thief and Waxahatchee core stays weathered, intimate, and organic, while both fixture-new selections are credible adjacent discoveries. The raw closing climax is rockier but does not cross into arena bombast.",
+      "evidence": [
+        "\"Right Back to It\" provides a warm, steady opening before the rawer \"Vampire Empire.\"",
+        "Fixture-new tracks \"True Love\" by Hovvdy and \"Chosen to Deserve\" by Wednesday preserve the guitar-led, bruised-heart character.",
+        "\"Lilacs\" into \"Not\" creates a forceful but stylistically grounded finish."
+      ]
+    },
+    {
+      "caseId": "artist-only-indie-folk",
+      "sample": 2,
+      "vibeFit": 4,
+      "anchorFidelity": 5,
+      "coherence": 4,
+      "orderedFlow": 3,
+      "noveltyQuality": 5,
+      "verdict": "green",
+      "failureMode": "none",
+      "reason": "The track choices strongly match the weathered indie-folk request and use both anchors effectively. The sequence makes several sharp energy turns, but they remain within one recognizable listening experience.",
+      "evidence": [
+        "\"Vampire Empire\" drops immediately into the gentler fixture-new \"True Love,\" creating an early energy swing.",
+        "Fixture-new \"Chosen to Deserve\" is a convincing country-rock neighbor to Waxahatchee and Big Thief.",
+        "The intense \"Not\" followed by the hushed \"Fire\" is an abrupt but plausible final landing."
+      ]
+    },
+    {
+      "caseId": "artist-only-indie-folk",
+      "sample": 3,
+      "vibeFit": 4,
+      "anchorFidelity": 5,
+      "coherence": 5,
+      "orderedFlow": 4,
+      "noveltyQuality": 5,
+      "verdict": "green",
+      "failureMode": "none",
+      "reason": "This is a cohesive, weathered guitar playlist whose new selections extend the anchors naturally. Its alternation between motion and intimacy suits a long drive, with only a slightly forceful late peak.",
+      "evidence": [
+        "Fixture-new \"Chosen to Deserve\" and \"She's Leaving You\" add twangy, conversational indie rock without glossy production.",
+        "\"Simulation Swarm,\" \"Lilacs,\" and \"She's Leaving You\" sustain the middle section's forward motion.",
+        "\"Not\" supplies the late peak before \"Fire\" returns the playlist to intimacy."
+      ]
+    },
+    {
+      "caseId": "track-only-neon-drive",
+      "sample": 1,
+      "vibeFit": 4,
+      "anchorFidelity": 5,
+      "coherence": 4,
+      "orderedFlow": 2,
+      "noveltyQuality": 5,
+      "verdict": "yellow",
+      "failureMode": "energy-arc",
+      "reason": "The nocturnal synth-pop palette is convincing and the fixture-new tracks are excellent neighbors to the anchors, but the requested acceleration is reversed by an early peak and a subdued middle.",
+      "evidence": [
+        "\"Midnight City\" opens near peak energy before the slower \"Under Your Spell.\"",
+        "\"Wait\" followed by fixture-new \"A Real Hero\" stalls the middle instead of accelerating it.",
+        "Fixture-new \"Sunset,\" \"A Real Hero,\" \"Shadow,\" and \"Fire for You\" all credibly support the neon night-drive vibe."
+      ]
+    },
+    {
+      "caseId": "track-only-neon-drive",
+      "sample": 2,
+      "vibeFit": 4,
+      "anchorFidelity": 5,
+      "coherence": 4,
+      "orderedFlow": 2,
+      "noveltyQuality": 5,
+      "verdict": "yellow",
+      "failureMode": "energy-arc",
+      "reason": "The selections consistently occupy the requested cinematic synth-pop world, but the order largely decelerates from its brightest track and never produces the specified middle acceleration.",
+      "evidence": [
+        "\"Midnight City\" is followed by \"Sunset\" and \"Under Your Spell,\" progressively lowering rather than building energy.",
+        "\"Wait\" and fixture-new \"A Real Hero\" create a particularly subdued fifth-to-sixth-track stretch.",
+        "Fixture-new \"Sunset,\" \"Shadow,\" \"A Real Hero,\" and \"Fire for You\" are credible, restrained discoveries."
+      ]
+    },
+    {
+      "caseId": "track-only-neon-drive",
+      "sample": 3,
+      "vibeFit": 4,
+      "anchorFidelity": 5,
+      "coherence": 4,
+      "orderedFlow": 4,
+      "noveltyQuality": 4,
+      "verdict": "green",
+      "failureMode": "none",
+      "reason": "The playlist starts sleek, builds through increasingly propulsive synth material, reaches its brightest peak late, and lands in a dreamier register. An early slowdown and slightly glossier final discovery are minor detours.",
+      "evidence": [
+        "\"Under Your Spell\" supplies the sleek opening, while \"Propagation\" begins the middle build after \"Wait.\"",
+        "\"Shadow\" leads into the late peak of \"Midnight City,\" followed by the hazier \"Killshot.\"",
+        "Fixture-new \"Sunset,\" \"Propagation,\" \"Shadow,\" and \"Killshot\" remain credible synth-led neighbors to the anchors."
+      ]
+    },
+    {
+      "caseId": "mixed-indie-dance",
+      "sample": 1,
+      "vibeFit": 4,
+      "anchorFidelity": 5,
+      "coherence": 4,
+      "orderedFlow": 4,
+      "noveltyQuality": 4,
+      "verdict": "green",
+      "failureMode": "none",
+      "reason": "The playlist delivers wiry, physical indie dance and uses its anchors as part of a broader live-band club vocabulary. One cooler synth-pop detour briefly eases the pressure before an exhilarating finish.",
+      "evidence": [
+        "Fixture-new \"NY Excuse,\" \"Over and Over,\" and \"House of Jealous Lovers\" supply tension, repetition, and human dance-floor energy.",
+        "\"House of Jealous Lovers\" into \"All My Friends\" forms a strong crowded-room peak.",
+        "Fixture-new \"Tournament\" cools the energy at position seven before \"Zero\" restores an urgent finish."
+      ]
+    },
+    {
+      "caseId": "mixed-indie-dance",
+      "sample": 2,
+      "vibeFit": 5,
+      "anchorFidelity": 5,
+      "coherence": 5,
+      "orderedFlow": 5,
+      "noveltyQuality": 5,
+      "verdict": "green",
+      "failureMode": "none",
+      "reason": "This sequence convincingly escalates from taut indie-dance tension into a crowded peak and closes with communal release. The fixture-new tracks broaden the anchors without introducing an acoustic, passive, or big-room detour.",
+      "evidence": [
+        "\"Tribulations\" and fixture-new \"House of Jealous Lovers\" establish a tense, live-band opening.",
+        "\"Heads Will Roll,\" \"NY Excuse,\" \"Zero,\" and fixture-new \"Holiday\" sustain the crowded-room surge.",
+        "\"All My Friends\" is positioned last as an extended communal and exhilarated release."
+      ]
+    },
+    {
+      "caseId": "mixed-indie-dance",
+      "sample": 3,
+      "vibeFit": 4,
+      "anchorFidelity": 5,
+      "coherence": 4,
+      "orderedFlow": 2,
+      "noveltyQuality": 4,
+      "verdict": "yellow",
+      "failureMode": "energy-arc",
+      "reason": "The songs consistently fit a sweaty, human-edged indie-dance floor, but placing the communal climax first leaves little room for escalation, and the ending is tenser rather than exhilarated.",
+      "evidence": [
+        "\"All My Friends\" opens the playlist even though it is the clearest communal-release track.",
+        "\"Heads Will Roll,\" fixture-new \"NY Excuse,\" and \"Zero\" keep the opening half near peak intensity.",
+        "Fixture-new \"The Wall\" closes with wiry post-punk tension instead of the requested exhilarated release."
+      ]
+    },
+    {
+      "caseId": "instructions-only-predawn-jazz",
+      "sample": 1,
+      "vibeFit": 3,
+      "anchorFidelity": 5,
+      "coherence": 3,
+      "orderedFlow": 2,
+      "noveltyQuality": 3,
+      "verdict": "orange",
+      "failureMode": "energy-arc",
+      "reason": "The opening is spacious and devotional, but the final third becomes increasingly groove-driven and ends far from the requested return to silence. That sustained reversal is a major arc failure.",
+      "evidence": [
+        "\"Gefion,\" \"The Other Side,\" and \"Desolation Sound\" establish the requested patient predawn calm.",
+        "\"Quiet Fire\" leads into the more insistent \"Modul 36\" and \"Hopopono.\"",
+        "\"Hopopono\" is the most propulsive closing choice rather than a nearly silent landing.",
+        "The request has no selected artist or track, so there is no anchor to misuse.",
+        "All eight tracks are fixture-unresolved, making fixture evidence insufficient to assess discovery quality."
+      ]
+    },
+    {
+      "caseId": "instructions-only-predawn-jazz",
+      "sample": 2,
+      "vibeFit": 4,
+      "anchorFidelity": 5,
+      "coherence": 4,
+      "orderedFlow": 4,
+      "noveltyQuality": 3,
+      "verdict": "green",
+      "failureMode": "none",
+      "reason": "The playlist is spacious, luminous, and largely restrained, with a measured rhythmic warming through the middle and a more patient final stretch. The more active ensemble pieces remain controlled enough to avoid showy fusion.",
+      "evidence": [
+        "\"Blue Nile,\" \"The Ground,\" and \"Gefion\" create a calm, acoustic opening.",
+        "\"Ruins,\" \"Kandaiki,\" and \"Bardo\" gradually introduce warmth and rhythmic motion.",
+        "\"It's OK to Listen to the Gray Voice\" and \"Unfold\" provide a spacious landing.",
+        "The request has no selected artist or track, so there is no anchor to misuse.",
+        "All eight tracks are fixture-unresolved, making fixture evidence insufficient to assess discovery quality."
+      ]
+    },
+    {
+      "caseId": "instructions-only-predawn-jazz",
+      "sample": 3,
+      "vibeFit": 5,
+      "anchorFidelity": 5,
+      "coherence": 5,
+      "orderedFlow": 5,
+      "noveltyQuality": 3,
+      "verdict": "green",
+      "failureMode": "none",
+      "reason": "This is an intentional predawn arc: hushed piano-trio material opens the set, darker and more expansive pieces gradually deepen it, and Paul Motian restores quiet at the close.",
+      "evidence": [
+        "\"Being There,\" \"Golden Rain,\" and \"Gefion\" form a nearly still, patient opening.",
+        "\"This Is How You Disappear,\" \"Desolation Sound,\" and \"Sex\" create a gradual, spacious middle expansion without a flashy peak.",
+        "\"It Should Have Happened a Long Time Ago\" supplies the requested return to silence.",
+        "The request has no selected artist or track, so there is no anchor to misuse.",
+        "All eight tracks are fixture-unresolved, making fixture evidence insufficient to assess discovery quality."
+      ]
+    },
+    {
+      "caseId": "conflicting-dark-electronic",
+      "sample": 1,
+      "vibeFit": 4,
+      "anchorFidelity": 5,
+      "coherence": 4,
+      "orderedFlow": 4,
+      "noveltyQuality": 5,
+      "verdict": "green",
+      "failureMode": "none",
+      "reason": "A convincing dark-electronic reinterpretation of the anchors, with intimate voices and layered production throughout; the radiant final Jon Hopkins track is the only slight tonal lightening.",
+      "evidence": [
+        "\"Archangel,\" \"Keep the Streets Empty for Me,\" and \"Retrograde\" supply shadowy electronic texture and human intimacy.",
+        "\"Anvil\" through \"On\" builds naturally into the more luminous closing track.",
+        "All eight tracks are fixture-new, and neither familiar anchor appears."
+      ]
+    },
+    {
+      "caseId": "conflicting-dark-electronic",
+      "sample": 2,
+      "vibeFit": 4,
+      "anchorFidelity": 5,
+      "coherence": 4,
+      "orderedFlow": 3,
+      "noveltyQuality": 5,
+      "verdict": "green",
+      "failureMode": "none",
+      "reason": "The selections strongly satisfy the dark, intimate electronic redirect, although the sequence wanders between club motion, vocal restraint, radiance, and a very dark ending.",
+      "evidence": [
+        "\"Archangel,\" \"Retrograde,\" and \"Keep the Streets Empty for Me\" preserve intimacy without copying Fleet Foxes or Bon Iver.",
+        "The move from \"Luminous Beings\" to \"The Highest Flood\" and \"Anvil\" creates a pronounced late tonal reversal.",
+        "Every position is fixture-new and avoids the selected familiar artists."
+      ]
+    },
+    {
+      "caseId": "conflicting-dark-electronic",
+      "sample": 3,
+      "vibeFit": 4,
+      "anchorFidelity": 5,
+      "coherence": 4,
+      "orderedFlow": 4,
+      "noveltyQuality": 5,
+      "verdict": "green",
+      "failureMode": "none",
+      "reason": "The playlist consistently translates intimacy and harmonic depth into nocturnal electronic music, with only a brighter final release after the darker preceding tracks.",
+      "evidence": [
+        "\"Archangel,\" \"Retrograde,\" and \"Keep the Streets Empty for Me\" establish close, spectral vocal detail.",
+        "\"The Highest Flood,\" \"On,\" and \"Anvil\" form a coherent darker instrumental passage.",
+        "All eight selections are fixture-new, with no Fleet Foxes or Bon Iver tracks."
+      ]
+    },
+    {
+      "caseId": "instrumental-energy-arc",
+      "sample": 1,
+      "vibeFit": 5,
+      "anchorFidelity": 5,
+      "coherence": 4,
+      "orderedFlow": 2,
+      "noveltyQuality": 5,
+      "verdict": "orange",
+      "failureMode": "energy-arc",
+      "reason": "The material is an excellent instrumental-electronic fit, but the requested ending is reversed: the sequence lands at track seven and then rises into another major crescendo.",
+      "evidence": [
+        "\"A Walk\" and \"Recovery\" provide two restrained openers.",
+        "\"Open Eye Signal\" supplies a strong peak at position 6, followed by the weightless \"Abandon Window\" at position 7.",
+        "Fixture-new closer \"Says\" rebuilds toward an unmistakable crescendo instead of preserving the final landing."
+      ]
+    },
+    {
+      "caseId": "instrumental-energy-arc",
+      "sample": 2,
+      "vibeFit": 5,
+      "anchorFidelity": 5,
+      "coherence": 5,
+      "orderedFlow": 4,
+      "noveltyQuality": 5,
+      "verdict": "green",
+      "failureMode": "none",
+      "reason": "This is a cohesive instrumental ascent with restrained opening tracks, an increasingly kinetic middle, a late crescendo, and an airy if still rhythmic Tycho landing.",
+      "evidence": [
+        "\"Abandon Window\" and \"A Walk\" form the requested restrained opening pair.",
+        "\"Recovery,\" \"Looped,\" \"Order from Chaos,\" and \"Open Eye Signal\" create a credible four-track climb.",
+        "\"Says\" occupies the peak position before \"Hours\" reduces the intensity."
+      ]
+    },
+    {
+      "caseId": "instrumental-energy-arc",
+      "sample": 3,
+      "vibeFit": 5,
+      "anchorFidelity": 5,
+      "coherence": 5,
+      "orderedFlow": 5,
+      "noveltyQuality": 5,
+      "verdict": "green",
+      "failureMode": "none",
+      "reason": "The sequence closely realizes the specified arc while maintaining detailed, patient instrumental electronic texture from beginning to end.",
+      "evidence": [
+        "\"Abandon Window\" and \"A Walk\" are restrained opening tracks.",
+        "\"Two Thousand and Seventeen,\" \"Hours,\" \"Looped,\" and \"Order from Chaos\" supply a smooth four-track climb.",
+        "\"Open Eye Signal\" is the clear position-7 peak, followed by the calmer fixture-new \"Recovery\" landing."
+      ]
+    },
+    {
+      "caseId": "familiar-only-slow-groove",
+      "sample": 1,
+      "vibeFit": 4,
+      "anchorFidelity": 5,
+      "coherence": 5,
+      "orderedFlow": 4,
+      "noveltyQuality": 5,
+      "verdict": "green",
+      "failureMode": "none",
+      "reason": "The Khruangbin and Sade alternation delivers warm bass, space, and understated sensuality throughout, with only a modest late energy lift.",
+      "evidence": [
+        "\"August 10,\" \"Friday Morning,\" and \"White Gloves\" provide spacious, warm guitar grooves.",
+        "\"No Ordinary Love,\" \"Like a Tattoo,\" and \"Cherish the Day\" add restrained vocal intimacy.",
+        "\"Time (You and I)\" briefly raises the energy at position 7, and all eight tracks remain fixture-familiar."
+      ]
+    },
+    {
+      "caseId": "familiar-only-slow-groove",
+      "sample": 2,
+      "vibeFit": 4,
+      "anchorFidelity": 5,
+      "coherence": 5,
+      "orderedFlow": 4,
+      "noveltyQuality": 5,
+      "verdict": "green",
+      "failureMode": "none",
+      "reason": "This is a roomy, elegant slow-groove set whose compatible anchors alternate cleanly; the upbeat penultimate track is a minor detour rather than a boundary violation.",
+      "evidence": [
+        "\"August 10\" into \"Like a Tattoo\" establishes an unhurried, spacious opening.",
+        "\"White Gloves\" and \"Cherish the Day\" maintain warm restraint through the middle.",
+        "\"Time (You and I)\" lifts the pulse before \"No Ordinary Love\" restores a slower close, with zero fixture-new tracks."
+      ]
+    },
+    {
+      "caseId": "familiar-only-slow-groove",
+      "sample": 3,
+      "vibeFit": 4,
+      "anchorFidelity": 5,
+      "coherence": 5,
+      "orderedFlow": 4,
+      "noveltyQuality": 5,
+      "verdict": "green",
+      "failureMode": "none",
+      "reason": "The playlist remains warm, spacious, and sensuous across both anchors, with a controlled late lift that still resolves elegantly.",
+      "evidence": [
+        "\"Friday Morning,\" \"White Gloves,\" and \"August 10\" sustain Khruangbin's negative-space groove.",
+        "\"Kiss of Life,\" \"Like a Tattoo,\" and \"No Ordinary Love\" integrate Sade's restrained soul sound.",
+        "\"Time (You and I)\" precedes the poised \"Cherish the Day\" closer, and every track is fixture-familiar."
+      ]
+    },
+    {
+      "caseId": "all-new-intimate-songwriters",
+      "sample": 1,
+      "vibeFit": 5,
+      "anchorFidelity": 5,
+      "coherence": 5,
+      "orderedFlow": 4,
+      "noveltyQuality": 5,
+      "verdict": "green",
+      "failureMode": "none",
+      "reason": "A highly specific set of restrained, emotionally detailed songwriters that uses the familiar track as a reference without copying its artist.",
+      "evidence": [
+        "\"Song for Nick Drake,\" \"Any Other Way,\" and \"Hannah Sun\" establish a hushed, close-recorded opening.",
+        "\"Hard Drive\" and \"The Bug Collector\" add distinctive narrative and lyrical character without arena-scale production.",
+        "All eight artists are fixture-new, and Phoebe Bridgers is absent."
+      ]
+    },
+    {
+      "caseId": "all-new-intimate-songwriters",
+      "sample": 2,
+      "vibeFit": 5,
+      "anchorFidelity": 5,
+      "coherence": 5,
+      "orderedFlow": 4,
+      "noveltyQuality": 5,
+      "verdict": "green",
+      "failureMode": "none",
+      "reason": "The selections consistently deliver intimate, distinctive writing and restrained arrangements, with a natural progression from hushed folk detail to the late spoken-narrative centerpiece.",
+      "evidence": [
+        "\"Song for Nick Drake\" and \"Any Other Way\" open with the requested close emotional scale.",
+        "\"The Bug Collector\" flows into the literate, restrained \"Hard Drive\" before \"Bad Dreams\" closes the set.",
+        "Every track is classified fixture-new, and none uses the selected familiar artist."
+      ]
+    },
+    {
+      "caseId": "all-new-intimate-songwriters",
+      "sample": 3,
+      "vibeFit": 5,
+      "anchorFidelity": 5,
+      "coherence": 5,
+      "orderedFlow": 4,
+      "noveltyQuality": 5,
+      "verdict": "green",
+      "failureMode": "none",
+      "reason": "The playlist is a cohesive collection of close, literate indie songwriting whose discoveries remain restrained and emotionally specific.",
+      "evidence": [
+        "\"Song for Nick Drake,\" \"Any Other Way,\" and \"Hannah Sun\" create a consistently intimate first movement.",
+        "\"Aquamarine,\" \"Hard Drive,\" and \"The Bug Collector\" broaden the texture while preserving human-scale detail.",
+        "All eight selections are fixture-new artists, with no Phoebe Bridgers inclusion."
+      ]
+    }
+  ]
+}

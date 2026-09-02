@@ -1,0 +1,121 @@
+{
+  "status": "success",
+  "caseId": "artist-only-indie-folk",
+  "sample": 3,
+  "startedAt": "2026-09-01T23:04:31.032Z",
+  "durationMs": 4745,
+  "output": {
+    "playlist": {
+      "name": "Porchlight Static",
+      "description": "Tender twang, bruised-heart confessionals, and late-night guitar shimmer for driving nowhere fast with the windows down.",
+      "tracks": [
+        {
+          "id": "artist-f2",
+          "name": "Vampire Empire",
+          "artist_name": "Big Thief"
+        },
+        {
+          "id": "artist-f4",
+          "name": "Right Back to It",
+          "artist_name": "Waxahatchee"
+        },
+        {
+          "id": "artist-n3",
+          "name": "Chosen to Deserve",
+          "artist_name": "Wednesday"
+        },
+        {
+          "id": "artist-f6",
+          "name": "Simulation Swarm",
+          "artist_name": "Big Thief"
+        },
+        {
+          "id": "artist-f5",
+          "name": "Lilacs",
+          "artist_name": "Waxahatchee"
+        },
+        {
+          "id": "artist-n4",
+          "name": "She's Leaving You",
+          "artist_name": "MJ Lenderman"
+        },
+        {
+          "id": "artist-f1",
+          "name": "Not",
+          "artist_name": "Big Thief"
+        },
+        {
+          "id": "artist-f3",
+          "name": "Fire",
+          "artist_name": "Waxahatchee"
+        }
+      ]
+    }
+  },
+  "metrics": {
+    "exactTrackCount": true,
+    "trackCount": 8,
+    "uniqueTrackCount": 8,
+    "duplicateCount": 0,
+    "duplicateKeys": [],
+    "inventedIds": [],
+    "unresolvedCount": 0,
+    "fixtureResolvableCount": 8,
+    "fixtureResolvableRate": 1,
+    "selectedTrackCoverage": {
+      "required": 0,
+      "included": 0,
+      "missingIds": []
+    },
+    "selectedArtistCoverage": {
+      "required": 2,
+      "represented": 2,
+      "missingIds": []
+    },
+    "novelty": {
+      "requestedCount": 2,
+      "newCount": 2,
+      "familiarCount": 6,
+      "unresolvedCount": 0,
+      "newRatio": 0.25,
+      "absoluteCountDelta": 0
+    },
+    "trackFixtureClassifications": [
+      {
+        "position": 1,
+        "classification": "familiar"
+      },
+      {
+        "position": 2,
+        "classification": "familiar"
+      },
+      {
+        "position": 3,
+        "classification": "new"
+      },
+      {
+        "position": 4,
+        "classification": "familiar"
+      },
+      {
+        "position": 5,
+        "classification": "familiar"
+      },
+      {
+        "position": 6,
+        "classification": "new"
+      },
+      {
+        "position": 7,
+        "classification": "familiar"
+      },
+      {
+        "position": 8,
+        "classification": "familiar"
+      }
+    ],
+    "adjacentSameArtistCount": 0,
+    "maxNewTracksByArtist": 1,
+    "constraintViolations": []
+  }
+}

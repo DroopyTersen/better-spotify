@@ -19,6 +19,22 @@ interface PlaylistDisplayProps {
   onPlaylistModified: () => void;
 }
 
+export function PlaylistDescription({
+  description,
+}: {
+  description: string | null;
+}) {
+  const visibleDescription = description?.trim();
+
+  if (!visibleDescription) return null;
+
+  return (
+    <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+      {visibleDescription}
+    </p>
+  );
+}
+
 export const PlaylistDisplay = ({
   playlist,
   onPlaylistModified,
@@ -71,7 +87,7 @@ export const PlaylistDisplay = ({
   return (
     <div className="space-y-4 w-full max-w-[100vw] md:max-w-5xl md:mx-auto">
       <div className="flex flex-col md:flex-row md:items-center gap-4 flex-wrap">
-        <div className="md:hidden">
+        <div className="space-y-2 md:hidden">
           <EditablePlaylistName
             playlistId={playlist.id}
             name={playlistName}
@@ -79,6 +95,7 @@ export const PlaylistDisplay = ({
             userTokens={currentUser.tokens}
             onSaved={setPlaylistName}
           />
+          <PlaylistDescription description={playlist.description} />
         </div>
         <div className="grid grid-cols-[auto_1fr_auto] gap-4 w-full">
           <SpotifyImage
@@ -94,7 +111,8 @@ export const PlaylistDisplay = ({
               userTokens={currentUser.tokens}
               onSaved={setPlaylistName}
             />
-            <div className="text-muted-foreground font-normal text-sm md:text-base md:block hidden">
+            <PlaylistDescription description={playlist.description} />
+            <div className="mt-1 hidden text-sm font-normal text-muted-foreground md:block md:text-base">
               {playlist.itemsAvailability === "available"
                 ? `${playlist.tracks.total} tracks`
                 : "Tracks unavailable"}

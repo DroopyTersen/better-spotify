@@ -4,11 +4,25 @@ import {
   canonicalizePlaylistTracks,
   createVerifiedPlaylist,
   ensurePlaylistTrack,
+  getArtistCatalogLimits,
   PlaylistCreationResidualError,
   type PlaylistCreationDependencies,
   resolvePlaylistTracks,
   selectNewSongCandidates,
 } from "./buildPlaylist.server";
+
+describe("discovery catalog bounds", () => {
+  test("keeps all scout and baseline artists within a fixed Spotify request budget", () => {
+    expect(getArtistCatalogLimits(5)).toEqual({
+      releaseLimit: 10,
+      trackLimit: 20,
+    });
+    const expanded = getArtistCatalogLimits(14);
+    expect(expanded).toEqual({ releaseLimit: 3, trackLimit: 20 });
+    expect(14 * (1 + expanded.releaseLimit)).toBeLessThanOrEqual(60);
+    expect(() => getArtistCatalogLimits(21)).toThrow("between 0 and 20");
+  });
+});
 
 describe("playlist track resolution", () => {
   test("fails the whole resolution when any track cannot be verified", async () => {

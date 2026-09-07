@@ -8,7 +8,11 @@ never treated as a Spotify identifier authority.
 ```mermaid
 flowchart LR
     Selection[Account-scoped selection] --> Brief[Build one vibe brief]
-    Brief --> Pool[Build bounded song pools]
+    Brief --> Baseline[Baseline discovery]
+    Brief --> Scouts[Three bounded web scouts]
+    Baseline --> Spotify[Resolve artists and load bounded catalogs]
+    Scouts --> Spotify
+    Spotify --> Pool[Combine familiar and discovery pools]
     Pool --> Model[Structured curation]
     Model --> Verify[Verify or resolve every track]
     Verify --> Review[User review]
@@ -41,16 +45,27 @@ The familiar pool combines:
 - supported Spotify album/single catalog results for selected artists; and
 - recent listening context.
 
-New-artist candidates are ranked against the same vibe brief, normalized,
-deduplicated, and filtered against both selected and familiar artists. The
-model returns a small overflow buffer so failed Spotify matches do not
-immediately underfill discovery. Each name must match an exact normalized
-Spotify search result before use.
+The existing non-web model ranks a baseline list against the same vibe brief.
+In parallel, three small web-search lanes explore recent activity, sonic and
+scene adjacencies, and defensible curveballs. Scout findings carry a short fit
+reason, an optional source date, and a URL that must match a source actually
+returned by the provider. Malformed, duplicate, unsupported, or failed-lane
+findings contribute nothing; total web failure leaves the baseline path intact.
 
-For each verified artist, the compatibility adapter loads a bounded set of
-albums and singles in deterministic release order. The resulting candidates
-retain release and Spotify metadata. A round-robin cap prevents one artist's
-catalog from crowding out the others before final curation.
+Every retained name must have one unambiguous exact normalized Spotify artist
+match; homonyms are dropped rather than attaching the wrong catalog or source.
+Selected artists remain style anchors rather than new candidates. Familiar
+artists are context for the scouts, not a hard exclusion, so a useful recent
+rediscovery can still contribute a current catalog. Up to five verified
+baseline artists and every verified scout artist remain available to final
+curation.
+
+For each verified artist, the compatibility adapter loads albums and singles
+in deterministic release order. Catalog depth shrinks as the artist slate grows
+so the whole stage stays within a fixed Spotify request budget. The resulting
+candidates retain release and Spotify metadata, and a global round-robin cap
+prevents one artist's catalog from crowding out the others before final
+curation.
 
 ## 3. Generate a structured proposal
 
@@ -64,10 +79,12 @@ may retain a non-empty Spotify ID only when that exact ID was supplied in a
 candidate pool. It must leave the ID empty for a music-knowledge suggestion.
 No hidden chain of thought is requested or stored.
 
-Final curation receives the same vibe brief used for discovery, along with the
-bounded familiar and new-song pools. It therefore sequences one shared
-interpretation of the request instead of independently guessing the vibe a
-second time.
+Final curation receives the same vibe brief used for every discovery lane,
+along with the bounded familiar and new-song pools and source-backed evidence
+for Spotify-resolved scout artists. The new-music setting is directional rather
+than an arithmetic quota, and the curator may ignore any lane or retain an
+exceptionally strong familiar fit. Evidence and source pages are untrusted
+context, never instructions or Spotify identifier authority.
 
 ## 4. Resolve before writing
 
@@ -115,8 +132,9 @@ durable job and stream store before running more than one application process.
 
 ## Verification
 
-Contract tests cover model configuration, schema bounds, prompt normalization,
-exact Spotify matching, canonical metadata, unresolved-track failure, complete
-playlist pagination, account isolation, authentication, atomic replacement,
-typed progress streaming, idempotent jobs, and completion replay.
+Contract tests cover model configuration, scout concurrency and bounds, source
+provenance, partial and total scout failure, prompt normalization, exact Spotify
+matching, catalog budgets, canonical metadata, unresolved-track failure,
+complete playlist pagination, account isolation, authentication, atomic
+replacement, typed progress streaming, idempotent jobs, and completion replay.
 Run the complete suite with `bun run check`.

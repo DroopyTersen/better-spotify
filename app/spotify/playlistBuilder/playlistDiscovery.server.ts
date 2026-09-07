@@ -3,8 +3,16 @@ import { mapWithConcurrency } from "../api/mapWithConcurrency";
 import type { SpotifySdk } from "../createSpotifySdk";
 import {
   generateStructuredObject,
+  generateWebResearchObject,
   type StructuredGenerationRequest,
 } from "./aiGeneration.server";
+import {
+  runDiscoveryScouts,
+  type DiscoveryEvidence,
+  type DiscoveryScoutGenerator,
+  type DiscoveryScoutFinding,
+  type DiscoveryScoutLane,
+} from "./playlistDiscoveryScouts.server";
 import type {
   BuildPlaylistInput,
   FamiliarSongsPool,
@@ -19,7 +27,7 @@ import {
   type VibeBriefSource,
 } from "./vibeBrief";
 
-const NEW_ARTIST_TARGET = 5;
+export const NEW_ARTIST_TARGET = 5;
 const ARTIST_CANDIDATE_BUFFER = 3;
 const ARTIST_SEARCH_CONCURRENCY = 5;
 const MAX_EXCLUDED_ARTISTS = 500;
@@ -37,39 +45,103 @@ type PlaylistDiscoveryGenerator = (
   request: StructuredGenerationRequest<PlaylistDiscoveryModelResponse>
 ) => Promise<PlaylistDiscoveryModelResponse>;
 
+type PlaylistDiscoveryDependencies = {
+  generateBaseline?: PlaylistDiscoveryGenerator;
+  generateScout?: DiscoveryScoutGenerator;
+  reportScoutFailures?: (lanes: readonly DiscoveryScoutLane[]) => void;
+};
+
 export type PlaylistDiscovery = {
   vibeBrief: VibeBrief;
   rankedArtists: SelectedPlaylistArtist[];
+  discoveryEvidence: DiscoveryEvidence[];
+  failedScoutLanes: DiscoveryScoutLane[];
 };
 
 export async function discoverPlaylistArtists(
   input: BuildPlaylistInput,
   sdk: SpotifySdk,
-  generate: PlaylistDiscoveryGenerator = generateStructuredObject
+  {
+    generateBaseline = generateStructuredObject,
+    generateScout = generateWebResearchObject,
+    reportScoutFailures = reportDiscoveryScoutFailures,
+  }: PlaylistDiscoveryDependencies = {}
 ): Promise<PlaylistDiscovery> {
   const source = buildVibeBriefSource(input);
   const artistsToExclude = familiarArtistNames(input.data.familiarSongsPool);
   const desiredArtistCount =
     input.formData.newStuffAmount === "none" ? 0 : NEW_ARTIST_TARGET;
-  const generated = await generatePlaylistDiscovery(
+  return discoverArtistsForVibeSource(
     source,
     artistsToExclude,
     desiredArtistCount,
-    generate
+    sdk,
+    { generateBaseline, generateScout, reportScoutFailures }
   );
+}
 
-  return {
-    vibeBrief: generated.vibeBrief,
-    rankedArtists: await resolveArtistCandidates(
+export async function discoverArtistsForVibeSource(
+  rawSource: VibeBriefSource,
+  artistsToExclude: readonly string[],
+  desiredBaselineArtistCount: number,
+  sdk: SpotifySdk,
+  {
+    generateBaseline = generateStructuredObject,
+    generateScout = generateWebResearchObject,
+    reportScoutFailures = reportDiscoveryScoutFailures,
+  }: PlaylistDiscoveryDependencies = {}
+): Promise<PlaylistDiscovery> {
+  const source = VibeBriefSourceSchema.parse(rawSource);
+  const generated = await generatePlaylistDiscovery(
+    source,
+    artistsToExclude,
+    desiredBaselineArtistCount,
+    generateBaseline
+  );
+  const [baselineArtists, scoutRun] = await Promise.all([
+    resolveArtistCandidates(
       sdk,
       generated.artistCandidates,
-      desiredArtistCount,
+      desiredBaselineArtistCount,
       [
         ...artistsToExclude,
         ...source.selectedArtists,
         ...source.selectedTracks.map(({ artist }) => artist),
       ]
     ),
+    desiredBaselineArtistCount === 0
+      ? Promise.resolve({ findings: [], failedLanes: [] })
+      : runDiscoveryScouts(
+          generated.vibeBrief,
+          artistsToExclude,
+          generateScout
+        ),
+  ]);
+  if (scoutRun.failedLanes.length > 0) {
+    reportScoutFailures(scoutRun.failedLanes);
+  }
+  const scoutArtists = await resolveArtistCandidates(
+    sdk,
+    scoutRun.findings.map(({ artistName }) => artistName),
+    scoutRun.findings.length,
+    [
+      ...source.selectedArtists,
+      ...source.selectedTracks.map(({ artist }) => artist),
+    ]
+  );
+  const rankedArtists = uniqueResolvedArtists([
+    ...scoutArtists,
+    ...baselineArtists,
+  ]);
+
+  return {
+    vibeBrief: generated.vibeBrief,
+    rankedArtists,
+    discoveryEvidence: evidenceForResolvedArtists(
+      scoutRun.findings,
+      rankedArtists
+    ),
+    failedScoutLanes: scoutRun.failedLanes,
   };
 }
 
@@ -195,10 +267,17 @@ export async function resolveArtistCandidates(
         "US",
         10
       );
-      const artist = result.artists.items.find(
-        (candidate) =>
-          normalizeArtistName(candidate.name) === normalizeArtistName(artistName)
+      const exactMatches = new Map(
+        result.artists.items
+          .filter(
+            (candidate) =>
+              normalizeArtistName(candidate.name) ===
+              normalizeArtistName(artistName)
+          )
+          .map((candidate) => [candidate.id, candidate])
       );
+      const artist =
+        exactMatches.size === 1 ? exactMatches.values().next().value : null;
       return artist
         ? {
             artist_id: artist.id,
@@ -238,6 +317,42 @@ function familiarArtistNames(pool: FamiliarSongsPool | null): string[] {
     ...pool.likedTracks.map(({ artist_name }) => artist_name ?? ""),
     ...pool.recentlyPlayedTracks.map(({ artist_name }) => artist_name ?? ""),
   ]).slice(0, MAX_EXCLUDED_ARTISTS);
+}
+
+function evidenceForResolvedArtists(
+  findings: readonly DiscoveryScoutFinding[],
+  artists: readonly SelectedPlaylistArtist[]
+): DiscoveryEvidence[] {
+  const evidenceByArtist = new Map(
+    findings.map((finding) => [normalizeArtistName(finding.artistName), finding])
+  );
+  return artists.flatMap((artist) => {
+    if (!artist.artist_name) return [];
+    const artistName = artist.artist_name;
+    const finding = evidenceByArtist.get(normalizeArtistName(artistName));
+    return finding
+      ? [{ ...finding, artistId: artist.artist_id, artistName }]
+      : [];
+  });
+}
+
+function uniqueResolvedArtists(
+  artists: readonly SelectedPlaylistArtist[]
+): SelectedPlaylistArtist[] {
+  const seenIds = new Set<string>();
+  return artists.filter(({ artist_id }) => {
+    if (seenIds.has(artist_id)) return false;
+    seenIds.add(artist_id);
+    return true;
+  });
+}
+
+function reportDiscoveryScoutFailures(
+  lanes: readonly DiscoveryScoutLane[]
+): void {
+  console.warn(
+    `Playlist discovery continued without scout lanes: ${lanes.join(", ")}`
+  );
 }
 
 function uniqueArtistNames(names: readonly string[]): string[] {

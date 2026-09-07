@@ -174,7 +174,7 @@ export function BuilderForm() {
             { value: "half", label: "Yeah make it about 50/50" },
             {
               value: "all",
-              label: "Yes, ONLY new stuff based on what I've picked out",
+              label: "Go hard on new stuff based on what I've picked out",
             },
           ].map((option) => (
             <Label

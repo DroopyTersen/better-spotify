@@ -133,7 +133,8 @@ export const playlistQualityCases: PlaylistEvalCase[] = [
     mustHave: ["Space and patience", "Acoustic detail", "Predawn calm"],
     mustAvoid: ["Showy fusion solos", "Vocal standards", "Cocktail-lounge cheer"],
     arc: "Nearly still at the opening, gradually warmer, then return to silence",
-    novelty: "All selections come from music knowledge; unresolved IDs are expected",
+    novelty:
+      "Strongly favor music-knowledge discoveries; unresolved IDs are expected, but one exceptional familiar fit is acceptable",
     instructions:
       "Quiet devotional modern jazz for the hour before sunrise. Mostly instrumental, spacious, patient, and never showy.",
     newStuffAmount: "all",
@@ -148,7 +149,8 @@ export const playlistQualityCases: PlaylistEvalCase[] = [
       "Dark, close-mic electronic music that preserves the anchors' intimacy and layered harmony while removing their acoustic surface.",
     mustHave: ["Shadowy electronic texture", "Intimate vocals or human detail", "Subtle harmonic richness"],
     mustAvoid: ["Acoustic guitar", "Campfire folk", "Bright festival production"],
-    novelty: "Only fixture-new artists; familiar selections are style references",
+    novelty:
+      "Strongly favor fixture-new artists; familiar selections are style references, but one exceptional familiar fit is acceptable",
     selectedTracks: [seed("conflict-f1", "Blue Ridge Mountains", "Fleet Foxes")],
     selectedArtists: ["Bon Iver"],
     familiar: [
@@ -241,8 +243,13 @@ export const playlistQualityCases: PlaylistEvalCase[] = [
     vibe:
       "Intimate, literate indie songwriting with dry-room detail, emotional specificity, and restrained arrangements.",
     mustHave: ["Close emotional detail", "Distinctive writing", "Restrained arrangement"],
-    mustAvoid: ["Arena crescendos", "Generic coffeehouse folk", "The selected familiar artist"],
-    novelty: "Every track comes from fixture-new artists",
+    mustAvoid: [
+      "Arena crescendos",
+      "Generic coffeehouse folk",
+      "Overreliance on the selected familiar artist",
+    ],
+    novelty:
+      "Strongly favor fixture-new artists, while allowing one exceptional familiar fit",
     selectedTracks: [seed("all-f1", "Motion Sickness", "Phoebe Bridgers")],
     familiar: [
       seed("all-f2", "Garden Song", "Phoebe Bridgers"),

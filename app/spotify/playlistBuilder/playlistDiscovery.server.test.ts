@@ -182,6 +182,25 @@ describe("playlist artist discovery", () => {
     ]);
   });
 
+  test("drops an ambiguous exact-name match instead of attaching the wrong catalog", async () => {
+    const sdk = {
+      async search() {
+        return {
+          artists: {
+            items: [
+              { id: "homonym-one", name: "Shared Name", images: [] },
+              { id: "homonym-two", name: "Shared Name", images: [] },
+            ],
+          },
+        };
+      },
+    } as unknown as SpotifySdk;
+
+    await expect(
+      resolveArtistCandidates(sdk, ["Shared Name"], 1, [])
+    ).resolves.toEqual([]);
+  });
+
   test("passes one instructions-only brief through verified artist discovery", async () => {
     const input = buildInput();
     input.data.selectedArtists = [];
@@ -198,14 +217,20 @@ describe("playlist artist discovery", () => {
     const discovery = await discoverPlaylistArtists(
       input,
       sdk,
-      async (request) =>
-        request.schema.parse({
-          vibeProfile: profile,
-          recommendedArtists: Array.from(
-            { length: 8 },
-            (_, index) => `Fresh ${index}`
-          ),
-        })
+      {
+        generateBaseline: async (request) =>
+          request.schema.parse({
+            vibeProfile: profile,
+            recommendedArtists: Array.from(
+              { length: 8 },
+              (_, index) => `Fresh ${index}`
+            ),
+          }),
+        generateScout: async () => ({
+          output: { candidates: [] },
+          sourceUrls: [],
+        }),
+      }
     );
 
     expect(discovery.vibeBrief.source).toEqual({
@@ -214,8 +239,178 @@ describe("playlist artist discovery", () => {
       explicitInstructions: "Keep it warm and avoid glossy production.",
     });
     expect(discovery.rankedArtists).toHaveLength(5);
+    expect(discovery.discoveryEvidence).toEqual([]);
+  });
+
+  test("keeps every resolved scout lane and the baseline available while dropping Spotify misses", async () => {
+    const searchedArtists: string[] = [];
+    const sdk = {
+      async search(query: string) {
+        const name = JSON.parse(query.slice("artist:".length)) as string;
+        searchedArtists.push(name);
+        return {
+          artists: {
+            items:
+              name === "Missing Scout"
+                ? []
+                : [{ id: `id-${name}`, name, images: [] }],
+          },
+        };
+      },
+    } as unknown as SpotifySdk;
+
+    const discovery = await discoverPlaylistArtists(
+      buildInput(),
+      sdk,
+      {
+        generateBaseline: async (request) =>
+          request.schema.parse({
+            vibeProfile: profile,
+            recommendedArtists: Array.from(
+              { length: 8 },
+              (_, index) => `Baseline ${index}`
+            ),
+          }),
+        generateScout: async (request) => {
+          const candidates = request.prompt.includes(
+            "<discovery_lane>recent</discovery_lane>"
+          )
+            ? [
+                scoutCandidate("Missing Scout", "https://example.com/missing"),
+                scoutCandidate("Recent Scout", "https://example.com/recent"),
+              ]
+            : request.prompt.includes(
+                  "<discovery_lane>adjacent</discovery_lane>"
+                )
+              ? [
+                  scoutCandidate(
+                    "Adjacent Scout",
+                    "https://example.com/adjacent"
+                  ),
+                ]
+              : [
+                  scoutCandidate(
+                    "Wildcard Scout",
+                    "https://example.com/wildcard"
+                  ),
+                ];
+          return {
+            output: { candidates },
+            sourceUrls: candidates.map(({ sourceUrl }) => sourceUrl),
+          };
+        },
+      }
+    );
+
+    expect(discovery.rankedArtists.map(({ artist_name }) => artist_name)).toEqual([
+      "Adjacent Scout",
+      "Wildcard Scout",
+      "Recent Scout",
+      "Baseline 0",
+      "Baseline 1",
+      "Baseline 2",
+      "Baseline 3",
+      "Baseline 4",
+    ]);
+    expect(searchedArtists).toContain("Missing Scout");
+    expect(discovery.discoveryEvidence).toEqual([
+      {
+        lane: "adjacent",
+        artistId: "id-Adjacent Scout",
+        ...scoutCandidate("Adjacent Scout", "https://example.com/adjacent"),
+      },
+      {
+        lane: "wildcard",
+        artistId: "id-Wildcard Scout",
+        ...scoutCandidate("Wildcard Scout", "https://example.com/wildcard"),
+      },
+      {
+        lane: "recent",
+        artistId: "id-Recent Scout",
+        ...scoutCandidate("Recent Scout", "https://example.com/recent"),
+      },
+    ]);
+  });
+
+  test("keeps the baseline path operational when every scout fails", async () => {
+    let reportedFailures: readonly string[] = [];
+    const sdk = {
+      async search(query: string) {
+        const name = JSON.parse(query.slice("artist:".length)) as string;
+        return {
+          artists: { items: [{ id: `id-${name}`, name, images: [] }] },
+        };
+      },
+    } as unknown as SpotifySdk;
+
+    const discovery = await discoverPlaylistArtists(
+      buildInput(),
+      sdk,
+      {
+        generateBaseline: async (request) =>
+          request.schema.parse({
+            vibeProfile: profile,
+            recommendedArtists: Array.from(
+              { length: 8 },
+              (_, index) => `Baseline ${index}`
+            ),
+          }),
+        generateScout: async () => {
+          throw new Error("web unavailable");
+        },
+        reportScoutFailures: (lanes) => {
+          reportedFailures = lanes;
+        },
+      }
+    );
+
+    expect(discovery.rankedArtists.map(({ artist_name }) => artist_name)).toEqual([
+      "Baseline 0",
+      "Baseline 1",
+      "Baseline 2",
+      "Baseline 3",
+      "Baseline 4",
+    ]);
+    expect(discovery.discoveryEvidence).toEqual([]);
+    expect(reportedFailures).toEqual(["recent", "adjacent", "wildcard"]);
+  });
+
+  test("does not call web discovery when the user asks for no new music", async () => {
+    const input = buildInput();
+    input.formData.newStuffAmount = "none";
+    input.data.formData.newStuffAmount = "none";
+    let scoutCalls = 0;
+
+    const discovery = await discoverPlaylistArtists(
+      input,
+      {} as SpotifySdk,
+      {
+        generateBaseline: async (request) =>
+          request.schema.parse({
+            vibeProfile: profile,
+            recommendedArtists: [],
+          }),
+        generateScout: async () => {
+          scoutCalls += 1;
+          return { output: { candidates: [] }, sourceUrls: [] };
+        },
+      }
+    );
+
+    expect(scoutCalls).toBe(0);
+    expect(discovery.rankedArtists).toEqual([]);
+    expect(discovery.discoveryEvidence).toEqual([]);
   });
 });
+
+function scoutCandidate(artistName: string, sourceUrl: string) {
+  return {
+    artistName,
+    fitReason: `${artistName} has a well-supported fit.`,
+    sourceUrl,
+    sourceDate: "2026-09-01",
+  };
+}
 
 function buildInput(): BuildPlaylistInput {
   const formData = {

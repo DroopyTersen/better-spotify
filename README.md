@@ -164,11 +164,13 @@ docker build -t better-spotify:check .
 type generation, strict TypeScript, and both production client and SSR builds.
 Authentication and visual changes still require a real browser pass.
 
-Playlist-quality evaluation is opt-in because it is billable and
-nondeterministic. Run `bun run eval:playlist -- help` and see the
-[playlist-quality evaluation guide](evals/playlist-quality/README.md). The live
-eval path exercises curation from public fixtures without authenticating with
-Spotify or creating a playlist.
+Playlist-quality and discovery-quality evaluations are opt-in because they are
+billable and nondeterministic. Run `bun run eval:playlist -- help` or
+`bun run eval:discovery -- --help`; see the
+[playlist-quality guide](evals/playlist-quality/README.md) and
+[discovery-quality guide](evals/discovery-quality/README.md). Both use public
+fixtures without authenticating a listener or creating a playlist; the
+discovery eval uses app-level Spotify credentials for read-only artist search.
 
 The current latest `drizzle-kit` transitively retains one development-only
 moderate esbuild advisory. It is not part of the production dependency install;

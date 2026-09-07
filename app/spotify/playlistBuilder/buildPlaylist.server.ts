@@ -24,6 +24,7 @@ const ARTIST_CATALOG_CONCURRENCY = 3;
 const TRACK_SEARCH_CONCURRENCY = 5;
 const MAX_NEW_RELEASES_PER_ARTIST = 10;
 const MAX_NEW_TRACKS_PER_ARTIST = 20;
+const MAX_ARTIST_CATALOG_PROVIDER_CALLS = 60;
 const NEW_TRACK_CANDIDATE_MULTIPLIER = 3;
 
 export class PlaylistCreationResidualError extends Error {
@@ -74,6 +75,9 @@ export async function buildPlaylist(
   const discovery = await discoverPlaylistArtists(input, sdk);
 
   reportProgress(FINDING_TRACKS_PROGRESS);
+  const catalogLimits = getArtistCatalogLimits(
+    discovery.rankedArtists.length
+  );
   const rankedNewSongCatalogs = await mapWithConcurrency(
     discovery.rankedArtists,
     ARTIST_CATALOG_CONCURRENCY,
@@ -81,10 +85,7 @@ export async function buildPlaylist(
       getArtistCatalogTracks(
         sdk,
         artist.artist_id,
-        {
-          releaseLimit: MAX_NEW_RELEASES_PER_ARTIST,
-          trackLimit: MAX_NEW_TRACKS_PER_ARTIST,
-        }
+        catalogLimits
       )
   );
   const newSongs = selectNewSongCandidates(
@@ -100,6 +101,7 @@ export async function buildPlaylist(
     },
     {
       vibeBrief: discovery.vibeBrief,
+      discoveryEvidence: discovery.discoveryEvidence,
       onPartialOutput: (partialOutput) => {
         const draftedSongs =
           partialOutput.playlist?.tracks?.filter(Boolean).length ?? 0;
@@ -171,6 +173,31 @@ export async function buildPlaylist(
   };
 }
 export type BuildPlaylistOutput = Awaited<ReturnType<typeof buildPlaylist>>;
+
+export function getArtistCatalogLimits(artistCount: number): {
+  releaseLimit: number;
+  trackLimit: number;
+} {
+  if (!Number.isInteger(artistCount) || artistCount < 0 || artistCount > 20) {
+    throw new RangeError("Artist count must be between 0 and 20");
+  }
+  if (artistCount === 0) {
+    return {
+      releaseLimit: MAX_NEW_RELEASES_PER_ARTIST,
+      trackLimit: MAX_NEW_TRACKS_PER_ARTIST,
+    };
+  }
+  return {
+    releaseLimit: Math.min(
+      MAX_NEW_RELEASES_PER_ARTIST,
+      Math.max(
+        1,
+        Math.floor(MAX_ARTIST_CATALOG_PROVIDER_CALLS / artistCount) - 1
+      )
+    ),
+    trackLimit: MAX_NEW_TRACKS_PER_ARTIST,
+  };
+}
 
 export async function resolvePlaylistTracks(
   tracks: BuildPlaylistTrack[],

@@ -6,7 +6,7 @@ import {
 import {
   CircleAlert,
   Headphones,
-  History,
+  ListMusic,
   LoaderCircle,
   Music2,
   ShieldCheck,
@@ -17,19 +17,19 @@ import { Card, CardContent } from "~/shadcn/components/ui/card";
 
 const LOGIN_FEATURES = [
   {
-    icon: History,
-    title: "Rediscover favorites",
-    description: "Bring forgotten music back into reach.",
-  },
-  {
     icon: Sparkles,
-    title: "Build better playlists",
-    description: "Shape mixes around your taste and intent.",
+    title: "Find fresh favorites",
+    description: "Get music picks beyond your usual rotation.",
   },
   {
     icon: Headphones,
-    title: "Explore your library",
-    description: "Search and browse your listening in one place.",
+    title: "Set the vibe",
+    description: "Start with artists, songs, or a mood.",
+  },
+  {
+    icon: ListMusic,
+    title: "Save it to Spotify",
+    description: "Your new mix goes straight to your library.",
   },
 ];
 
@@ -40,7 +40,8 @@ export const meta = () => [
   { title: "Sign in · Better Spotify" },
   {
     name: "description",
-    content: "Connect Spotify to explore your listening and build playlists.",
+    content:
+      "Fresh music recommendations and better playlists, saved straight to Spotify.",
   },
 ];
 
@@ -77,11 +78,11 @@ export default function Login() {
           </div>
 
           <h1 className="max-w-xl text-balance text-4xl font-semibold leading-[1.02] tracking-[-0.045em] sm:text-6xl lg:text-7xl">
-            Your music library, <span className="text-[#1ed760]">finally useful.</span>
+            Fresh music. <span className="text-[#1ed760]">Better playlists.</span>
           </h1>
           <p className="mt-5 max-w-xl text-base leading-7 text-white/60 sm:mt-6 sm:text-xl sm:leading-8">
-            A personal music workspace for rediscovering favorites and building
-            playlists from your saved music and listening history.
+            Tired of the same Spotify recommendations? Find fresh picks and
+            turn them into playlists you&apos;ll want on repeat.
           </p>
 
           <div className="mt-7 grid divide-y divide-white/[0.08] border-y border-white/[0.08] sm:mt-10 sm:grid-cols-3 sm:gap-3 sm:divide-y-0 sm:border-y-0">
@@ -117,10 +118,6 @@ export default function Login() {
               <Music2 className="size-6" aria-hidden="true" />
             </div>
             <h2 className="text-3xl font-semibold tracking-tight">Welcome back.</h2>
-            <p className="mt-3 leading-7 text-white/60">
-              Use Spotify to securely open your library and playlist tools.
-            </p>
-
             {errorMessage && (
               <div
                 className="mt-6 flex items-start gap-2.5 rounded-xl border border-red-400/20 bg-red-400/10 px-3.5 py-3 text-sm text-red-100"

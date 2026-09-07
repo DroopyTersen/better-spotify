@@ -1,6 +1,7 @@
 import type { PlaylistCurationResponse as PlaylistCurationOutput } from "../../app/spotify/playlistBuilder/generatePlaylist.server";
 import { PlaylistCurationResponse } from "../../app/spotify/playlistBuilder/generatePlaylist.server";
 import type { GeneratePlaylistInput } from "../../app/spotify/playlistBuilder/playlistBuilder.types";
+import { sanitizeArtifactError } from "./artifactStore";
 import { analyzePlaylistSample, validatePlaylistBenchmark } from "./metrics";
 import {
   BlindComparisonKeySchema,
@@ -80,7 +81,7 @@ export async function runPlaylistBenchmark({
           sample: sampleNumber,
           startedAt: new Date(sampleStarted).toISOString(),
           durationMs: Math.max(0, now() - sampleStarted),
-          error: sanitizeError(error),
+          error: sanitizeArtifactError(error),
         };
       }
       samples.push(sample);
@@ -296,16 +297,6 @@ function validateRunLabel(label: string): string {
     );
   }
   return clean;
-}
-
-function sanitizeError(error: unknown): { name: string; message: string } {
-  const name = error instanceof Error ? error.name : "Error";
-  const rawMessage = error instanceof Error ? error.message : "Unknown failure";
-  const message = rawMessage
-    .replace(/sk-[a-z0-9_-]+/gi, "[redacted]")
-    .replace(/bearer\s+[a-z0-9._-]+/gi, "Bearer [redacted]")
-    .slice(0, 500);
-  return { name: name.slice(0, 100), message };
 }
 
 function compactTimestamp(milliseconds: number): string {

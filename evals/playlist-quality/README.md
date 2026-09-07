@@ -104,7 +104,7 @@ Deterministic metrics include:
 - exact requested track count;
 - duplicate IDs and duplicate normalized track/artist pairs;
 - selected-track and feasible selected-artist coverage;
-- familiar/new/unresolved counts and requested-ratio deviation;
+- familiar/new/unresolved counts and an exact-ratio diagnostic;
 - nonempty IDs that were not supplied by a fixture pool;
 - adjacent tracks by the same artist;
 - concentration above three new tracks by one artist;
@@ -114,6 +114,11 @@ Deterministic metrics include:
 An infeasible fixture is rejected before model calls. An individual failed model
 sample is recorded without discarding successful samples, while the overall run
 is marked incomplete.
+
+The exact-ratio diagnostic describes how outputs moved across fixed fixture
+pools; it is not a quota, pass/fail check, or regression criterion. Interpret it
+within the product's broad `sprinkle`, `half`, and `all` appetites, and use the
+rubric's novelty-quality score to judge whether discoveries actually belong.
 
 ## Sampling and judging
 

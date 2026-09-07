@@ -45,6 +45,19 @@ export async function readJsonFile(path: string): Promise<unknown> {
   return JSON.parse(await readFile(path, "utf8")) as unknown;
 }
 
+export function sanitizeArtifactError(error: unknown): {
+  name: string;
+  message: string;
+} {
+  const name = error instanceof Error ? error.name : "Error";
+  const rawMessage = error instanceof Error ? error.message : "Unknown failure";
+  const message = rawMessage
+    .replace(/sk-[a-z0-9_-]+/gi, "[redacted]")
+    .replace(/bearer\s+[a-z0-9._-]+/gi, "Bearer [redacted]")
+    .slice(0, 500);
+  return { name: name.slice(0, 100), message };
+}
+
 function isAlreadyExists(error: unknown): boolean {
   return (
     typeof error === "object" &&
